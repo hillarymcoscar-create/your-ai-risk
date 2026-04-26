@@ -71,8 +71,14 @@ export const Results = ({ answers, onRestart }: Props) => {
     band = bandFromScore(score);
     // Keep dataset's band if modifier is 0 to honour source labelling
     if (modifier === 0) band = normaliseBand(match.risk_band);
-    tasks = match.tasks_at_risk?.slice(0, 3) ?? [];
-    skills = match.protective_tasks?.slice(0, 3) ?? [];
+    const override = TASK_OVERRIDES[match.title];
+    if (override) {
+      tasks = override.tasks_at_risk;
+      skills = override.protective_tasks;
+    } else {
+      tasks = (match.tasks_at_risk ?? []).map(cleanTask).filter(Boolean).slice(0, 3);
+      skills = (match.protective_tasks ?? []).map(cleanTask).filter(Boolean).slice(0, 3);
+    }
     const pct = percentile(score, occupations);
     comparison = `Your role ranks in the ${pct}th percentile of 1,016 occupations analysed`;
   } else {
@@ -80,8 +86,8 @@ export const Results = ({ answers, onRestart }: Props) => {
     score = calculateRisk(answers);
     const legacyBand = riskBand(score);
     band = legacyBand === "low" ? "Low" : legacyBand === "medium" ? "Moderate" : "High";
-    tasks = tasksAtRisk(answers);
-    skills = protectiveSkills(answers);
+    tasks = tasksAtRisk(answers).map(cleanTask).filter(Boolean);
+    skills = protectiveSkills(answers).map(cleanTask).filter(Boolean);
     comparison = industryComparison(score, answers.industry);
   }
 

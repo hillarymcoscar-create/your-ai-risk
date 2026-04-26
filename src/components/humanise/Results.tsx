@@ -41,6 +41,45 @@ function bandFromScore(score: number): Band {
   return "Very High";
 }
 
+// Trailing words that indicate a sentence was cut off mid-thought
+const TRAILING_STOPWORDS = new Set([
+  "and", "or", "the", "a", "an", "of", "to", "for", "in", "on", "at",
+  "by", "with", "from", "into", "as", "is", "are", "was", "were", "be",
+  "but", "if", "than", "that", "which", "who", "whom", "while", "when",
+  "such", "via", "per", "about",
+]);
+
+/** Clean a task string: trim, strip trailing punctuation/conjunctions, cap at 8 words. */
+function cleanTask(raw: string): string {
+  if (!raw) return "";
+  let s = String(raw).replace(/\s+/g, " ").trim();
+  s = s.replace(/[.;,:\-–—]+$/g, "").trim();
+  let words = s.split(" ").filter(Boolean);
+  if (words.length > 8) words = words.slice(0, 8);
+  while (words.length > 1 && TRAILING_STOPWORDS.has(words[words.length - 1].toLowerCase())) {
+    words.pop();
+  }
+  if (!words.length) return "";
+  let out = words.join(" ");
+  out = out.charAt(0).toUpperCase() + out.slice(1);
+  return out;
+}
+
+const TASK_OVERRIDES: Record<string, { tasks_at_risk: string[]; protective_tasks: string[] }> = {
+  "Maids and Housekeeping Cleaners": {
+    tasks_at_risk: [
+      "Routine room cleaning and tidying",
+      "Linen sorting and laundry processing",
+      "Inventory restocking and record keeping",
+    ],
+    protective_tasks: [
+      "Physical cleaning requiring human presence",
+      "Guest interaction and personalised service",
+      "Problem-solving in varied environments",
+    ],
+  },
+};
+
 function normaliseBand(b: string | undefined): Band {
   const v = (b ?? "").toLowerCase();
   if (v.startsWith("very")) return "Very High";
@@ -71,8 +110,14 @@ export const Results = ({ answers, onRestart }: Props) => {
     band = bandFromScore(score);
     // Keep dataset's band if modifier is 0 to honour source labelling
     if (modifier === 0) band = normaliseBand(match.risk_band);
-    tasks = match.tasks_at_risk?.slice(0, 3) ?? [];
-    skills = match.protective_tasks?.slice(0, 3) ?? [];
+    const override = TASK_OVERRIDES[match.title];
+    if (override) {
+      tasks = override.tasks_at_risk;
+      skills = override.protective_tasks;
+    } else {
+      tasks = (match.tasks_at_risk ?? []).map(cleanTask).filter(Boolean).slice(0, 3);
+      skills = (match.protective_tasks ?? []).map(cleanTask).filter(Boolean).slice(0, 3);
+    }
     const pct = percentile(score, occupations);
     comparison = `Your role ranks in the ${pct}th percentile of 1,016 occupations analysed`;
   } else {
@@ -80,8 +125,8 @@ export const Results = ({ answers, onRestart }: Props) => {
     score = calculateRisk(answers);
     const legacyBand = riskBand(score);
     band = legacyBand === "low" ? "Low" : legacyBand === "medium" ? "Moderate" : "High";
-    tasks = tasksAtRisk(answers);
-    skills = protectiveSkills(answers);
+    tasks = tasksAtRisk(answers).map(cleanTask).filter(Boolean);
+    skills = protectiveSkills(answers).map(cleanTask).filter(Boolean);
     comparison = industryComparison(score, answers.industry);
   }
 

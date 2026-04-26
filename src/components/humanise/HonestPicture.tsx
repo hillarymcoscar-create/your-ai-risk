@@ -6,9 +6,10 @@ type Props = {
   industry: string;
   score: number;
   usesAi: boolean;
+  onTasks?: (tasks: { tasks_at_risk: string[]; protective_tasks: string[] }) => void;
 };
 
-export const HonestPicture = ({ jobTitle, industry, score, usesAi }: Props) => {
+export const HonestPicture = ({ jobTitle, industry, score, usesAi, onTasks }: Props) => {
   const [text, setText] = useState<string>("");
   const [error, setError] = useState<string>("");
   const [loading, setLoading] = useState(true);
@@ -30,7 +31,13 @@ export const HonestPicture = ({ jobTitle, industry, score, usesAi }: Props) => {
         } else if (data?.error) {
           setError(data.error);
         } else {
-          setText(data?.text ?? "");
+          setText(data?.honest_picture ?? data?.text ?? "");
+          if (onTasks && (data?.tasks_at_risk?.length || data?.protective_tasks?.length)) {
+            onTasks({
+              tasks_at_risk: data?.tasks_at_risk ?? [],
+              protective_tasks: data?.protective_tasks ?? [],
+            });
+          }
         }
       })
       .catch(() => {

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/humanise/Logo";
 import { RiskGauge } from "@/components/humanise/RiskGauge";
@@ -93,6 +94,7 @@ function normaliseBand(b: string | undefined): Band {
 
 export const Results = ({ answers, onRestart }: Props) => {
   const occupations = useOccupations();
+  const [aiTasks, setAiTasks] = useState<{ tasks_at_risk: string[]; protective_tasks: string[] } | null>(null);
   useAliases(); // ensure aliases are loaded/cached
   const match: Occupation | null = occupations
     ? findByAlias(answers.jobTitle, occupations) ?? findBestMatch(answers.jobTitle, occupations)
@@ -190,6 +192,7 @@ export const Results = ({ answers, onRestart }: Props) => {
           industry={answers.industry}
           score={score}
           usesAi={answers.aiUsage === "Yes, regularly" || answers.aiUsage === "Sometimes"}
+          onTasks={setAiTasks}
         />
 
         <NzMarketSignal
@@ -202,13 +205,13 @@ export const Results = ({ answers, onRestart }: Props) => {
             icon={<AlertTriangle className="h-5 w-5" />}
             tone="danger"
             title="Top 3 tasks at risk"
-            items={tasks}
+            items={aiTasks?.tasks_at_risk?.length ? aiTasks.tasks_at_risk : tasks}
           />
           <InsightCard
             icon={<Shield className="h-5 w-5" />}
             tone="success"
             title="Top 3 protective skills"
-            items={skills}
+            items={aiTasks?.protective_tasks?.length ? aiTasks.protective_tasks : skills}
           />
           <InsightCard
             icon={<BarChart3 className="h-5 w-5" />}

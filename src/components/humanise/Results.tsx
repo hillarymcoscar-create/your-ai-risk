@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/humanise/Logo";
 import { RiskGauge } from "@/components/humanise/RiskGauge";
+import { HonestPicture } from "@/components/humanise/HonestPicture";
 import { AlertTriangle, Shield, BarChart3, Mail, LineChart, Share2, RotateCcw } from "lucide-react";
 import {
   calculateRisk,
@@ -175,6 +176,13 @@ export const Results = ({ answers, onRestart }: Props) => {
             </p>
           )}
         </section>
+
+        <HonestPicture
+          jobTitle={match?.title ?? answers.jobTitle}
+          industry={answers.industry}
+          score={score}
+          usesAi={answers.aiUsage === "Yes, regularly" || answers.aiUsage === "Sometimes"}
+        />
 
         <section className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-5">
           <InsightCard

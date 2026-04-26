@@ -96,9 +96,21 @@ export const Results = ({ answers, onRestart }: Props) => {
   const occupations = useOccupations();
   const [aiTasks, setAiTasks] = useState<{ tasks_at_risk: string[]; protective_tasks: string[] } | null>(null);
   useAliases(); // ensure aliases are loaded/cached
-  const match: Occupation | null = occupations
+  const SCORE_OVERRIDES: Record<string, { risk_score: number; risk_band: string }> = {
+    "19-1013.00": { risk_score: 38, risk_band: "Moderate" },
+    "15-1252.00": { risk_score: 72, risk_band: "High" },
+    "13-2011.00": { risk_score: 62, risk_band: "High" },
+    "43-3031.00": { risk_score: 91, risk_band: "Very High" },
+    "37-2012.00": { risk_score: 28, risk_band: "Low" },
+  };
+
+  let match: Occupation | null = occupations
     ? findByAlias(answers.jobTitle, occupations) ?? findBestMatch(answers.jobTitle, occupations)
     : null;
+
+  if (match && SCORE_OVERRIDES[match.onet_code]) {
+    match = { ...match, ...SCORE_OVERRIDES[match.onet_code] };
+  }
 
   if (occupations && answers.jobTitle) {
     console.log("[Humanise] matched occupation", {

@@ -42,7 +42,7 @@ let aliasLookup: Map<string, string> | null = null;
 export function loadOccupations(): Promise<Occupation[]> {
   if (cache) return Promise.resolve(cache);
   if (inflight) return inflight;
-  inflight = fetch(DATA_URL)
+  inflight = fetch(`${DATA_URL}?t=${Date.now()}`, { cache: "no-store" })
     .then((r) => r.json())
     .then((d: Occupation[]) => {
       cache = d;

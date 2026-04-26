@@ -41,6 +41,45 @@ function bandFromScore(score: number): Band {
   return "Very High";
 }
 
+// Trailing words that indicate a sentence was cut off mid-thought
+const TRAILING_STOPWORDS = new Set([
+  "and", "or", "the", "a", "an", "of", "to", "for", "in", "on", "at",
+  "by", "with", "from", "into", "as", "is", "are", "was", "were", "be",
+  "but", "if", "than", "that", "which", "who", "whom", "while", "when",
+  "such", "via", "per", "about",
+]);
+
+/** Clean a task string: trim, strip trailing punctuation/conjunctions, cap at 8 words. */
+function cleanTask(raw: string): string {
+  if (!raw) return "";
+  let s = String(raw).replace(/\s+/g, " ").trim();
+  s = s.replace(/[.;,:\-–—]+$/g, "").trim();
+  let words = s.split(" ").filter(Boolean);
+  if (words.length > 8) words = words.slice(0, 8);
+  while (words.length > 1 && TRAILING_STOPWORDS.has(words[words.length - 1].toLowerCase())) {
+    words.pop();
+  }
+  if (!words.length) return "";
+  let out = words.join(" ");
+  out = out.charAt(0).toUpperCase() + out.slice(1);
+  return out;
+}
+
+const TASK_OVERRIDES: Record<string, { tasks_at_risk: string[]; protective_tasks: string[] }> = {
+  "Maids and Housekeeping Cleaners": {
+    tasks_at_risk: [
+      "Routine room cleaning and tidying",
+      "Linen sorting and laundry processing",
+      "Inventory restocking and record keeping",
+    ],
+    protective_tasks: [
+      "Physical cleaning requiring human presence",
+      "Guest interaction and personalised service",
+      "Problem-solving in varied environments",
+    ],
+  },
+};
+
 function normaliseBand(b: string | undefined): Band {
   const v = (b ?? "").toLowerCase();
   if (v.startsWith("very")) return "Very High";

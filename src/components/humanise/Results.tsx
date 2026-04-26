@@ -11,7 +11,7 @@ import {
   industryComparison,
   type QuizAnswers,
 } from "@/lib/humanise";
-import { useOccupations, findBestMatch, percentile, type Occupation } from "@/lib/onet";
+import { useOccupations, useAliases, findBestMatch, findByAlias, percentile, type Occupation } from "@/lib/onet";
 import { toast } from "sonner";
 
 type Props = {

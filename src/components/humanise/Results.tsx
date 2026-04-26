@@ -178,7 +178,7 @@ export const Results = ({ answers, onRestart }: Props) => {
         </section>
 
         <p className="mt-16 text-center text-xs text-muted-foreground/80">
-          Powered by O*NET 30.2 — the same occupational database used by the US Department of Labor
+          Powered by O*NET 30.2 and AI Forum NZ research — the same data used by NZ government and industry.
         </p>
       </main>
     </div>

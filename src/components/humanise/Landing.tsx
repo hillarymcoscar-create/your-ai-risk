@@ -60,27 +60,27 @@ export const Landing = ({ onStart }: { onStart: () => void }) => {
 
         <div className="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 text-left">
           <StatCard
-            number="46%"
-            label="of NZ jobs at risk"
-            sub="over the next 20 years"
-            source="NZ Productivity Commission"
+            number="2×"
+            label="NZ job losses from AI doubled in one year"
+            sub="From 7% to 14% of businesses in 12 months"
+            source="AI Forum NZ, August 2025"
           />
           <StatCard
-            number="87%"
-            label="of large NZ organisations use AI"
-            sub="up from 48% just two years ago"
-            source="Datacom State of AI Index 2025"
+            number="50%"
+            label="of NZ AI-using businesses need fewer staff"
+            sub="Jobs aren't just changing — they're disappearing"
+            source="AI Forum NZ, August 2025"
           />
           <StatCard
-            number="14%"
-            label="of NZ workers feel AI-confident"
-            sub="while their employers race ahead"
-            source="Datacom State of AI Index 2025"
+            number="3rd"
+            label="fastest AI adopters in the world"
+            sub="Yet half of NZ businesses have no AI governance"
+            source="Microsoft NZ / Accenture, 2024"
           />
         </div>
 
         <p className="mt-12 text-center text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto">
-          That gap between organisational AI adoption and individual worker readiness is exactly the problem Humanise is here to solve.
+          That gap between AI adoption and worker readiness is exactly the problem Humanise is here to solve.
         </p>
 
         <div className="mt-8 text-center">

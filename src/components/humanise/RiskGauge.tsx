@@ -1,12 +1,18 @@
 import { useEffect, useState } from "react";
-import { riskBand } from "@/lib/humanise";
 
-export const RiskGauge = ({ score }: { score: number }) => {
+type Band = "Low" | "Moderate" | "High" | "Very High";
+
+const BAND_COLOR: Record<Band, string> = {
+  Low: "hsl(var(--success))",
+  Moderate: "hsl(var(--warning))",
+  High: "hsl(var(--warning-strong))",
+  "Very High": "hsl(var(--danger))",
+};
+
+export const RiskGauge = ({ score, band }: { score: number; band: Band }) => {
   const [animated, setAnimated] = useState(0);
-  const band = riskBand(score);
-  const colorVar =
-    band === "low" ? "hsl(var(--success))" : band === "medium" ? "hsl(var(--warning))" : "hsl(var(--danger))";
-  const label = band === "low" ? "Low risk" : band === "medium" ? "Moderate risk" : "High risk";
+  const colorVar = BAND_COLOR[band] ?? "hsl(var(--warning))";
+  const label = `${band} risk`;
 
   const radius = 92;
   const circumference = 2 * Math.PI * radius;

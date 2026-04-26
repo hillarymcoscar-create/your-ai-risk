@@ -27,9 +27,9 @@ export type AliasEntry = {
 type AliasFile = { aliases: AliasEntry[] };
 
 const DATA_URL =
-  "https://raw.githubusercontent.com/hillarymcoscar-create/humanise-data/refs/heads/main/humanise-scores.json";
+  "https://cdn.jsdelivr.net/gh/hillarymcoscar-create/humanise-data@main/humanise-scores.json?v=3";
 const ALIAS_URL =
-  "https://raw.githubusercontent.com/hillarymcoscar-create/humanise-data/refs/heads/main/job-title-aliases.json";
+  "https://cdn.jsdelivr.net/gh/hillarymcoscar-create/humanise-data@main/job-title-aliases.json?v=3";
 
 let cache: Occupation[] | null = null;
 let inflight: Promise<Occupation[]> | null = null;

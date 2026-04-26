@@ -55,10 +55,8 @@ export function loadOccupations(): Promise<Occupation[]> {
   if (inflight) return inflight;
   inflight = fetchFreshJson<Occupation[]>(DATA_URL)
     .then((d: Occupation[]) => {
-      console.log(
-        "Soil and Plant Scientists score:",
-        d.find((o) => o.onet_code === "19-1013.00")?.risk_score,
-      );
+      const testOcc = d.find((o) => o.onet_code === "19-1013.00");
+      console.log("Soil and Plant Scientists risk_score:", testOcc?.risk_score);
       cache = d;
       return d;
     })

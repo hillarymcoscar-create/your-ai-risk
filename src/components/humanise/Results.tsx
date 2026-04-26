@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/humanise/Logo";
 import { RiskGauge } from "@/components/humanise/RiskGauge";
 import { HonestPicture } from "@/components/humanise/HonestPicture";
-import { AlertTriangle, Shield, BarChart3, Mail, LineChart, Share2, RotateCcw } from "lucide-react";
+import { AlertTriangle, Shield, BarChart3, Mail, LineChart, Share2, RotateCcw, BarChart2 } from "lucide-react";
 import {
   calculateRisk,
   riskBand,
@@ -183,6 +183,29 @@ export const Results = ({ answers, onRestart }: Props) => {
           score={score}
           usesAi={answers.aiUsage === "Yes, regularly" || answers.aiUsage === "Sometimes"}
         />
+
+        {match?.job_market_signal?.display_message && (
+          <section
+            className="mt-4 rounded-xl p-4 sm:p-5 flex items-start gap-4 animate-fade-in"
+            style={{ backgroundColor: "hsl(var(--accent) / 0.10)" }}
+            aria-label="NZ market signal"
+          >
+            <div className="shrink-0 inline-flex h-9 w-9 items-center justify-center rounded-lg bg-accent/15 text-accent">
+              <BarChart2 className="h-5 w-5" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent">
+                NZ market signal
+              </p>
+              <p className="mt-1 text-[15px] leading-relaxed text-primary">
+                {match.job_market_signal.display_message}
+              </p>
+              <p className="mt-2 text-[11px] text-muted-foreground/80">
+                Source: SEEK NZ Employment Report, March 2026
+              </p>
+            </div>
+          </section>
+        )}
 
         <section className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-5">
           <InsightCard

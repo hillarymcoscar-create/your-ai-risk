@@ -39,12 +39,27 @@ let aliasInflight: Promise<AliasEntry[]> | null = null;
 // Lookup map: lowercased trimmed variant -> onet_title
 let aliasLookup: Map<string, string> | null = null;
 
+function fetchFreshJson<T>(url: string): Promise<T> {
+  const timestamp = Date.now();
+
+  return fetch(`${url}?t=${timestamp}`, {
+    cache: "no-store",
+    headers: {
+      "Cache-Control": "no-cache, no-store, must-revalidate",
+      Pragma: "no-cache",
+    },
+  }).then((r) => r.json());
+}
+
 export function loadOccupations(): Promise<Occupation[]> {
   if (cache) return Promise.resolve(cache);
   if (inflight) return inflight;
-  inflight = fetch(`${DATA_URL}?t=${Date.now()}`, { cache: "no-store" })
-    .then((r) => r.json())
+  inflight = fetchFreshJson<Occupation[]>(DATA_URL)
     .then((d: Occupation[]) => {
+      console.log(
+        "Soil and Plant Scientists score:",
+        d.find((o) => o.onet_code === "19-1013.00")?.risk_score,
+      );
       cache = d;
       return d;
     })
@@ -58,8 +73,7 @@ export function loadOccupations(): Promise<Occupation[]> {
 export function loadAliases(): Promise<AliasEntry[]> {
   if (aliasCache) return Promise.resolve(aliasCache);
   if (aliasInflight) return aliasInflight;
-  aliasInflight = fetch(`${ALIAS_URL}?t=${Date.now()}`, { cache: "no-store" })
-    .then((r) => r.json())
+  aliasInflight = fetchFreshJson<AliasFile | AliasEntry[]>(ALIAS_URL)
     .then((d: AliasFile | AliasEntry[]) => {
       const arr = Array.isArray(d) ? d : d.aliases ?? [];
       aliasCache = arr;

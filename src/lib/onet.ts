@@ -27,9 +27,9 @@ export type AliasEntry = {
 type AliasFile = { aliases: AliasEntry[] };
 
 const DATA_URL =
-  "https://raw.githubusercontent.com/hillarymcoscar-create/humanise-data/refs/heads/main/humanise-scores.json";
+  "https://cdn.jsdelivr.net/gh/hillarymcoscar-create/humanise-data@main/humanise-scores.json?v=3";
 const ALIAS_URL =
-  "https://raw.githubusercontent.com/hillarymcoscar-create/humanise-data/refs/heads/main/job-title-aliases.json";
+  "https://cdn.jsdelivr.net/gh/hillarymcoscar-create/humanise-data@main/job-title-aliases.json?v=3";
 
 let cache: Occupation[] | null = null;
 let inflight: Promise<Occupation[]> | null = null;
@@ -55,10 +55,8 @@ export function loadOccupations(): Promise<Occupation[]> {
   if (inflight) return inflight;
   inflight = fetchFreshJson<Occupation[]>(DATA_URL)
     .then((d: Occupation[]) => {
-      console.log(
-        "Soil and Plant Scientists score:",
-        d.find((o) => o.onet_code === "19-1013.00")?.risk_score,
-      );
+      const testOcc = d.find((o) => o.onet_code === "19-1013.00");
+      console.log("Soil and Plant Scientists risk_score:", testOcc?.risk_score);
       cache = d;
       return d;
     })

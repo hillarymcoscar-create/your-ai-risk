@@ -4,12 +4,14 @@ import { RiskGauge } from "@/components/humanise/RiskGauge";
 import { AlertTriangle, Shield, BarChart3, Mail, LineChart, Share2, RotateCcw } from "lucide-react";
 import {
   calculateRisk,
-  industryComparison,
-  protectiveSkills,
+  riskBand,
   riskSummary,
   tasksAtRisk,
+  protectiveSkills,
+  industryComparison,
   type QuizAnswers,
 } from "@/lib/humanise";
+import { useOccupations, findBestMatch, percentile, type Occupation } from "@/lib/onet";
 import { toast } from "sonner";
 
 type Props = {
@@ -17,12 +19,70 @@ type Props = {
   onRestart: () => void;
 };
 
+type Band = "Low" | "Moderate" | "High" | "Very High";
+
+const Q3_MOD: Record<string, number> = {
+  "Almost all of it": 5,
+  "About half": 0,
+  "Less than half": -10,
+  "Rarely - I work with my hands": -20,
+};
+const Q4_MOD: Record<string, number> = {
+  "Yes, regularly": -15,
+  "Sometimes": -5,
+  "I've tried but don't use them": 3,
+  "No, not at all": 8,
+};
+
+function bandFromScore(score: number): Band {
+  if (score <= 30) return "Low";
+  if (score <= 55) return "Moderate";
+  if (score <= 75) return "High";
+  return "Very High";
+}
+
+function normaliseBand(b: string | undefined): Band {
+  const v = (b ?? "").toLowerCase();
+  if (v.startsWith("very")) return "Very High";
+  if (v.startsWith("high")) return "High";
+  if (v.startsWith("mod") || v.startsWith("med")) return "Moderate";
+  if (v.startsWith("low")) return "Low";
+  return "Moderate";
+}
+
 export const Results = ({ answers, onRestart }: Props) => {
-  const score = calculateRisk(answers);
+  const occupations = useOccupations();
+  const match: Occupation | null = occupations ? findBestMatch(answers.jobTitle, occupations) : null;
+
+  const modifier = (Q3_MOD[answers.computerUse] ?? 0) + (Q4_MOD[answers.aiUsage] ?? 0);
+
+  let score: number;
+  let band: Band;
+  let tasks: string[];
+  let skills: string[];
+  let comparison: string;
+
+  if (match && occupations) {
+    const raw = match.risk_score + modifier;
+    score = Math.max(5, Math.min(95, Math.round(raw)));
+    band = bandFromScore(score);
+    // Keep dataset's band if modifier is 0 to honour source labelling
+    if (modifier === 0) band = normaliseBand(match.risk_band);
+    tasks = match.tasks_at_risk?.slice(0, 3) ?? [];
+    skills = match.protective_tasks?.slice(0, 3) ?? [];
+    const pct = percentile(score, occupations);
+    comparison = `Your role ranks in the ${pct}th percentile of 1,016 occupations analysed`;
+  } else {
+    // Fallback: industry-based scoring
+    score = calculateRisk(answers);
+    const legacyBand = riskBand(score);
+    band = legacyBand === "low" ? "Low" : legacyBand === "medium" ? "Moderate" : "High";
+    tasks = tasksAtRisk(answers);
+    skills = protectiveSkills(answers);
+    comparison = industryComparison(score, answers.industry);
+  }
+
   const summary = riskSummary(score);
-  const tasks = tasksAtRisk(answers);
-  const skills = protectiveSkills(answers);
-  const comparison = industryComparison(score, answers.industry);
 
   const handleShare = async () => {
     const text = `My AI automation risk score is ${score}% — find yours at Humanise.`;
@@ -54,7 +114,7 @@ export const Results = ({ answers, onRestart }: Props) => {
             Your automation risk score
           </p>
           <div className="mt-6 flex justify-center">
-            <RiskGauge score={score} />
+            <RiskGauge score={score} band={band} />
           </div>
           <p className="mt-8 text-xl sm:text-2xl font-medium text-primary max-w-2xl mx-auto leading-snug">
             {summary}
@@ -62,7 +122,7 @@ export const Results = ({ answers, onRestart }: Props) => {
           {answers.jobTitle && (
             <p className="mt-3 text-sm text-muted-foreground">
               {answers.jobTitle}
-              {answers.industry ? ` · ${answers.industry}` : ""}
+              {match ? ` · matched to "${match.title}"` : ""}
               {answers.country ? ` · ${answers.region ? `${answers.region}, ` : ""}${answers.country}` : ""}
             </p>
           )}
@@ -116,6 +176,10 @@ export const Results = ({ answers, onRestart }: Props) => {
             />
           </div>
         </section>
+
+        <p className="mt-16 text-center text-xs text-muted-foreground/80">
+          Powered by O*NET 30.2 — the same occupational database used by the US Department of Labor
+        </p>
       </main>
     </div>
   );

@@ -8,10 +8,13 @@ export type Occupation = {
   key_factors?: Record<string, number>;
   tasks_at_risk: string[];
   protective_tasks: string[];
-  job_market_signal?: {
+  job_market_signals?: {
+    nz_market?: string;
+    nz_yoy_change?: string;
+    source?: string;
     display_message?: string;
     [key: string]: unknown;
-  };
+  } | null;
 };
 
 export type AliasEntry = {

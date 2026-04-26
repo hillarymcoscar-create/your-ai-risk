@@ -184,7 +184,7 @@ export const Results = ({ answers, onRestart }: Props) => {
           usesAi={answers.aiUsage === "Yes, regularly" || answers.aiUsage === "Sometimes"}
         />
 
-        {match?.job_market_signal?.display_message && (
+        {match?.job_market_signals?.display_message && (
           <section
             className="mt-4 rounded-xl p-4 sm:p-5 flex items-start gap-4 animate-fade-in"
             style={{ backgroundColor: "hsl(var(--accent) / 0.10)" }}
@@ -198,11 +198,13 @@ export const Results = ({ answers, onRestart }: Props) => {
                 NZ market signal
               </p>
               <p className="mt-1 text-[15px] leading-relaxed text-primary">
-                {match.job_market_signal.display_message}
+                {match.job_market_signals.display_message}
               </p>
-              <p className="mt-2 text-[11px] text-muted-foreground/80">
-                Source: SEEK NZ Employment Report, March 2026
-              </p>
+              {match.job_market_signals.source && (
+                <p className="mt-2 text-[11px] text-muted-foreground/80">
+                  Source: {match.job_market_signals.source}
+                </p>
+              )}
             </div>
           </section>
         )}

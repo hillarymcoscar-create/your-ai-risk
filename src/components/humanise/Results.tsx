@@ -11,7 +11,7 @@ import {
   industryComparison,
   type QuizAnswers,
 } from "@/lib/humanise";
-import { useOccupations, findBestMatch, percentile, type Occupation } from "@/lib/onet";
+import { useOccupations, useAliases, findBestMatch, findByAlias, percentile, type Occupation } from "@/lib/onet";
 import { toast } from "sonner";
 
 type Props = {
@@ -52,7 +52,10 @@ function normaliseBand(b: string | undefined): Band {
 
 export const Results = ({ answers, onRestart }: Props) => {
   const occupations = useOccupations();
-  const match: Occupation | null = occupations ? findBestMatch(answers.jobTitle, occupations) : null;
+  useAliases(); // ensure aliases are loaded/cached
+  const match: Occupation | null = occupations
+    ? findByAlias(answers.jobTitle, occupations) ?? findBestMatch(answers.jobTitle, occupations)
+    : null;
 
   const modifier = (Q3_MOD[answers.computerUse] ?? 0) + (Q4_MOD[answers.aiUsage] ?? 0);
 
@@ -121,8 +124,8 @@ export const Results = ({ answers, onRestart }: Props) => {
           </p>
           {answers.jobTitle && (
             <p className="mt-3 text-sm text-muted-foreground">
-              {answers.jobTitle}
-              {match ? ` · matched to "${match.title}"` : ""}
+              {answers.jobTitle.trim()}
+              {match ? ` · matched to ${match.title}` : ""}
               {answers.country ? ` · ${answers.region ? `${answers.region}, ` : ""}${answers.country}` : ""}
             </p>
           )}

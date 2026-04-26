@@ -10,11 +10,27 @@ export type Occupation = {
   protective_tasks: string[];
 };
 
+export type AliasEntry = {
+  input_variants: string[];
+  onet_title: string;
+  onet_code?: string;
+  category?: string;
+};
+
+type AliasFile = { aliases: AliasEntry[] };
+
 const DATA_URL =
   "https://raw.githubusercontent.com/hillarymcoscar-create/humanise-data/refs/heads/main/humanise-scores.json";
+const ALIAS_URL =
+  "https://raw.githubusercontent.com/hillarymcoscar-create/humanise-data/refs/heads/main/job-title-aliases.json";
 
 let cache: Occupation[] | null = null;
 let inflight: Promise<Occupation[]> | null = null;
+
+let aliasCache: AliasEntry[] | null = null;
+let aliasInflight: Promise<AliasEntry[]> | null = null;
+// Lookup map: lowercased trimmed variant -> onet_title
+let aliasLookup: Map<string, string> | null = null;
 
 export function loadOccupations(): Promise<Occupation[]> {
   if (cache) return Promise.resolve(cache);
@@ -32,12 +48,62 @@ export function loadOccupations(): Promise<Occupation[]> {
   return inflight;
 }
 
+export function loadAliases(): Promise<AliasEntry[]> {
+  if (aliasCache) return Promise.resolve(aliasCache);
+  if (aliasInflight) return aliasInflight;
+  aliasInflight = fetch(ALIAS_URL)
+    .then((r) => r.json())
+    .then((d: AliasFile | AliasEntry[]) => {
+      const arr = Array.isArray(d) ? d : d.aliases ?? [];
+      aliasCache = arr;
+      const map = new Map<string, string>();
+      for (const entry of arr) {
+        for (const v of entry.input_variants ?? []) {
+          map.set(v.toLowerCase().trim(), entry.onet_title);
+        }
+      }
+      aliasLookup = map;
+      return arr;
+    })
+    .catch(() => {
+      aliasInflight = null;
+      return [] as AliasEntry[];
+    });
+  return aliasInflight;
+}
+
+export function loadAll() {
+  return Promise.all([loadOccupations(), loadAliases()]);
+}
+
 export function useOccupations() {
   const [data, setData] = useState<Occupation[] | null>(cache);
   useEffect(() => {
     if (!cache) loadOccupations().then(setData);
   }, []);
   return data;
+}
+
+export function useAliases() {
+  const [data, setData] = useState<AliasEntry[] | null>(aliasCache);
+  useEffect(() => {
+    if (!aliasCache) loadAliases().then(setData);
+  }, []);
+  return data;
+}
+
+/**
+ * Resolve a user-typed job title via the alias file (exact, case-insensitive).
+ * Returns the matching Occupation by exact onet_title lookup, or null.
+ */
+export function findByAlias(jobTitle: string, occupations: Occupation[]): Occupation | null {
+  if (!jobTitle || !aliasLookup || !occupations?.length) return null;
+  const key = jobTitle.toLowerCase().trim();
+  if (!key) return null;
+  const onetTitle = aliasLookup.get(key);
+  if (!onetTitle) return null;
+  const target = onetTitle.toLowerCase();
+  return occupations.find((o) => o.title.toLowerCase() === target) ?? null;
 }
 
 // Case-insensitive fuzzy matching: token overlap + substring boosts

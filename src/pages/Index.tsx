@@ -4,7 +4,7 @@ import { Quiz } from "@/components/humanise/Quiz";
 import { Calculating } from "@/components/humanise/Calculating";
 import { Results } from "@/components/humanise/Results";
 import type { QuizAnswers } from "@/lib/humanise";
-import { loadOccupations } from "@/lib/onet";
+import { loadAll } from "@/lib/onet";
 
 type Stage = "landing" | "quiz" | "calculating" | "results";
 
@@ -13,7 +13,7 @@ const Index = () => {
   const [answers, setAnswers] = useState<QuizAnswers | null>(null);
 
   useEffect(() => {
-    loadOccupations();
+    loadAll();
   }, []);
 
   if (stage === "landing") return <Landing onStart={() => setStage("quiz")} />;

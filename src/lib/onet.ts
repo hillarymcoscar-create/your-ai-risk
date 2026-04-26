@@ -41,14 +41,13 @@ let aliasLookup: Map<string, string> | null = null;
 
 function fetchFreshJson<T>(url: string): Promise<T> {
   const timestamp = Date.now();
-
-  return fetch(`${url}?t=${timestamp}`, {
-    cache: "no-store",
-    headers: {
-      "Cache-Control": "no-cache, no-store, must-revalidate",
-      Pragma: "no-cache",
-    },
-  }).then((r) => r.json());
+  // Note: do NOT send Cache-Control / Pragma request headers here.
+  // raw.githubusercontent.com does not allow them via CORS preflight,
+  // and the ?t= query param is sufficient to bust caches.
+  return fetch(`${url}?t=${timestamp}`, { cache: "no-store" }).then((r) => {
+    if (!r.ok) throw new Error(`Failed to fetch ${url}: ${r.status}`);
+    return r.json() as Promise<T>;
+  });
 }
 
 export function loadOccupations(): Promise<Occupation[]> {

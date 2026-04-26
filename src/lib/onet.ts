@@ -8,6 +8,10 @@ export type Occupation = {
   key_factors?: Record<string, number>;
   tasks_at_risk: string[];
   protective_tasks: string[];
+  job_market_signal?: {
+    display_message?: string;
+    [key: string]: unknown;
+  };
 };
 
 export type AliasEntry = {

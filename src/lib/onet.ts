@@ -58,7 +58,7 @@ export function loadOccupations(): Promise<Occupation[]> {
 export function loadAliases(): Promise<AliasEntry[]> {
   if (aliasCache) return Promise.resolve(aliasCache);
   if (aliasInflight) return aliasInflight;
-  aliasInflight = fetch(ALIAS_URL)
+  aliasInflight = fetch(`${ALIAS_URL}?t=${Date.now()}`, { cache: "no-store" })
     .then((r) => r.json())
     .then((d: AliasFile | AliasEntry[]) => {
       const arr = Array.isArray(d) ? d : d.aliases ?? [];

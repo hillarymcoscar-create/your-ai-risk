@@ -1,16 +1,32 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useState } from "react";
+import { Landing } from "@/components/humanise/Landing";
+import { Quiz } from "@/components/humanise/Quiz";
+import { Calculating } from "@/components/humanise/Calculating";
+import { Results } from "@/components/humanise/Results";
+import type { QuizAnswers } from "@/lib/humanise";
 
-// IMPORTANT: Fully REPLACE this with your own code
-const PlaceholderIndex = () => {
-  // PLACEHOLDER: Replace this entire return statement with the user's app.
-  // The inline background color is intentionally not part of the design system.
-  return (
-    <div className="flex min-h-screen items-center justify-center" style={{ backgroundColor: '#fcfbf8' }}>
-      <img data-lovable-blank-page-placeholder="REMOVE_THIS" src="/placeholder.svg" alt="Your app will live here!" />
-    </div>
-  );
+type Stage = "landing" | "quiz" | "calculating" | "results";
+
+const Index = () => {
+  const [stage, setStage] = useState<Stage>("landing");
+  const [answers, setAnswers] = useState<QuizAnswers | null>(null);
+
+  if (stage === "landing") return <Landing onStart={() => setStage("quiz")} />;
+  if (stage === "quiz")
+    return (
+      <Quiz
+        onExit={() => setStage("landing")}
+        onComplete={(a) => {
+          setAnswers(a);
+          setStage("calculating");
+        }}
+      />
+    );
+  if (stage === "calculating") return <Calculating onDone={() => setStage("results")} />;
+  if (stage === "results" && answers)
+    return <Results answers={answers} onRestart={() => { setAnswers(null); setStage("landing"); }} />;
+
+  return null;
 };
-
-const Index = PlaceholderIndex;
 
 export default Index;

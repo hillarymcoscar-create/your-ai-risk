@@ -295,6 +295,7 @@ export const Results = ({ answers, onRestart }: Props) => {
           industry={answers.industry}
           jobTitle={match?.title ?? answers.jobTitle}
           score={score}
+          onEmailCaptured={(email) => { void sendResultsEmail(email); }}
         />
 
         <section className="mt-12">
@@ -305,7 +306,7 @@ export const Results = ({ answers, onRestart }: Props) => {
               title="Get my full action plan"
               desc="Personalised steps emailed to you."
               cta="Email me the plan"
-              onClick={() => toast.success("Action plan — coming soon", { description: "We'll wire up email capture next." })}
+              onClick={() => setPlanOpen(true)}
               primary
             />
             <CtaCard

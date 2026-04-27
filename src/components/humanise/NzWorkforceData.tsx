@@ -86,8 +86,9 @@ const REGION_KEY: Record<string, string> = {
 };
 
 function pctLabel(pct: number): string {
+  if (pct === 0) return "were flat";
   const abs = Math.abs(pct).toFixed(1).replace(/\.0$/, "");
-  return pct >= 0 ? `grew ${abs}%` : `fell ${abs}%`;
+  return pct > 0 ? `grew ${abs}%` : `fell ${abs}%`;
 }
 
 type Props = {

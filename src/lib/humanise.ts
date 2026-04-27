@@ -8,18 +8,25 @@ export type QuizAnswers = {
 };
 
 export const INDUSTRIES = [
-  "Retail",
-  "Transport & Logistics",
-  "Finance & Accounting",
-  "Marketing & Advertising",
   "Admin & Clerical",
-  "Manufacturing",
-  "Legal",
-  "Healthcare",
+  "Agriculture & Primary Industries",
+  "Arts & Creative",
+  "Community & Social Services",
   "Construction",
   "Education",
-  "Technology",
+  "Finance & Accounting",
+  "Government & Public Sector",
+  "Healthcare",
   "Hospitality",
+  "Hospitality & Tourism",
+  "Legal",
+  "Manufacturing",
+  "Marketing & Advertising",
+  "Media & Communications",
+  "Real Estate",
+  "Retail",
+  "Technology",
+  "Transport & Logistics",
   "Other",
 ] as const;
 
@@ -80,6 +87,18 @@ export function calculateRisk(a: QuizAnswers): number {
   const lowRiskIndustries = ["Healthcare", "Construction", "Education", "Hospitality"];
   if (highRiskIndustries.includes(a.industry)) score += 18;
   if (lowRiskIndustries.includes(a.industry)) score -= 15;
+
+  // Modifiers for new industries (MBIE Jobs Online Dec 2025). Existing industries above unchanged.
+  const newIndustryMods: Record<string, number> = {
+    "Agriculture & Primary Industries": -8,
+    "Arts & Creative":                  -5,
+    "Community & Social Services":       2,
+    "Government & Public Sector":        0,
+    "Hospitality & Tourism":             0,
+    "Media & Communications":            3,
+    "Real Estate":                       0,
+  };
+  score += newIndustryMods[a.industry] ?? 0;
 
   const computerMap: Record<string, number> = {
     "Almost all of it": 22,

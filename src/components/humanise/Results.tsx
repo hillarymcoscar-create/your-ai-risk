@@ -222,7 +222,7 @@ export const Results = ({ answers, onRestart }: Props) => {
     }
   };
 
-
+  return (
     <div className="min-h-screen bg-background">
       <header className="container max-w-6xl py-6 flex items-center justify-between">
         <Logo onClick={onRestart} />

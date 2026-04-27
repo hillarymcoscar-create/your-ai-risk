@@ -156,6 +156,9 @@ export const UpskillSection = ({ skills, industry, jobTitle, score, onEmailCaptu
     if (!email.trim()) return;
     setSubmitting(true);
 
+    // Fire-and-forget: send the score + Career Insight email too
+    onEmailCaptured?.(email.trim());
+
     try {
       let pack: UpskillPack | null = null;
 

@@ -119,7 +119,9 @@ export const Results = ({ answers, onRestart }: Props) => {
     });
   }
 
-  const modifier = (Q3_MOD[answers.computerUse] ?? 0) + (Q4_MOD[answers.aiUsage] ?? 0);
+  const rawModifier = (Q3_MOD[answers.computerUse] ?? 0) + (Q4_MOD[answers.aiUsage] ?? 0);
+  // Cap modifier at ±15 so quiz answers personalise without overwhelming the O*NET base score
+  const modifier = Math.max(-15, Math.min(15, rawModifier));
 
   let score: number;
   let band: Band;

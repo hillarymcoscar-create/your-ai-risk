@@ -17,7 +17,6 @@ export const INDUSTRIES = [
   "Finance & Accounting",
   "Government & Public Sector",
   "Healthcare",
-  "Hospitality",
   "Hospitality & Tourism",
   "Legal",
   "Manufacturing",
@@ -84,7 +83,7 @@ export function calculateRisk(a: QuizAnswers): number {
   let score = 35;
 
   const highRiskIndustries = ["Admin & Clerical", "Retail", "Finance & Accounting", "Marketing & Advertising", "Transport & Logistics"];
-  const lowRiskIndustries = ["Healthcare", "Construction", "Education", "Hospitality"];
+  const lowRiskIndustries = ["Healthcare", "Construction", "Education"];
   if (highRiskIndustries.includes(a.industry)) score += 18;
   if (lowRiskIndustries.includes(a.industry)) score -= 15;
 
@@ -94,7 +93,7 @@ export function calculateRisk(a: QuizAnswers): number {
     "Arts & Creative":                  -5,
     "Community & Social Services":       2,
     "Government & Public Sector":        0,
-    "Hospitality & Tourism":             0,
+    "Hospitality & Tourism":            -15,
     "Media & Communications":            3,
     "Real Estate":                       0,
   };

@@ -4,6 +4,7 @@ import { Logo } from "@/components/humanise/Logo";
 import { RiskGauge } from "@/components/humanise/RiskGauge";
 import { HonestPicture } from "@/components/humanise/HonestPicture";
 import { NzMarketSignal } from "@/components/humanise/NzMarketSignal";
+import { NzWorkforceData } from "@/components/humanise/NzWorkforceData";
 import { AlertTriangle, Shield, BarChart3, Mail, LineChart, Share2, RotateCcw } from "lucide-react";
 import {
   calculateRisk,
@@ -212,6 +213,10 @@ export const Results = ({ answers, onRestart }: Props) => {
         <NzMarketSignal
           message={match?.job_market_signals?.display_message ?? null}
           source={match?.job_market_signals?.source ?? null}
+        />
+        <NzWorkforceData
+          onetCode={match?.onet_code}
+          region={answers.country === "New Zealand" ? answers.region : null}
         />
 
         <section className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-5">

@@ -137,9 +137,10 @@ type Props = {
   industry: string;
   jobTitle: string;
   score: number;
+  onEmailCaptured?: (email: string) => void;
 };
 
-export const UpskillSection = ({ skills, industry, jobTitle, score }: Props) => {
+export const UpskillSection = ({ skills, industry, jobTitle, score, onEmailCaptured }: Props) => {
   const [modalOpen, setModalOpen]     = useState(false);
   const [email, setEmail]             = useState("");
   const [submitting, setSubmitting]   = useState(false);

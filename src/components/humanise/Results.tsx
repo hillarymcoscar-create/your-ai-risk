@@ -329,6 +329,43 @@ export const Results = ({ answers, onRestart }: Props) => {
         <p className="mt-16 text-center text-xs text-muted-foreground/80">
           Powered by O*NET 30.2 and AI Forum NZ research — the same data used by NZ government and industry.
         </p>
+
+        <Dialog open={planOpen} onOpenChange={setPlanOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Email me my result</DialogTitle>
+              <DialogDescription>
+                We'll send your {score}% {band} Risk score and a personalised Career Insight for {match?.title ?? answers.jobTitle?.trim() || "your role"}.
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handlePlanSubmit} className="mt-2 space-y-4">
+              <Input
+                type="email"
+                required
+                placeholder="your@email.com"
+                value={planEmail}
+                onChange={(e) => setPlanEmail(e.target.value)}
+                disabled={planSubmitting}
+                className="h-12 rounded-xl"
+              />
+              <Button
+                type="submit"
+                disabled={planSubmitting || !planEmail.trim()}
+                className="w-full rounded-full font-semibold bg-cta text-accent-foreground hover:opacity-95 disabled:opacity-50"
+              >
+                {planSubmitting ? (
+                  <span className="flex items-center gap-2">
+                    <span className="h-4 w-4 rounded-full border-2 border-accent-foreground/30 border-t-accent-foreground animate-spin" />
+                    Sending…
+                  </span>
+                ) : (
+                  "Send me my result"
+                )}
+              </Button>
+              <p className="text-center text-[11px] text-muted-foreground">No spam. Unsubscribe anytime.</p>
+            </form>
+          </DialogContent>
+        </Dialog>
       </main>
     </div>
   );

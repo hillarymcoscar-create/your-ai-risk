@@ -335,7 +335,7 @@ export const Results = ({ answers, onRestart }: Props) => {
             <DialogHeader>
               <DialogTitle>Email me my result</DialogTitle>
               <DialogDescription>
-                We'll send your {score}% {band} Risk score and a personalised Career Insight for {match?.title ?? answers.jobTitle?.trim() || "your role"}.
+                We'll send your {score}% {band} Risk score and a personalised Career Insight for {match?.title ?? (answers.jobTitle?.trim() || "your role")}.
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handlePlanSubmit} className="mt-2 space-y-4">

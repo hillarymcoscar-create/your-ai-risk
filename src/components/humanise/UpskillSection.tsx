@@ -144,7 +144,6 @@ export const UpskillSection = ({ skills, industry, jobTitle, score, onEmailCaptu
   const [modalOpen, setModalOpen]     = useState(false);
   const [email, setEmail]             = useState("");
   const [submitting, setSubmitting]   = useState(false);
-  const [resources, setResources]     = useState<UpskillPack | null>(null);
 
   if (!skills.length) return null;
 
@@ -181,7 +180,6 @@ export const UpskillSection = ({ skills, industry, jobTitle, score, onEmailCaptu
         pack = data as UpskillPack;
       }
 
-      setResources(pack);
       setModalOpen(false);
 
       // Fire-and-forget: send email without blocking the UI
@@ -214,7 +212,7 @@ export const UpskillSection = ({ skills, industry, jobTitle, score, onEmailCaptu
           {skills.map((skill, i) => (
             <li key={i} className="py-3 first:pt-0 last:pb-0">
               <p className="text-sm font-medium text-primary">{skill}</p>
-              <div className="mt-1.5 flex flex-wrap gap-3">
+              <div className="mt-1.5">
                 <a
                   href={`https://www.linkedin.com/learning/search?keywords=${encodeURIComponent(skill)}`}
                   target="_blank"
@@ -223,24 +221,6 @@ export const UpskillSection = ({ skills, industry, jobTitle, score, onEmailCaptu
                 >
                   <ExternalLink className="h-3 w-3" />
                   LinkedIn Learning
-                </a>
-                <a
-                  href={`https://www.coursera.org/search?query=${encodeURIComponent(skill)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-xs font-medium text-accent hover:underline"
-                >
-                  <ExternalLink className="h-3 w-3" />
-                  Coursera
-                </a>
-                <a
-                  href="https://www.careers.govt.nz/jobs-database/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-xs font-medium text-accent hover:underline"
-                >
-                  <ExternalLink className="h-3 w-3" />
-                  Careers NZ
                 </a>
               </div>
             </li>
@@ -263,8 +243,7 @@ export const UpskillSection = ({ skills, industry, jobTitle, score, onEmailCaptu
           </Button>
         </div>
 
-        {/* Inline resource display after submission */}
-        {resources && <PackDisplay pack={resources} industry={industry} />}
+
       </div>
 
       {/* Paid tier */}

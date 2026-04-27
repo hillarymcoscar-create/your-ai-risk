@@ -184,10 +184,17 @@ export const UpskillSection = ({ skills, industry, jobTitle, score, onEmailCaptu
       setResources(pack);
       setModalOpen(false);
 
+      // Fire-and-forget: send email without blocking the UI
+      supabase.functions
+        .invoke("send-email", {
+          body: { to: email.trim(), industry, jobTitle, pack },
+        })
+        .catch((err) => console.warn("send-email failed silently:", err));
+
       const successMsg = isCurated
         ? `Check your inbox — your ${displayIndustry} upskill pack is on its way.`
         : `Check your inbox — your personalised upskill pack is on its way.`;
-      toast.success(successMsg, { description: "Email delivery coming soon — resources are shown below." });
+      toast.success(successMsg);
     } catch {
       toast.error("Couldn't load your upskill pack right now. Please try again shortly.");
     } finally {

@@ -185,7 +185,44 @@ export const Results = ({ answers, onRestart }: Props) => {
     }
   };
 
-  return (
+  const sendResultsEmail = async (email: string) => {
+    const trimmed = email.trim();
+    if (!trimmed) return false;
+    try {
+      const { data, error } = await supabase.functions.invoke("send-results-email", {
+        body: {
+          email: trimmed,
+          jobTitle: answers.jobTitle?.trim() || "your role",
+          matchedTitle: match?.title ?? null,
+          score,
+          industry: answers.industry,
+        },
+      });
+      if (error) throw new Error(error.message);
+      if (data?.error) throw new Error(data.error);
+      return true;
+    } catch (e) {
+      console.error("send-results-email failed", e);
+      return false;
+    }
+  };
+
+  const handlePlanSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!planEmail.trim()) return;
+    setPlanSubmitting(true);
+    const ok = await sendResultsEmail(planEmail);
+    setPlanSubmitting(false);
+    if (ok) {
+      setPlanOpen(false);
+      setPlanEmail("");
+      toast.success("Check your inbox — your result and Career Insight are on the way.");
+    } else {
+      toast.error("Couldn't send the email right now. Please try again shortly.");
+    }
+  };
+
+
     <div className="min-h-screen bg-background">
       <header className="container max-w-6xl py-6 flex items-center justify-between">
         <Logo onClick={onRestart} />

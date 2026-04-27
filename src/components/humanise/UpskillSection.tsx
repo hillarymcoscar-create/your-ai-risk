@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import type { AnzscoGroupData } from "@/lib/nzWorkforceUtils";
 
 // ── Types ─────────────────────────────────────────────────────────────
 
@@ -136,11 +137,23 @@ type Props = {
   skills: string[];
   industry: string;
   jobTitle: string;
+  matchedTitle?: string | null;
   score: number;
+  riskBand?: string;
+  honestPicture?: string;
+  nzMarketSignalMsg?: string;
+  nzMarketSignalSrc?: string;
+  nzData?: AnzscoGroupData | null;
+  tasksAtRisk?: string[];
+  region?: string;
   onEmailCaptured?: (email: string) => void;
 };
 
-export const UpskillSection = ({ skills, industry, jobTitle, score, onEmailCaptured }: Props) => {
+export const UpskillSection = ({
+  skills, industry, jobTitle, matchedTitle, score, riskBand,
+  honestPicture, nzMarketSignalMsg, nzMarketSignalSrc, nzData,
+  tasksAtRisk, region, onEmailCaptured,
+}: Props) => {
   const [modalOpen, setModalOpen]     = useState(false);
   const [email, setEmail]             = useState("");
   const [submitting, setSubmitting]   = useState(false);
@@ -185,7 +198,22 @@ export const UpskillSection = ({ skills, industry, jobTitle, score, onEmailCaptu
       // Fire-and-forget: send email without blocking the UI
       supabase.functions
         .invoke("send-email", {
-          body: { to: email.trim(), industry, jobTitle, pack },
+          body: {
+            to: email.trim(), industry, jobTitle, matchedTitle: matchedTitle ?? null,
+            riskScore: score, riskBand: riskBand ?? "",
+            honestPicture: honestPicture ?? "",
+            nzMarketSignalMsg: nzMarketSignalMsg ?? "",
+            nzMarketSignalSrc: nzMarketSignalSrc ?? "",
+            mbieGroup: nzData?.group ?? "",
+            mbieAnnualChange: nzData?.annual_change_pct ?? null,
+            mbieRegion: region ?? "",
+            mbieRegionalChange: nzData?.regional_change ?? null,
+            statsnzThousands: nzData?.employed_thousands ?? null,
+            statsnzShare: nzData?.nz_workforce_share_pct ?? null,
+            tasksAtRisk: tasksAtRisk ?? [],
+            protectiveSkills: skills,
+            pack,
+          },
         })
         .catch((err) => console.warn("send-email failed silently:", err));
 

@@ -25,6 +25,7 @@ import {
   type QuizAnswers,
 } from "@/lib/humanise";
 import { useOccupations, useAliases, findBestMatch, findByAlias, percentile, type Occupation } from "@/lib/onet";
+import { getAnzscoGroupData } from "@/lib/nzWorkforceUtils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -105,7 +106,7 @@ function normaliseBand(b: string | undefined): Band {
 
 export const Results = ({ answers, onRestart }: Props) => {
   const occupations = useOccupations();
-  const [aiTasks, setAiTasks] = useState<{ tasks_at_risk: string[]; protective_tasks: string[] } | null>(null);
+  const [aiTasks, setAiTasks] = useState<{ tasks_at_risk: string[]; protective_tasks: string[]; honest_picture?: string } | null>(null);
   const [planOpen, setPlanOpen] = useState(false);
   const [planEmail, setPlanEmail] = useState("");
   const [planSubmitting, setPlanSubmitting] = useState(false);
@@ -185,6 +186,13 @@ export const Results = ({ answers, onRestart }: Props) => {
     }
   };
 
+  const nzData = getAnzscoGroupData(
+    match?.onet_code,
+    answers.country === "New Zealand" ? answers.region : null
+  );
+  const activeSkills = aiTasks?.protective_tasks?.length ? aiTasks.protective_tasks : skills;
+  const activeTasks  = aiTasks?.tasks_at_risk?.length  ? aiTasks.tasks_at_risk  : tasks;
+
   const sendResultsEmail = async (email: string) => {
     const trimmed = email.trim();
     if (!trimmed) return false;
@@ -192,10 +200,22 @@ export const Results = ({ answers, onRestart }: Props) => {
       const { data, error } = await supabase.functions.invoke("send-results-email", {
         body: {
           email: trimmed,
-          jobTitle: answers.jobTitle?.trim() || "your role",
-          matchedTitle: match?.title ?? null,
+          jobTitle:            answers.jobTitle?.trim() || "your role",
+          matchedTitle:        match?.title ?? null,
           score,
-          industry: answers.industry,
+          riskBand:            band,
+          industry:            answers.industry,
+          honestPicture:       aiTasks?.honest_picture ?? "",
+          nzMarketSignalMsg:   match?.job_market_signals?.display_message ?? "",
+          nzMarketSignalSrc:   match?.job_market_signals?.source ?? "",
+          mbieGroup:           nzData?.group ?? "",
+          mbieAnnualChange:    nzData?.annual_change_pct ?? null,
+          mbieRegion:          answers.region ?? "",
+          mbieRegionalChange:  nzData?.regional_change ?? null,
+          statsnzThousands:    nzData?.employed_thousands ?? null,
+          statsnzShare:        nzData?.nz_workforce_share_pct ?? null,
+          tasksAtRisk:         activeTasks,
+          protectiveSkills:    activeSkills,
         },
       });
       if (error) throw new Error(error.message);
@@ -291,10 +311,18 @@ export const Results = ({ answers, onRestart }: Props) => {
         </section>
 
         <UpskillSection
-          skills={aiTasks?.protective_tasks?.length ? aiTasks.protective_tasks : skills}
+          skills={activeSkills}
           industry={answers.industry}
           jobTitle={match?.title ?? answers.jobTitle}
+          matchedTitle={match?.title ?? null}
           score={score}
+          riskBand={band}
+          honestPicture={aiTasks?.honest_picture ?? ""}
+          nzMarketSignalMsg={match?.job_market_signals?.display_message ?? ""}
+          nzMarketSignalSrc={match?.job_market_signals?.source ?? ""}
+          nzData={nzData}
+          tasksAtRisk={activeTasks}
+          region={answers.region ?? ""}
           onEmailCaptured={(email) => { void sendResultsEmail(email); }}
         />
 

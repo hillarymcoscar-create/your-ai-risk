@@ -5,7 +5,8 @@ import { RiskGauge } from "@/components/humanise/RiskGauge";
 import { HonestPicture } from "@/components/humanise/HonestPicture";
 import { NzMarketSignal } from "@/components/humanise/NzMarketSignal";
 import { NzWorkforceData } from "@/components/humanise/NzWorkforceData";
-import { AlertTriangle, Shield, BarChart3, Mail, LineChart, Share2, RotateCcw, ExternalLink } from "lucide-react";
+import { UpskillSection } from "@/components/humanise/UpskillSection";
+import { AlertTriangle, Shield, BarChart3, Mail, LineChart, Share2, RotateCcw } from "lucide-react";
 import {
   calculateRisk,
   riskBand,
@@ -242,7 +243,9 @@ export const Results = ({ answers, onRestart }: Props) => {
 
         <UpskillSection
           skills={aiTasks?.protective_tasks?.length ? aiTasks.protective_tasks : skills}
-          onActionPlan={() => toast.success("Action plan — coming soon", { description: "We'll wire up email capture next." })}
+          industry={answers.industry}
+          jobTitle={match?.title ?? answers.jobTitle}
+          score={score}
         />
 
         <section className="mt-12">
@@ -313,83 +316,6 @@ const InsightCard = ({
     </ul>
   </div>
 );
-
-const UpskillSection = ({
-  skills,
-  onActionPlan,
-}: {
-  skills: string[];
-  onActionPlan: () => void;
-}) => {
-  if (!skills.length) return null;
-  return (
-    <section className="mt-12">
-      <h2 className="text-2xl font-semibold text-primary text-center">Ready to Upskill?</h2>
-
-      {/* Free tier */}
-      <div className="mt-6 rounded-2xl border border-border bg-card p-6 shadow-soft">
-        <h3 className="font-semibold text-primary">Your 3 protective skills to build</h3>
-        <ul className="mt-4 divide-y divide-border">
-          {skills.map((skill, i) => (
-            <li key={i} className="py-3 first:pt-0 last:pb-0">
-              <p className="text-sm font-medium text-primary">{skill}</p>
-              <div className="mt-1.5 flex flex-wrap gap-3">
-                <a
-                  href={`https://www.linkedin.com/learning/search?keywords=${encodeURIComponent(skill)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-xs font-medium text-accent hover:underline"
-                >
-                  <ExternalLink className="h-3 w-3" />
-                  LinkedIn Learning
-                </a>
-                <a
-                  href={`https://www.coursera.org/search?query=${encodeURIComponent(skill)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-xs font-medium text-accent hover:underline"
-                >
-                  <ExternalLink className="h-3 w-3" />
-                  Coursera
-                </a>
-                <a
-                  href="https://www.careers.govt.nz/jobs-database/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-xs font-medium text-accent hover:underline"
-                >
-                  <ExternalLink className="h-3 w-3" />
-                  Careers NZ
-                </a>
-              </div>
-            </li>
-          ))}
-        </ul>
-        <p className="mt-3 text-xs text-muted-foreground">Free and paid options available</p>
-      </div>
-
-      {/* Paid tier */}
-      <div className="mt-4 rounded-2xl border border-accent/30 bg-accent/5 p-6">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <h3 className="font-semibold text-primary">Want a full 12-month action plan?</h3>
-          <span className="shrink-0 inline-flex items-center rounded-full bg-accent/15 px-3 py-1 text-xs font-semibold text-accent">
-            $29 NZD — one time
-          </span>
-        </div>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Get a personalised reskilling roadmap for your role — specific courses, skills to prioritise, and a
-          month-by-month plan to stay ahead of AI.
-        </p>
-        <Button
-          onClick={onActionPlan}
-          className="mt-5 w-full rounded-full font-semibold bg-cta text-accent-foreground hover:opacity-95"
-        >
-          Get my full action plan
-        </Button>
-      </div>
-    </section>
-  );
-};
 
 const CtaCard = ({
   icon, title, desc, cta, onClick, primary,

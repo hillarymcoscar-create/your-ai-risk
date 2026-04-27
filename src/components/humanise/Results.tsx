@@ -1,5 +1,13 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Logo } from "@/components/humanise/Logo";
 import { RiskGauge } from "@/components/humanise/RiskGauge";
 import { HonestPicture } from "@/components/humanise/HonestPicture";
@@ -17,6 +25,7 @@ import {
   type QuizAnswers,
 } from "@/lib/humanise";
 import { useOccupations, useAliases, findBestMatch, findByAlias, percentile, type Occupation } from "@/lib/onet";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 type Props = {
@@ -97,6 +106,9 @@ function normaliseBand(b: string | undefined): Band {
 export const Results = ({ answers, onRestart }: Props) => {
   const occupations = useOccupations();
   const [aiTasks, setAiTasks] = useState<{ tasks_at_risk: string[]; protective_tasks: string[] } | null>(null);
+  const [planOpen, setPlanOpen] = useState(false);
+  const [planEmail, setPlanEmail] = useState("");
+  const [planSubmitting, setPlanSubmitting] = useState(false);
   useAliases(); // ensure aliases are loaded/cached
   const SCORE_OVERRIDES: Record<string, { risk_score: number; risk_band: string }> = {
     "19-1013.00": { risk_score: 38, risk_band: "Moderate" },
@@ -173,6 +185,43 @@ export const Results = ({ answers, onRestart }: Props) => {
     }
   };
 
+  const sendResultsEmail = async (email: string) => {
+    const trimmed = email.trim();
+    if (!trimmed) return false;
+    try {
+      const { data, error } = await supabase.functions.invoke("send-results-email", {
+        body: {
+          email: trimmed,
+          jobTitle: answers.jobTitle?.trim() || "your role",
+          matchedTitle: match?.title ?? null,
+          score,
+          industry: answers.industry,
+        },
+      });
+      if (error) throw new Error(error.message);
+      if (data?.error) throw new Error(data.error);
+      return true;
+    } catch (e) {
+      console.error("send-results-email failed", e);
+      return false;
+    }
+  };
+
+  const handlePlanSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!planEmail.trim()) return;
+    setPlanSubmitting(true);
+    const ok = await sendResultsEmail(planEmail);
+    setPlanSubmitting(false);
+    if (ok) {
+      setPlanOpen(false);
+      setPlanEmail("");
+      toast.success("Check your inbox — your result and Career Insight are on the way.");
+    } else {
+      toast.error("Couldn't send the email right now. Please try again shortly.");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <header className="container max-w-6xl py-6 flex items-center justify-between">
@@ -246,6 +295,7 @@ export const Results = ({ answers, onRestart }: Props) => {
           industry={answers.industry}
           jobTitle={match?.title ?? answers.jobTitle}
           score={score}
+          onEmailCaptured={(email) => { void sendResultsEmail(email); }}
         />
 
         <section className="mt-12">
@@ -256,7 +306,7 @@ export const Results = ({ answers, onRestart }: Props) => {
               title="Get my full action plan"
               desc="Personalised steps emailed to you."
               cta="Email me the plan"
-              onClick={() => toast.success("Action plan — coming soon", { description: "We'll wire up email capture next." })}
+              onClick={() => setPlanOpen(true)}
               primary
             />
             <CtaCard
@@ -279,6 +329,43 @@ export const Results = ({ answers, onRestart }: Props) => {
         <p className="mt-16 text-center text-xs text-muted-foreground/80">
           Powered by O*NET 30.2 and AI Forum NZ research — the same data used by NZ government and industry.
         </p>
+
+        <Dialog open={planOpen} onOpenChange={setPlanOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Email me my result</DialogTitle>
+              <DialogDescription>
+                We'll send your {score}% {band} Risk score and a personalised Career Insight for {match?.title ?? (answers.jobTitle?.trim() || "your role")}.
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handlePlanSubmit} className="mt-2 space-y-4">
+              <Input
+                type="email"
+                required
+                placeholder="your@email.com"
+                value={planEmail}
+                onChange={(e) => setPlanEmail(e.target.value)}
+                disabled={planSubmitting}
+                className="h-12 rounded-xl"
+              />
+              <Button
+                type="submit"
+                disabled={planSubmitting || !planEmail.trim()}
+                className="w-full rounded-full font-semibold bg-cta text-accent-foreground hover:opacity-95 disabled:opacity-50"
+              >
+                {planSubmitting ? (
+                  <span className="flex items-center gap-2">
+                    <span className="h-4 w-4 rounded-full border-2 border-accent-foreground/30 border-t-accent-foreground animate-spin" />
+                    Sending…
+                  </span>
+                ) : (
+                  "Send me my result"
+                )}
+              </Button>
+              <p className="text-center text-[11px] text-muted-foreground">No spam. Unsubscribe anytime.</p>
+            </form>
+          </DialogContent>
+        </Dialog>
       </main>
     </div>
   );

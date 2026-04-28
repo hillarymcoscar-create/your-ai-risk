@@ -28,7 +28,9 @@ type Payload = {
   statsnzShare?: number | null;
   tasksAtRisk?: string[];
   protectiveSkills?: string[];
-  pack: UpskillPack;
+  pack?: UpskillPack;
+  html?: string;
+  subject?: string;
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────
@@ -296,8 +298,8 @@ Deno.serve(async (req) => {
     const body = await req.json() as Payload;
     const { to, industry, jobTitle, pack } = body;
 
-    if (!to || !pack) {
-      return new Response(JSON.stringify({ error: "to and pack are required" }), {
+    if (!to || (!pack && !body.html)) {
+      return new Response(JSON.stringify({ error: "to and either pack or html are required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -327,8 +329,8 @@ Deno.serve(async (req) => {
     await sendEmail({
       from: FROM,
       to: [to],
-      subject: `Your ${industry || "personalised"} upskill pack — from Humanise`,
-      html: buildEmail(body),
+      subject: body.subject ?? `Your ${industry || "personalised"} upskill pack — from Humanise`,
+      html: body.html ?? buildEmail(body),
     });
 
     // 2. Notification to Hillary

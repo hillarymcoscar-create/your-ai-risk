@@ -204,13 +204,14 @@ Deno.serve(async (req) => {
 
     const body = await req.json().catch(() => ({}));
     const {
-      email, jobTitle, matchedTitle, score, riskBand = "Moderate", industry,
+      email, to, jobTitle, matchedTitle, score, riskBand = "Moderate", industry,
       honestPicture, nzMarketSignalMsg, nzMarketSignalSrc,
       mbieGroup, mbieAnnualChange, mbieRegion, mbieRegionalChange,
       statsnzThousands, statsnzShare, tasksAtRisk, protectiveSkills,
+      html: prebuiltHtml, subject: prebuiltSubject,
     } = body ?? {};
 
-    const emailStr = typeof email === "string" ? email.trim() : "";
+    const emailStr = typeof (email ?? to) === "string" ? String(email ?? to).trim() : "";
     const jobStr   = typeof jobTitle === "string" ? jobTitle.trim() : "";
     const scoreNum = typeof score === "number" ? score : Number(score);
 
@@ -231,24 +232,29 @@ Deno.serve(async (req) => {
     }
 
     const finalScore = Math.round(scoreNum);
-    const html = buildHtml({
-      jobTitle: jobStr,
-      matchedTitle: typeof matchedTitle === "string" ? matchedTitle : null,
-      score: finalScore,
-      riskBand: typeof riskBand === "string" ? riskBand : "Moderate",
-      industry: typeof industry === "string" ? industry : "",
-      honestPicture: typeof honestPicture === "string" ? honestPicture : "",
-      nzMarketSignalMsg: typeof nzMarketSignalMsg === "string" ? nzMarketSignalMsg : "",
-      nzMarketSignalSrc: typeof nzMarketSignalSrc === "string" ? nzMarketSignalSrc : "",
-      mbieGroup: typeof mbieGroup === "string" ? mbieGroup : "",
-      mbieAnnualChange: typeof mbieAnnualChange === "number" ? mbieAnnualChange : null,
-      mbieRegion: typeof mbieRegion === "string" ? mbieRegion : "",
-      mbieRegionalChange: typeof mbieRegionalChange === "number" ? mbieRegionalChange : null,
-      statsnzThousands: typeof statsnzThousands === "number" ? statsnzThousands : null,
-      statsnzShare: typeof statsnzShare === "number" ? statsnzShare : null,
-      tasksAtRisk: Array.isArray(tasksAtRisk) ? tasksAtRisk : [],
-      protectiveSkills: Array.isArray(protectiveSkills) ? protectiveSkills : [],
-    });
+    const html = typeof prebuiltHtml === "string" && prebuiltHtml
+      ? prebuiltHtml
+      : buildHtml({
+          jobTitle: jobStr,
+          matchedTitle: typeof matchedTitle === "string" ? matchedTitle : null,
+          score: finalScore,
+          riskBand: typeof riskBand === "string" ? riskBand : "Moderate",
+          industry: typeof industry === "string" ? industry : "",
+          honestPicture: typeof honestPicture === "string" ? honestPicture : "",
+          nzMarketSignalMsg: typeof nzMarketSignalMsg === "string" ? nzMarketSignalMsg : "",
+          nzMarketSignalSrc: typeof nzMarketSignalSrc === "string" ? nzMarketSignalSrc : "",
+          mbieGroup: typeof mbieGroup === "string" ? mbieGroup : "",
+          mbieAnnualChange: typeof mbieAnnualChange === "number" ? mbieAnnualChange : null,
+          mbieRegion: typeof mbieRegion === "string" ? mbieRegion : "",
+          mbieRegionalChange: typeof mbieRegionalChange === "number" ? mbieRegionalChange : null,
+          statsnzThousands: typeof statsnzThousands === "number" ? statsnzThousands : null,
+          statsnzShare: typeof statsnzShare === "number" ? statsnzShare : null,
+          tasksAtRisk: Array.isArray(tasksAtRisk) ? tasksAtRisk : [],
+          protectiveSkills: Array.isArray(protectiveSkills) ? protectiveSkills : [],
+        });
+    const subject = typeof prebuiltSubject === "string" && prebuiltSubject
+      ? prebuiltSubject
+      : `Your Humanise result: ${finalScore}% ${riskBand} Risk`;
 
     const resendRes = await fetch(`${GATEWAY_URL}/emails`, {
       method: "POST",
@@ -260,7 +266,7 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         from: "Humanise <onboarding@resend.dev>",
         to: [emailStr],
-        subject: `Your Humanise result: ${finalScore}% ${riskBand} Risk`,
+        subject,
         html,
         text: `Humanise — ${finalScore}% ${riskBand} Risk\nFor: ${jobStr}`,
       }),

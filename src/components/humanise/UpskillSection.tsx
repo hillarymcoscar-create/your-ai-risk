@@ -188,10 +188,10 @@ export const UpskillSection = ({
         pack: pack as EmailPack | null,
       });
       supabase.functions
-        .invoke("send-email", {
-          body: { to: email.trim(), subject: emailSubject, html: emailHtml, jobTitle, industry, riskScore: score },
+        .invoke("send-results-email", {
+          body: { email: email.trim(), subject: emailSubject, html: emailHtml, jobTitle, industry, score, riskBand: riskBand ?? "Moderate" },
         })
-        .catch((err) => console.warn("send-email failed silently:", err));
+        .catch((err) => console.warn("send-results-email failed silently:", err));
 
       const successMsg = isCurated
         ? `Check your inbox — your ${displayIndustry} upskill pack is on its way.`

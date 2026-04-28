@@ -238,8 +238,8 @@ export const Results = ({ answers, onRestart }: Props) => {
         pack,
       });
 
-      const { data, error } = await supabase.functions.invoke("send-email", {
-        body: { to: trimmed, subject, html, jobTitle, industry, riskScore: score },
+      const { data, error } = await supabase.functions.invoke("send-results-email", {
+        body: { email: trimmed, subject, html, jobTitle, industry, score, riskBand: band },
       });
       if (error) throw new Error(error.message);
       if (data?.error) throw new Error(data.error);

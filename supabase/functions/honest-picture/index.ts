@@ -45,10 +45,11 @@ Country: New Zealand
 Automation risk score: ${score}%
 Regularly uses AI tools: ${usesAi ? "yes" : "no"}
 
-Return a JSON object with three fields:
+Return a JSON object with four fields:
 - "honest_picture": a 3-4 sentence paragraph explaining what AI can and cannot ACTUALLY do to this specific role right now. Reference real AI tools where relevant. Be honest, warm, and specific.
 - "tasks_at_risk": exactly 3 short action phrases (4-7 words each) describing the most automatable tasks for this specific role.
 - "protective_tasks": exactly 3 short action phrases (4-7 words each) describing what makes this role hard to fully automate.
+- "agent_note": name one specific AI agent tool currently being used for tasks in this occupation (choose the most relevant from: Microsoft Copilot, ChatGPT, Google Gemini, Make.com, or Manus) and give one concrete example of what it handles in this role. Keep to under 30 words. If the occupation is trades, healthcare, or other hands-on physical work, write "This role has strong natural protection from AI agents because [reason]" without naming a tool.
 
 All task phrases must be complete, specific to the role, and never end with a preposition, conjunction, or article.`;
 
@@ -73,8 +74,9 @@ All task phrases must be complete, specific to the role, and never end with a pr
               minItems: 3,
               maxItems: 3,
             },
+            agent_note: { type: "string" },
           },
-          required: ["honest_picture", "tasks_at_risk", "protective_tasks"],
+          required: ["honest_picture", "tasks_at_risk", "protective_tasks", "agent_note"],
           additionalProperties: false,
         },
       },
@@ -117,7 +119,7 @@ All task phrases must be complete, specific to the role, and never end with a pr
 
     const data = await resp.json();
     const msg = data.choices?.[0]?.message;
-    let parsed: { honest_picture?: string; tasks_at_risk?: string[]; protective_tasks?: string[] } = {};
+    let parsed: { honest_picture?: string; tasks_at_risk?: string[]; protective_tasks?: string[]; agent_note?: string } = {};
 
     const toolCall = msg?.tool_calls?.[0];
     if (toolCall?.function?.arguments) {
@@ -130,9 +132,10 @@ All task phrases must be complete, specific to the role, and never end with a pr
     const honest_picture = (parsed.honest_picture ?? "").trim();
     const tasks_at_risk = (parsed.tasks_at_risk ?? []).map(cleanTask).filter(Boolean).slice(0, 3);
     const protective_tasks = (parsed.protective_tasks ?? []).map(cleanTask).filter(Boolean).slice(0, 3);
+    const agent_note = (parsed.agent_note ?? "").trim();
 
     return new Response(
-      JSON.stringify({ text: honest_picture, honest_picture, tasks_at_risk, protective_tasks }),
+      JSON.stringify({ text: honest_picture, honest_picture, tasks_at_risk, protective_tasks, agent_note }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (e) {

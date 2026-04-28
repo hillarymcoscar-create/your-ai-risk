@@ -6,7 +6,7 @@ type Props = {
   industry: string;
   score: number;
   usesAi: boolean;
-  onTasks?: (tasks: { tasks_at_risk: string[]; protective_tasks: string[]; honest_picture?: string }) => void;
+  onTasks?: (tasks: { tasks_at_risk: string[]; protective_tasks: string[]; honest_picture?: string; agent_note?: string }) => void;
 };
 
 export const HonestPicture = ({ jobTitle, industry, score, usesAi, onTasks }: Props) => {
@@ -37,6 +37,7 @@ export const HonestPicture = ({ jobTitle, industry, score, usesAi, onTasks }: Pr
               tasks_at_risk: data?.tasks_at_risk ?? [],
               protective_tasks: data?.protective_tasks ?? [],
               honest_picture: data?.honest_picture ?? data?.text ?? "",
+              agent_note: data?.agent_note ?? "",
             });
           }
         }

@@ -119,7 +119,7 @@ function normaliseBand(b: string | undefined): Band {
 
 export const Results = ({ answers, onRestart }: Props) => {
   const occupations = useOccupations();
-  const [aiTasks, setAiTasks] = useState<{ tasks_at_risk: string[]; protective_tasks: string[]; honest_picture?: string } | null>(null);
+  const [aiTasks, setAiTasks] = useState<{ tasks_at_risk: string[]; protective_tasks: string[]; honest_picture?: string; agent_note?: string } | null>(null);
   const [planOpen, setPlanOpen] = useState(false);
   const [planEmail, setPlanEmail] = useState("");
   const [planSubmitting, setPlanSubmitting] = useState(false);
@@ -317,6 +317,8 @@ export const Results = ({ answers, onRestart }: Props) => {
           onTasks={setAiTasks}
         />
 
+        <AgentWatch agenticCapped={agenticCapped} agentNote={aiTasks?.agent_note} />
+
         <NzMarketSignal
           message={match?.job_market_signals?.display_message ?? null}
           source={match?.job_market_signals?.source ?? null}
@@ -433,6 +435,41 @@ export const Results = ({ answers, onRestart }: Props) => {
         </Dialog>
       </main>
     </div>
+  );
+};
+
+function agentExposure(capped: number): { label: string; color: string } {
+  if (capped >= 10) return { label: "HIGH AGENT EXPOSURE",     color: "#DC2626" };
+  if (capped >= 4)  return { label: "MODERATE AGENT EXPOSURE", color: "#D97706" };
+  if (capped >= -3) return { label: "LOW AGENT EXPOSURE",      color: "#059669" };
+  return               { label: "MINIMAL AGENT EXPOSURE",   color: "#059669" };
+}
+
+const AgentWatch = ({ agenticCapped, agentNote }: { agenticCapped: number; agentNote?: string }) => {
+  const { label, color } = agentExposure(agenticCapped);
+  return (
+    <section
+      className="mt-8 rounded-2xl bg-card border border-border shadow-soft p-6 sm:p-7"
+      style={{ borderLeft: "4px solid #00B5A4" }}
+    >
+      <p className="text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: "#00B5A4" }}>
+        🤖 Agent Watch
+      </p>
+      <p className="mt-3 text-[15px] text-muted-foreground leading-relaxed">
+        AI agents handle entire task sequences without human input. Here's what's targeting roles like yours right now.
+      </p>
+      <span
+        className="mt-4 inline-block rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-[0.1em] text-white"
+        style={{ background: color }}
+      >
+        {label}
+      </span>
+      {agentNote && (
+        <p className="mt-4 text-[15px] leading-relaxed text-primary">
+          <strong>Agent note:</strong> {agentNote}
+        </p>
+      )}
+    </section>
   );
 };
 

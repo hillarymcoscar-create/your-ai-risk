@@ -28,6 +28,7 @@ import { useOccupations, useAliases, findBestMatch, findByAlias, percentile, typ
 import { getAnzscoGroupData } from "@/lib/nzWorkforceUtils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { buildEmailHtml, CURATED_INDUSTRIES, CURATED_URL, type EmailPack } from "@/lib/emailTemplate";
 
 type Props = {
   answers: QuizAnswers;
@@ -197,26 +198,48 @@ export const Results = ({ answers, onRestart }: Props) => {
     const trimmed = email.trim();
     if (!trimmed) return false;
     try {
-      const { data, error } = await supabase.functions.invoke("send-results-email", {
-        body: {
-          email: trimmed,
-          jobTitle:            answers.jobTitle?.trim() || "your role",
-          matchedTitle:        match?.title ?? null,
-          score,
-          riskBand:            band,
-          industry:            answers.industry,
-          honestPicture:       aiTasks?.honest_picture ?? "",
-          nzMarketSignalMsg:   match?.job_market_signals?.display_message ?? "",
-          nzMarketSignalSrc:   match?.job_market_signals?.source ?? "",
-          mbieGroup:           nzData?.group ?? "",
-          mbieAnnualChange:    nzData?.annual_change_pct ?? null,
-          mbieRegion:          answers.region ?? "",
-          mbieRegionalChange:  nzData?.regional_change ?? null,
-          statsnzThousands:    nzData?.employed_thousands ?? null,
-          statsnzShare:        nzData?.nz_workforce_share_pct ?? null,
-          tasksAtRisk:         activeTasks,
-          protectiveSkills:    activeSkills,
-        },
+      const jobTitle   = answers.jobTitle?.trim() || "your role";
+      const industry   = answers.industry;
+
+      // Fetch curated pack (or Claude fallback) for section 8
+      let pack: EmailPack | null = null;
+      if (CURATED_INDUSTRIES.has(industry)) {
+        const resp = await fetch(`${CURATED_URL}?t=${Date.now()}`).catch(() => null);
+        if (resp?.ok) {
+          const data = await resp.json().catch(() => ({}));
+          pack = (data as Record<string, EmailPack>)[industry] ?? null;
+        }
+      }
+      if (!pack) {
+        const { data } = await supabase.functions.invoke("upskill-pack", {
+          body: { jobTitle, industry, score },
+        }).catch(() => ({ data: null }));
+        pack = data as EmailPack | null;
+      }
+
+      const subject = `Your Humanise result — ${jobTitle} · ${score}% ${band}`;
+      const html = buildEmailHtml({
+        jobTitle,
+        matchedTitle:        match?.title ?? null,
+        industry,
+        riskScore:           score,
+        riskBand:            band,
+        honestPicture:       aiTasks?.honest_picture ?? "",
+        nzMarketSignal:      match?.job_market_signals?.display_message ?? "",
+        nzMarketSignalSource: match?.job_market_signals?.source ?? "",
+        mbieGroup:           nzData?.group ?? "",
+        mbieAnnualChange:    nzData?.annual_change_pct ?? null,
+        mbieRegion:          answers.region ?? "",
+        mbieRegionalChange:  nzData?.regional_change ?? null,
+        statsnzThousands:    nzData?.employed_thousands ?? null,
+        statsnzShare:        nzData?.nz_workforce_share_pct ?? null,
+        tasksAtRisk:         activeTasks,
+        protectiveSkills:    activeSkills,
+        pack,
+      });
+
+      const { data, error } = await supabase.functions.invoke("send-email", {
+        body: { to: trimmed, subject, html, jobTitle, industry, riskScore: score },
       });
       if (error) throw new Error(error.message);
       if (data?.error) throw new Error(data.error);

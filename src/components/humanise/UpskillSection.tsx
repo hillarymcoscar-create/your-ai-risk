@@ -1,17 +1,4 @@
-import { useState } from "react";
-import { ExternalLink, BookOpen } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-import type { AnzscoGroupData } from "@/lib/nzWorkforceUtils";
+import { buildEmailHtml, CURATED_INDUSTRIES, CURATED_URL, type EmailPack } from "@/lib/emailTemplate";
 
 // ── Types ─────────────────────────────────────────────────────────────
 
@@ -27,255 +14,6 @@ type UpskillPack = {
 };
 
 type CuratedData = Record<string, UpskillPack>;
-
-// ── Curated industry set ──────────────────────────────────────────────
-
-const CURATED_INDUSTRIES = new Set([
-  "Finance & Accounting",
-  "Healthcare",
-  "Marketing & Advertising",
-  "Technology",
-  "Education",
-]);
-
-const CURATED_URL =
-  "https://cdn.jsdelivr.net/gh/hillarymcoscar-create/humanise-data@main/upskill-pack-curated.json";
-
-// ── Email HTML builder ────────────────────────────────────────────────
-
-const _esc = (s: unknown) =>
-  String(s ?? "")
-    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
-
-const _teal = "#00B5A4";
-const _dark = "#1a1a2e";
-
-const _emailSection = (text: string) =>
-  `<div style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
-     color:${_teal};padding-top:24px;padding-bottom:8px;border-top:1px solid #e5e7eb;">${text}</div>`;
-
-function _bandColour(score: number): string {
-  if (score < 30) return "#16a34a";
-  if (score < 50) return "#d97706";
-  if (score < 70) return "#ea580c";
-  return "#dc2626";
-}
-
-function _pctLabel(pct: number): string {
-  if (pct === 0) return "were flat";
-  const abs = Math.abs(pct).toString().replace(/\.0$/, "");
-  return pct > 0 ? `grew ${abs}%` : `fell ${abs}%`;
-}
-
-type _Community = { name: string; platform: string; url: string; description: string };
-const _COMMUNITIES: Record<string, _Community[]> = {
-  "Finance & Accounting": [
-    { name: "School of AI", platform: "Skool", url: "https://www.skool.com/school-of-ai",
-      description: "AI for finance and business professionals — active community, free to join" },
-    { name: "The AI Advantage", platform: "Skool", url: "https://www.skool.com/the-ai-advantage",
-      description: "Practical AI workflows for professionals — active daily" },
-  ],
-  "Marketing & Advertising": [
-    { name: "The AI Advantage", platform: "Skool", url: "https://www.skool.com/the-ai-advantage",
-      description: "Practical AI for marketers — workflows, tool reviews, peer discussion" },
-  ],
-  "Healthcare": [
-    { name: "School of AI", platform: "Skool", url: "https://www.skool.com/school-of-ai",
-      description: "General AI upskilling community with a growing healthcare cohort" },
-  ],
-  "Technology": [
-    { name: "School of AI", platform: "Skool", url: "https://www.skool.com/school-of-ai",
-      description: "AI and software development — active threads on tools, careers" },
-    { name: "The AI Advantage", platform: "Skool", url: "https://www.skool.com/the-ai-advantage",
-      description: "Practical AI for technical professionals — daily activity" },
-  ],
-  "Education": [
-    { name: "School of AI", platform: "Skool", url: "https://www.skool.com/school-of-ai",
-      description: "Educators using AI for content, lesson planning, and professional development" },
-  ],
-};
-function _getCommunities(industry: string): _Community[] {
-  return _COMMUNITIES[industry] ?? [
-    { name: "School of AI", platform: "Skool", url: "https://www.skool.com/school-of-ai",
-      description: "AI upskilling community open to all workers — free to join" },
-  ];
-}
-
-function buildEmailHtml(opts: {
-  jobTitle: string; matchedTitle?: string | null; industry: string;
-  score: number; riskBand: string;
-  honestPicture?: string; nzMarketSignalMsg?: string; nzMarketSignalSrc?: string;
-  mbieGroup?: string; mbieAnnualChange?: number | null;
-  mbieRegion?: string; mbieRegionalChange?: number | null;
-  statsnzThousands?: number | null; statsnzShare?: number | null;
-  tasksAtRisk?: string[]; protectiveSkills?: string[];
-  pack?: UpskillPack | null;
-}): string {
-  const { jobTitle, matchedTitle, industry, score, riskBand, pack } = opts;
-  const colour = _bandColour(score);
-  const displayRole = _esc(matchedTitle ?? jobTitle);
-
-  const scoreCard = `
-    <div style="background:#f8f9fa;border:1px solid #e5e7eb;border-radius:12px;
-      padding:20px 24px;text-align:center;margin:20px 0 4px;">
-      <div style="font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
-        color:#888;margin-bottom:8px;">Your automation risk score</div>
-      <div style="font-size:54px;font-weight:800;line-height:1;color:${colour};">${score}%</div>
-      <div style="font-size:15px;font-weight:600;margin-top:6px;color:${colour};">${_esc(riskBand)} Risk</div>
-    </div>`;
-
-  const honestSection = opts.honestPicture ? `
-    ${_emailSection("Your honest picture")}
-    <p style="margin:0;font-size:14px;line-height:1.7;color:#333;">${_esc(opts.honestPicture)}</p>` : "";
-
-  const marketSection = opts.nzMarketSignalMsg ? `
-    ${_emailSection("NZ market signal")}
-    <p style="margin:0;font-size:14px;line-height:1.6;color:#333;">${_esc(opts.nzMarketSignalMsg)}</p>
-    ${opts.nzMarketSignalSrc
-      ? `<p style="margin:4px 0 0;font-size:11px;color:#9ca3af;">Source: ${_esc(opts.nzMarketSignalSrc)}</p>`
-      : ""}` : "";
-
-  let workforceHtml = "";
-  if (opts.mbieGroup && typeof opts.mbieAnnualChange === "number") {
-    workforceHtml += `<p style="margin:0 0 4px;font-size:14px;line-height:1.6;color:#333;">
-      Job ads for ${_esc(opts.mbieGroup.toLowerCase())} ${_pctLabel(opts.mbieAnnualChange)}
-      in the past year (MBIE Jobs Online, Dec 2025)</p>`;
-  }
-  if (opts.mbieRegion && typeof opts.mbieRegionalChange === "number") {
-    workforceHtml += `<p style="margin:0 0 4px;font-size:14px;line-height:1.6;color:#333;">
-      In ${_esc(opts.mbieRegion)}, job ads ${_pctLabel(opts.mbieRegionalChange)} annually</p>`;
-  }
-  if (opts.mbieGroup && opts.statsnzThousands && opts.statsnzShare) {
-    workforceHtml += `<p style="margin:0 0 4px;font-size:14px;line-height:1.6;color:#333;">
-      There are approximately ${opts.statsnzThousands}k ${_esc(opts.mbieGroup.toLowerCase())} workers
-      in NZ — ${opts.statsnzShare}% of the workforce (Stats NZ HLFS Dec 2025)</p>`;
-  }
-  const workforceSection = workforceHtml
-    ? `${_emailSection("NZ workforce data")}${workforceHtml}` : "";
-
-  const tasksSection = opts.tasksAtRisk?.length ? `
-    ${_emailSection("Your top 3 tasks at risk")}
-    <ul style="margin:0;padding:0 0 0 18px;color:#333;font-size:14px;line-height:1.9;">
-      ${opts.tasksAtRisk.map((t) => `<li>${_esc(t)}</li>`).join("")}
-    </ul>` : "";
-
-  const skills = opts.protectiveSkills ?? [];
-  const skillsSection = skills.length ? `
-    ${_emailSection("Your top 3 protective skills")}
-    <ul style="margin:0;padding:0 0 0 18px;color:#333;font-size:14px;line-height:1.9;">
-      ${skills.map((s) => `<li>${_esc(s)}</li>`).join("")}
-    </ul>` : "";
-
-  const upskillSection = skills.length ? `
-    ${_emailSection("Ready to upskill? — LinkedIn Learning")}
-    <ul style="margin:0;padding:0 0 0 18px;font-size:14px;line-height:1.9;">
-      ${skills.map((s) =>
-        `<li><a href="https://www.linkedin.com/learning/search?keywords=${encodeURIComponent(s)}"
-          style="color:${_teal};text-decoration:none;">${_esc(s)}</a></li>`
-      ).join("")}
-    </ul>` : "";
-
-  let packSection = "";
-  if (pack) {
-    const elink = (url: string, title: string) =>
-      `<a href="${_esc(url)}" style="color:${_teal};text-decoration:none;">${_esc(title)}</a>`;
-    const resourceRow = (r: UpskillResource) => `
-      <div style="margin-bottom:10px;padding:10px 12px;background:#f0fdfa;border-radius:8px;font-size:13px;">
-        <div style="font-weight:600;margin-bottom:3px;">${elink(r.url, r.title)}</div>
-        <div style="color:#555;">${_esc(r.why)}</div>
-      </div>`;
-    const courseRow = (c: UpskillCourse) => `
-      <div style="margin-bottom:10px;padding:10px 12px;background:#f0fdfa;border-radius:8px;font-size:13px;">
-        <div style="font-weight:600;margin-bottom:3px;">${elink(c.url, c.title)}</div>
-        <div style="color:#888;font-size:11px;margin-bottom:3px;">
-          ${_esc(c.platform)}${c.cost ? ` · ${_esc(c.cost)}` : ""}${c.time ? ` · ${_esc(c.time)}` : ""}
-        </div>
-        <div style="color:#555;">${_esc(c.why)}</div>
-      </div>`;
-    if (pack.headline) {
-      packSection += `<p style="font-size:13px;font-style:italic;color:#555;margin:16px 0 8px;">${_esc(pack.headline)}</p>`;
-    }
-    if (pack.youtube?.length) {
-      packSection += `${_emailSection("Understand AI — YouTube")}${pack.youtube.map(resourceRow).join("")}`;
-    }
-    if (pack.courses?.length) {
-      packSection += `${_emailSection("Use AI now — Courses")}${pack.courses.map(courseRow).join("")}`;
-    }
-    if (pack.nz_specific?.length) {
-      packSection += `${_emailSection("NZ-specific resources")}${pack.nz_specific.map(courseRow).join("")}`;
-    }
-    if (pack.quick_wins?.length) {
-      packSection += `${_emailSection("Quick wins this week")}
-        <ol style="margin:0;padding:0 0 0 18px;color:#333;font-size:14px;line-height:1.8;">
-          ${pack.quick_wins.map((w) => `<li>${_esc(w)}</li>`).join("")}
-        </ol>`;
-    }
-  }
-
-  const communities = _getCommunities(industry);
-  const communitySection = `
-    ${_emailSection("Join the conversation")}
-    <p style="margin:0 0 10px;font-size:12px;color:#9ca3af;">
-      Free communities where NZ workers are figuring out AI together</p>
-    ${communities.map((c) => `
-      <div style="margin-bottom:10px;font-size:14px;line-height:1.6;">
-        <a href="${_esc(c.url)}" style="color:${_teal};text-decoration:none;font-weight:600;">
-          ${_esc(c.name)}</a>
-        <span style="color:#6b7280;font-size:12px;"> (${_esc(c.platform)})</span>
-        — ${_esc(c.description)}
-      </div>`).join("")}`;
-
-  return `<!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Humanise — your AI automation risk result</title>
-</head>
-<body style="margin:0;padding:0;background:#f3f4f6;
-  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6;padding:32px 16px;">
-  <tr><td align="center">
-  <table width="100%" style="max-width:600px;background:#ffffff;border-radius:12px;
-    overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08);">
-    <tr><td style="background:${_dark};padding:24px 32px;">
-      <div style="font-size:20px;font-weight:700;color:#fff;">Humanise</div>
-      <div style="font-size:12px;color:#9ca3af;margin-top:2px;">
-        humanise.nz — your AI automation risk result</div>
-    </td></tr>
-    <tr><td style="padding:16px 32px 0;">
-      <p style="margin:0;font-size:13px;color:#6b7280;">
-        For: <strong style="color:${_dark};">${displayRole}</strong>
-        ${matchedTitle && matchedTitle !== jobTitle ? ` · matched to ${_esc(matchedTitle)}` : ""}
-        ${industry ? ` · ${_esc(industry)}` : ""}
-      </p>
-    </td></tr>
-    <tr><td style="padding:4px 32px 32px;">
-      ${scoreCard}
-      ${honestSection}
-      ${marketSection}
-      ${workforceSection}
-      ${tasksSection}
-      ${skillsSection}
-      ${upskillSection}
-      ${packSection}
-      ${communitySection}
-      <div style="border-top:1px solid #e5e7eb;margin-top:28px;padding-top:20px;
-        font-size:14px;color:${_dark};line-height:1.7;">
-        Good luck. The workers who adapt fastest will be fine.<br><br>
-        <strong>Hillary Woods</strong><br>
-        Founder, Humanise<br>
-        <a href="https://humanise.nz" style="color:${_teal};text-decoration:none;">humanise.nz</a>
-      </div>
-    </td></tr>
-    <tr><td style="background:#f9fafb;border-top:1px solid #e5e7eb;padding:14px 32px;">
-      <p style="margin:0;font-size:11px;color:#9ca3af;text-align:center;">
-        You received this because you requested your Humanise result.</p>
-    </td></tr>
-  </table>
-  </td></tr>
-</table>
-</body></html>`;
-}
 
 // ── Sub-components ────────────────────────────────────────────────────
 
@@ -435,10 +173,10 @@ export const UpskillSection = ({
       const emailSubject = `Your Humanise result — ${jobTitle} · ${score}% ${riskBand ?? ""}`.trim();
       const emailHtml = buildEmailHtml({
         jobTitle, matchedTitle: matchedTitle ?? null, industry,
-        score, riskBand: riskBand ?? "Moderate",
+        riskScore: score, riskBand: riskBand ?? "Moderate",
         honestPicture: honestPicture ?? "",
-        nzMarketSignalMsg: nzMarketSignalMsg ?? "",
-        nzMarketSignalSrc: nzMarketSignalSrc ?? "",
+        nzMarketSignal: nzMarketSignalMsg ?? "",
+        nzMarketSignalSource: nzMarketSignalSrc ?? "",
         mbieGroup: nzData?.group ?? "",
         mbieAnnualChange: nzData?.annual_change_pct ?? null,
         mbieRegion: region ?? "",
@@ -447,7 +185,7 @@ export const UpskillSection = ({
         statsnzShare: nzData?.nz_workforce_share_pct ?? null,
         tasksAtRisk: tasksAtRisk ?? [],
         protectiveSkills: skills,
-        pack,
+        pack: pack as EmailPack | null,
       });
       supabase.functions
         .invoke("send-email", {

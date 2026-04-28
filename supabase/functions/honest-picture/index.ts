@@ -50,6 +50,7 @@ Return a JSON object with four fields:
 - "tasks_at_risk": exactly 3 short action phrases (4-7 words each) describing the most automatable tasks for this specific role.
 - "protective_tasks": exactly 3 short action phrases (4-7 words each) describing what makes this role hard to fully automate.
 - "agent_note": name one specific AI agent tool currently being used for tasks in this occupation (choose the most relevant from: Microsoft Copilot, ChatGPT, Google Gemini, Make.com, or Manus) and give one concrete example of what it handles in this role. Keep to under 30 words. If the occupation is trades, healthcare, or other hands-on physical work, write "This role has strong natural protection from AI agents because [reason]" without naming a tool.
+- "agent_tasks": exactly 3 specific tasks in this occupation that AI agents are handling today. Each must start with an action verb, be specific to the role (not generic), and be no longer than 12 words.
 
 All task phrases must be complete, specific to the role, and never end with a preposition, conjunction, or article.`;
 
@@ -75,8 +76,14 @@ All task phrases must be complete, specific to the role, and never end with a pr
               maxItems: 3,
             },
             agent_note: { type: "string" },
+            agent_tasks: {
+              type: "array",
+              items: { type: "string" },
+              minItems: 3,
+              maxItems: 3,
+            },
           },
-          required: ["honest_picture", "tasks_at_risk", "protective_tasks", "agent_note"],
+          required: ["honest_picture", "tasks_at_risk", "protective_tasks", "agent_note", "agent_tasks"],
           additionalProperties: false,
         },
       },
@@ -119,7 +126,7 @@ All task phrases must be complete, specific to the role, and never end with a pr
 
     const data = await resp.json();
     const msg = data.choices?.[0]?.message;
-    let parsed: { honest_picture?: string; tasks_at_risk?: string[]; protective_tasks?: string[]; agent_note?: string } = {};
+    let parsed: { honest_picture?: string; tasks_at_risk?: string[]; protective_tasks?: string[]; agent_note?: string; agent_tasks?: string[] } = {};
 
     const toolCall = msg?.tool_calls?.[0];
     if (toolCall?.function?.arguments) {
@@ -133,9 +140,10 @@ All task phrases must be complete, specific to the role, and never end with a pr
     const tasks_at_risk = (parsed.tasks_at_risk ?? []).map(cleanTask).filter(Boolean).slice(0, 3);
     const protective_tasks = (parsed.protective_tasks ?? []).map(cleanTask).filter(Boolean).slice(0, 3);
     const agent_note = (parsed.agent_note ?? "").trim();
+    const agent_tasks = (parsed.agent_tasks ?? []).map(cleanTask).filter(Boolean).slice(0, 3);
 
     return new Response(
-      JSON.stringify({ text: honest_picture, honest_picture, tasks_at_risk, protective_tasks, agent_note }),
+      JSON.stringify({ text: honest_picture, honest_picture, tasks_at_risk, protective_tasks, agent_note, agent_tasks }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (e) {

@@ -14,7 +14,7 @@ import { HonestPicture } from "@/components/humanise/HonestPicture";
 import { NzMarketSignal } from "@/components/humanise/NzMarketSignal";
 import { NzWorkforceData } from "@/components/humanise/NzWorkforceData";
 import { UpskillSection } from "@/components/humanise/UpskillSection";
-import { AlertTriangle, Shield, BarChart3, Mail, LineChart, Share2, RotateCcw } from "lucide-react";
+import { AlertTriangle, Shield, BarChart3, Mail, LineChart, Share2, RotateCcw, Lock } from "lucide-react";
 import {
   calculateRisk,
   riskBand,
@@ -119,10 +119,11 @@ function normaliseBand(b: string | undefined): Band {
 
 export const Results = ({ answers, onRestart }: Props) => {
   const occupations = useOccupations();
-  const [aiTasks, setAiTasks] = useState<{ tasks_at_risk: string[]; protective_tasks: string[]; honest_picture?: string; agent_note?: string } | null>(null);
+  const [aiTasks, setAiTasks] = useState<{ tasks_at_risk: string[]; protective_tasks: string[]; honest_picture?: string; agent_note?: string; agent_tasks?: string[] } | null>(null);
   const [planOpen, setPlanOpen] = useState(false);
   const [planEmail, setPlanEmail] = useState("");
   const [planSubmitting, setPlanSubmitting] = useState(false);
+  const [emailSubmitted, setEmailSubmitted] = useState(false);
   useAliases(); // ensure aliases are loaded/cached
   const SCORE_OVERRIDES: Record<string, { risk_score: number; risk_band: string }> = {
     "19-1013.00": { risk_score: 38, risk_band: "Moderate" },
@@ -273,6 +274,7 @@ export const Results = ({ answers, onRestart }: Props) => {
     if (ok) {
       setPlanOpen(false);
       setPlanEmail("");
+      setEmailSubmitted(true);
       toast.success("Check your inbox — your result and Career Insight are on the way.");
     } else {
       toast.error("Couldn't send the email right now. Please try again shortly.");
@@ -317,7 +319,14 @@ export const Results = ({ answers, onRestart }: Props) => {
           onTasks={setAiTasks}
         />
 
-        <AgentWatch agenticCapped={agenticCapped} agentNote={aiTasks?.agent_note} />
+        <AgentWatch
+          agenticCapped={agenticCapped}
+          agentNote={aiTasks?.agent_note}
+          agentTasks={aiTasks?.agent_tasks}
+          jobTitle={match?.title ?? answers.jobTitle}
+          emailSubmitted={emailSubmitted}
+          onOpenEmailModal={() => setPlanOpen(true)}
+        />
 
         <NzMarketSignal
           message={match?.job_market_signals?.display_message ?? null}
@@ -362,7 +371,7 @@ export const Results = ({ answers, onRestart }: Props) => {
           nzData={nzData}
           tasksAtRisk={activeTasks}
           region={answers.region ?? ""}
-          onEmailCaptured={(email) => { void sendResultsEmail(email); }}
+          onEmailCaptured={(email) => { void sendResultsEmail(email); setEmailSubmitted(true); }}
         />
 
         <section className="mt-12">
@@ -445,8 +454,22 @@ function agentExposure(capped: number): { label: string; color: string } {
   return               { label: "MINIMAL AGENT EXPOSURE",   color: "#059669" };
 }
 
-const AgentWatch = ({ agenticCapped, agentNote }: { agenticCapped: number; agentNote?: string }) => {
+const AgentWatch = ({
+  agenticCapped, agentNote, agentTasks, jobTitle, emailSubmitted, onOpenEmailModal,
+}: {
+  agenticCapped: number;
+  agentNote?: string;
+  agentTasks?: string[];
+  jobTitle: string;
+  emailSubmitted: boolean;
+  onOpenEmailModal: () => void;
+}) => {
   const { label, color } = agentExposure(agenticCapped);
+
+  const firstSentence = agentNote
+    ? (agentNote.match(/^[^.!?]+[.!?]/) ?? [agentNote])[0]
+    : "";
+
   return (
     <section
       className="mt-8 rounded-2xl bg-card border border-border shadow-soft p-6 sm:p-7"
@@ -464,10 +487,47 @@ const AgentWatch = ({ agenticCapped, agentNote }: { agenticCapped: number; agent
       >
         {label}
       </span>
-      {agentNote && (
+
+      {firstSentence && (
         <p className="mt-4 text-[15px] leading-relaxed text-primary">
-          <strong>Agent note:</strong> {agentNote}
+          {firstSentence}{firstSentence === agentNote ? "" : "…"}
         </p>
+      )}
+
+      {emailSubmitted ? (
+        <div className="mt-5 space-y-4">
+          {agentNote && agentNote !== firstSentence && (
+            <p className="text-[15px] leading-relaxed text-primary">{agentNote}</p>
+          )}
+          {agentTasks && agentTasks.length > 0 && (
+            <ul className="space-y-2">
+              {agentTasks.map((t, i) => (
+                <li key={i} className="flex gap-2 text-sm text-muted-foreground">
+                  <span className="mt-2 h-1.5 w-1.5 rounded-full shrink-0" style={{ background: "#00B5A4" }} />
+                  <span>{t}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+          <p className="text-[11px] text-muted-foreground/60">
+            Source: Humanise Agent Watch — updated April 2026
+          </p>
+        </div>
+      ) : (
+        <div className="mt-5">
+          <div className="rounded-xl border border-border bg-secondary/40 px-4 py-3 flex items-center gap-3 select-none">
+            <Lock className="h-4 w-4 shrink-0 text-muted-foreground/50" />
+            <p className="text-sm text-muted-foreground/60 italic">
+              What AI agents are doing in {jobTitle} roles right now
+            </p>
+          </div>
+          <Button
+            onClick={onOpenEmailModal}
+            className="mt-4 rounded-full font-semibold bg-cta text-accent-foreground hover:opacity-95 text-sm px-5 h-10"
+          >
+            See what AI agents are doing in your role →
+          </Button>
+        </div>
       )}
     </section>
   );

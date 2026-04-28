@@ -19,7 +19,7 @@ type Props = {
   onExit: () => void;
 };
 
-const TOTAL = 6;
+const TOTAL = 7;
 
 export const Quiz = ({ onComplete, onExit }: Props) => {
   const [step, setStep] = useState(1);
@@ -29,6 +29,7 @@ export const Quiz = ({ onComplete, onExit }: Props) => {
     computerUse: "",
     aiUsage: "",
     repeatableTasks: "",
+    handoffTask: "",
     country: "",
     region: "",
   });
@@ -45,7 +46,8 @@ export const Quiz = ({ onComplete, onExit }: Props) => {
     if (step === 3) return !!a.computerUse;
     if (step === 4) return !!a.aiUsage;
     if (step === 5) return !!a.repeatableTasks;
-    if (step === 6) return !!a.country && (a.country !== "New Zealand" || !!a.region);
+    if (step === 6) return !!a.handoffTask;
+    if (step === 7) return !!a.country && (a.country !== "New Zealand" || !!a.region);
     return false;
   })();
 
@@ -129,6 +131,24 @@ export const Quiz = ({ onComplete, onExit }: Props) => {
           )}
 
           {step === 6 && (
+            <Question
+              label="Could someone hand your daily task list to an AI and walk away?"
+              hint="Think about whether your work follows predictable steps someone could write down"
+            >
+              <OptionGrid
+                options={[
+                  "Yes — most of what I do follows a clear process",
+                  "Mostly, with some exceptions",
+                  "Somewhat — but it needs a lot of human judgment",
+                  "No — my work requires constant human judgment",
+                ]}
+                value={a.handoffTask ?? ""}
+                onChange={(v) => { setA({ ...a, handoffTask: v }); setTimeout(() => setStep(7), 180); }}
+              />
+            </Question>
+          )}
+
+          {step === 7 && (
             <Question label="Where are you based?">
               <div className="space-y-4">
                 <Select value={a.country} onValueChange={(v) => setA({ ...a, country: v, region: "" })}>

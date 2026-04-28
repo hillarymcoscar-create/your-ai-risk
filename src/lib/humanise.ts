@@ -4,6 +4,7 @@ export type QuizAnswers = {
   computerUse: string;
   aiUsage: string;
   repeatableTasks?: string;
+  handoffTask?: string;
   country: string;
   region?: string;
 };

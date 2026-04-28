@@ -3,6 +3,7 @@ export type QuizAnswers = {
   industry: string;
   computerUse: string;
   aiUsage: string;
+  repeatableTasks?: string;
   country: string;
   region?: string;
 };

@@ -49,6 +49,12 @@ const Q4_MOD: Record<string, number> = {
   "I've tried but don't use them": 3,
   "No, not at all": 8,
 };
+const Q5_MOD: Record<string, number> = {
+  "Yes, most of my day is this": 12,
+  "Some of my work is like this": 6,
+  "Only occasionally": 2,
+  "No, my work is varied and unpredictable": -5,
+};
 
 function bandFromScore(score: number): Band {
   if (score <= 30) return "Low";
@@ -135,7 +141,7 @@ export const Results = ({ answers, onRestart }: Props) => {
     });
   }
 
-  const rawModifier = (Q3_MOD[answers.computerUse] ?? 0) + (Q4_MOD[answers.aiUsage] ?? 0);
+  const rawModifier = (Q3_MOD[answers.computerUse] ?? 0) + (Q4_MOD[answers.aiUsage] ?? 0) + (Q5_MOD[answers.repeatableTasks ?? ""] ?? 0);
   // Cap modifier at ±15 so quiz answers personalise without overwhelming the O*NET base score
   const modifier = Math.max(-15, Math.min(15, rawModifier));
 

@@ -19,7 +19,7 @@ type Props = {
   onExit: () => void;
 };
 
-const TOTAL = 5;
+const TOTAL = 6;
 
 export const Quiz = ({ onComplete, onExit }: Props) => {
   const [step, setStep] = useState(1);
@@ -28,6 +28,7 @@ export const Quiz = ({ onComplete, onExit }: Props) => {
     industry: "",
     computerUse: "",
     aiUsage: "",
+    repeatableTasks: "",
     country: "",
     region: "",
   });
@@ -43,7 +44,8 @@ export const Quiz = ({ onComplete, onExit }: Props) => {
     if (step === 2) return !!a.industry;
     if (step === 3) return !!a.computerUse;
     if (step === 4) return !!a.aiUsage;
-    if (step === 5) return !!a.country && (a.country !== "New Zealand" || !!a.region);
+    if (step === 5) return !!a.repeatableTasks;
+    if (step === 6) return !!a.country && (a.country !== "New Zealand" || !!a.region);
     return false;
   })();
 
@@ -109,6 +111,24 @@ export const Quiz = ({ onComplete, onExit }: Props) => {
           )}
 
           {step === 5 && (
+            <Question
+              label="Does your role involve repeatable digital tasks?"
+              hint="Things like scheduling, reporting, data entry, email triage, or approvals"
+            >
+              <OptionGrid
+                options={[
+                  "Yes, most of my day is this",
+                  "Some of my work is like this",
+                  "Only occasionally",
+                  "No, my work is varied and unpredictable",
+                ]}
+                value={a.repeatableTasks ?? ""}
+                onChange={(v) => { setA({ ...a, repeatableTasks: v }); setTimeout(() => setStep(6), 180); }}
+              />
+            </Question>
+          )}
+
+          {step === 6 && (
             <Question label="Where are you based?">
               <div className="space-y-4">
                 <Select value={a.country} onValueChange={(v) => setA({ ...a, country: v, region: "" })}>

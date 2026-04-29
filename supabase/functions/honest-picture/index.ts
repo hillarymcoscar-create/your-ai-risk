@@ -392,6 +392,15 @@ No em dashes anywhere. No phrases ending in prepositions/conjunctions/articles i
       agent_reality_email = stripEmDashes((parsed.agent_reality_email ?? "").trim());
       nz_signal        = stripEmDashes((parsed.nz_signal ?? "").trim());
       your_move        = stripEmDashes((parsed.your_move ?? "").trim());
+      // Safety: keep only the first sentence and strip any humanise.nz / link follow-on
+      {
+        const sentences = your_move.match(/[^.!?]+[.!?]+/g) ?? [your_move];
+        let first = (sentences[0] ?? your_move).trim();
+        // Drop trailing humanise.nz mentions just in case
+        first = first.replace(/\s*(?:see|view|find|get).{0,80}humanise\.nz.*/i, "").trim();
+        first = first.replace(/\s*humanise\.nz.*/i, "").trim();
+        your_move = first;
+      }
       locked_preview   = stripEmDashes((parsed.locked_preview ?? "").trim());
       locked_content_full = stripEmDashes((parsed.locked_content_full ?? "").trim());
     } else {

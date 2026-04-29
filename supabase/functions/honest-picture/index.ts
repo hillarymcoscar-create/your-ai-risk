@@ -332,7 +332,13 @@ AGENT WATCH FIELDS
 - agent_reality: 2 to 3 sentences specific to this occupation. Describe what autonomous AI agents are doing right now in this exact role. Name 2 to 3 specific real tools (e.g. Semrush AI, BrightEdge Copilot, custom GPT-4o pipelines, Microsoft Copilot, Make.com, Manus, Claude). Be concrete about what work is being absorbed. Mention NZ digital agencies or NZ businesses where natural. Do NOT repeat the agent_note content.
 - nz_signal: 2 sentences. Include at least one specific NZ data point relevant to this occupation (e.g. AI mentions in NZ job ads have risen 143.5% since March 2025; junior coordinator roles being advertised less; senior roles increasingly listing AI proficiency as baseline). No generic global claims.
 - your_move: 2 to 3 sentences. Sentence one is one concrete 30-day action specific to this role (e.g. "Spend the next 30 days building one AI-assisted SEO workflow you own completely, site audit automation, content briefing, or monthly reporting"). Sentence two is one direct sentence about what separates the people keeping their roles from the ones being compressed. Direct, specific, no platitudes.
-- locked_preview: 1 to 2 sentences teasing premium content for this role. Frame it as "the [N] types of [role] work that agents cannot yet do, and whether your current role focuses on any of them." End with a direct question to the reader.
+- locked_preview: Maximum 2 sentences. Write one teaser that creates a specific, unresolved question about THIS person's situation. Reference the occupation by name and the agent tier reality. Make them feel there is one piece of information about their specific role that would change how they think about their next 90 days. End with a direct question to the reader. Banned words: unlock, discover, exclusive, tips, strategies, insights, premium. Do not sound like a marketing headline. No em dashes.
+
+EXAMPLES OF THE RIGHT TONE FOR locked_preview (do not copy verbatim, match the structure)
+- SEO Specialist (Tier 1): "There are three specific SEO tasks agents cannot yet do reliably, and whether your current role focuses on any of them determines how exposed you actually are. Does yours?"
+- Marketing Coordinator (Tier 2): "The agencies in NZ that restructured last quarter kept one type of coordinator and cut another. The difference was not seniority or salary. Do you know which side of that line your role sits on?"
+- Junior Accountant (Tier 1): "Two accounting tasks are disappearing from NZ job ads faster than any others right now. If either of them describes most of your week, your timeline is shorter than your score suggests. Want to know what they are?"
+- Registered Nurse (Tier 4): "Your clinical work is protected, but one part of your role is changing faster than most nurses realise. It is not what you would expect. Do you know what it is?"
 
 No em dashes anywhere. No phrases ending in prepositions/conjunctions/articles in the task arrays.`;
 

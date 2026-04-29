@@ -1,61 +1,60 @@
 import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2.95.0/cors";
 
-const SYSTEM_PROMPT = `You are Hillary Woods, founder of Humanise, a New Zealand AI workforce risk tool. You write in first-person founder voice ("I", "you", "we"). You are direct, warm, and honest. You do not use corporate language. You do not hedge everything. You do not catastrophise. You tell people the truth about their situation and then point them toward what they can actually do about it.
+// ========================================================================
+// HONEST PICTURE — voice-critical paragraph. Generated in its own call
+// with no tool-calling, so the model's narrative voice is preserved.
+// ========================================================================
 
-You are writing a short paragraph called "Your Honest Picture" for someone who just completed the Humanise quiz. This paragraph appears after their risk score and after the Agent Watch section, so do not repeat anything from those sections.
+const HP_SYSTEM = `You are Hillary Woods, founder of Humanise (a New Zealand AI workforce risk tool). You write in first-person founder voice, second-person to the reader. You are direct, warm, honest. You sound like a trusted colleague who knows the NZ market, not a consultant. You do not catastrophise. You do not hedge. You tell the truth and point to a next move.
 
-Your Honest Picture has one job: make the user feel genuinely seen in their specific situation, and leave them with one clear emotional truth they can act on.
+You are writing one paragraph called "Your Honest Picture" that appears after the user's risk score and after an "Agent Watch" section. It must not repeat anything from those sections.
 
-Real-world context for high-risk knowledge work roles (risk score above 55%):
-New Zealand marketing agencies are already making roles redundant and replacing teams of three people with one person using AI. This is happening now, in 2026, in NZ businesses across Auckland, Wellington, and Christchurch. The pattern is consistent: junior and coordinator-level roles go first. The person who survives is not the most experienced, it is the one who can direct AI tools and agents to do the work the team used to do.
-This applies to: marketing, SEO, content, social media, digital advertising, PR, communications, admin, data analysis, junior finance, and customer service roles. Reference this real-world pattern in honest_picture for these roles.
+GROUND TRUTH (NZ, 2026)
+For high-risk knowledge work (score above 55) in marketing, SEO, content, social media, digital advertising, PR, communications, admin, data analysis, junior finance, and customer service: New Zealand agencies are right now making roles redundant and replacing teams of three with one person who can direct AI tools. Junior and coordinator-level roles go first. The survivors are not the most experienced, they are the ones who can direct the tools. Reference this pattern directly.
 
-For moderate-risk roles (35 to 54 percent): the disruption is real but slower. Augmentation is happening before replacement. The window to adapt is 12 to 24 months, not 6.
+For moderate-risk roles (35 to 54): augmentation before replacement. The window to adapt is 12 to 24 months, not 6.
 
-For low-risk roles (under 35 percent): be honest that the risk is lower without being dismissive. The world around these people is still changing even if their specific role is more protected.
+For low-risk roles (under 35): be honest the risk is lower. Don't dismiss the broader changes around them.
 
-Tone shifts by AI relationship segment:
-- "avoiding": acknowledge the anxiety as accurate pattern recognition. Honest but never anxiety-amplifying. The user already feels worse than you should make them feel.
-- "curious": meet them where they are. The shift is not as hard as it looks from the outside.
-- "occasional" / "daily" / "building": acknowledge existing capability. Push toward the next level of role design, not toward fear.
+TONE BY SEGMENT
+- avoiding: validate the anxiety as accurate pattern recognition. Do not make them feel worse.
+- curious: the shift is smaller than it looks from the outside. Meet them there.
+- occasional / daily / building: acknowledge they are ahead. Push to the next level (designing how teams use AI, becoming the AI decision-maker), not toward fear.
 
-HARD RULES for honest_picture (these are non-negotiable):
-- Maximum 4 sentences. Count them.
-- Never use em dashes. Use commas or full stops instead.
-- Never use the phrase "it is important".
-- Never open with the user's job title.
-- Never use the word "significant".
-- Never use the word "leverage".
-- Never use the word "rapidly", "rapid", "landscape", "revolutionising", "navigate", "ever-changing", "evolving".
-- Never say anything resembling "in today's rapidly changing landscape".
-- Never repeat the risk score percentage or any number.
-- Never repeat the agent exposure tier or badge language.
-- Never repeat anything you put in agent_note or agent_tasks.
-- Write like a trusted colleague who knows this industry, not a consultant who has read about it.
-- The final sentence must create forward momentum, not anxiety. It should leave the user feeling they have a next move, not feeling stuck.
+HARD RULES (the paragraph will be rejected if any are broken)
+1. Maximum 4 sentences. Count them.
+2. No em dashes anywhere. Use commas or full stops.
+3. Never open with the user's job title. Open with the situation, the NZ market reality, or the user's emotional state.
+4. Never repeat the score number, band name, or tier name.
+5. Banned words and phrases: "rapidly", "rapid", "landscape", "ever-changing", "evolving", "revolutionising", "revolutionizing", "fundamentally rewriting", "navigate the", "shifting from a X to a Y", "your value is shifting", "leverage", "significant", "it is important", "in today's", "Kiwi intuition", "Kiwi ingenuity", "Kiwi humor", "high-level strategic architect", "editor-in-chief", "number cruncher", "grunt work", "heavy lifting", "the heart of your job", "doer".
+6. The final sentence must create forward momentum. The user should finish with a sense of next move, not stuckness.
+7. Do not use bullet points or headers. Just one paragraph.
 
-CALIBRATION EXAMPLES of the exact tone, length, and voice required:
+CALIBRATION (match this voice exactly)
 
-Example 1 (SEO Specialist, Very High, Tier 1, curious):
+SEO Specialist, Very High, Tier 1, curious:
 "What's happening in NZ agencies right now is real, teams of three are being replaced by one person with the right AI setup, and the junior roles go first. You're in a function where that pattern is already playing out, not coming eventually. The good news is that the people keeping their jobs aren't the most experienced SEO specialists, they're the ones who figured out how to direct the tools. That's a skill you can build faster than you think."
 
-Example 2 (Marketing Coordinator, High, Tier 2, avoiding):
+Marketing Coordinator, High, Tier 2, avoiding:
 "The anxiety you feel about AI in your role is not paranoia, it's accurate pattern recognition. Coordinator-level marketing roles are where NZ agencies are making the first cuts, because the execution tasks that fill most of your day are exactly what AI handles well. That doesn't mean your career is over, it means the version of your role that survives looks different from the one you were hired for. The shift isn't as hard as it feels from the outside."
 
-Example 3 (Senior Marketing Manager, Moderate, Tier 2, daily):
+Senior Marketing Manager, Moderate, Tier 2, daily:
 "You're already using AI daily, which puts you ahead of most people in your function, but using it for tasks is different from building it into how your whole team works. The senior marketing managers who are thriving in 2026 are the ones who've become the person their organisation comes to for AI decisions, not just AI outputs. You have the experience to do that. The question is whether you move toward it deliberately or wait for someone else to define the role."
 
-Example 4 (Registered Nurse, Low, Tier 4, curious):
+Registered Nurse, Low, Tier 4, curious:
 "Your clinical work is genuinely more protected than most, physical presence, human judgment, and regulated accountability are things AI cannot replicate in a care setting. What is changing is the admin and documentation load around your role, which AI is starting to handle well. That could actually free up more of your time for the work only you can do, if your employer implements it thoughtfully."
 
-Example 5 (Junior Accountant, Very High, Tier 1, avoiding):
+Junior Accountant, Very High, Tier 1, avoiding:
 "The honest version is that the processing and reporting work that takes up most of a junior accounting role is already being done by AI at firms that have adopted it, and the ones that haven't are moving in that direction. This isn't a reason to leave accounting. It's a reason to move toward the parts of the work that require human judgment, client relationships, and advisory thinking faster than you might have planned. The pathway exists. It just starts now instead of in five years."
 
-Match this voice exactly. Short, direct, second-person, NZ-grounded, specific to the user's situation. No consultant language. No generic AI commentary.
+Output the paragraph only. No preface. No quotes around it. No headers. No follow-up.`;
 
-You also generate task lists and an agent note for other parts of the page. Keep those as short, role-specific action phrases (4 to 7 words). The honest_picture must stand alone and never overlap in content with agent_note or agent_tasks.
+// ========================================================================
+// TASKS + AGENT NOTE — generated separately via tool-calling so the
+// honest_picture above is unconstrained by structured-output bias.
+// ========================================================================
 
-Return ONLY the structured tool call.`;
+const TASKS_SYSTEM = `You are an analyst producing short, role-specific task lists for the Humanise NZ AI workforce risk tool. You return ONLY the structured tool call. All phrases must be 4 to 7 words (12 max for agent_tasks), specific to the role, never end with a preposition, conjunction, or article. No em dashes anywhere.`;
 
 const TRAILING_STOPWORDS = new Set([
   "and","or","the","a","an","of","to","for","in","on","at","by","with","from",
@@ -77,10 +76,45 @@ function cleanTask(raw: string): string {
   return out.charAt(0).toUpperCase() + out.slice(1);
 }
 
-// Strip em dashes from a string by replacing with a comma.
+// Replace em / en dashes with a comma (handles cases with or without
+// surrounding whitespace). Also collapses any double spaces.
 function stripEmDashes(s: string): string {
   if (!s) return "";
-  return s.replace(/\s*[—–]\s*/g, ", ").replace(/\s{2,}/g, " ").trim();
+  return s
+    .replace(/[\u2014\u2013]/g, ", ")
+    .replace(/\s*,\s*,\s*/g, ", ")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
+const HP_TOOL = [{
+  type: "function",
+  function: {
+    name: "return_tasks",
+    description: "Return task lists and agent note.",
+    parameters: {
+      type: "object",
+      properties: {
+        tasks_at_risk:    { type: "array", items: { type: "string" }, minItems: 3, maxItems: 3 },
+        protective_tasks: { type: "array", items: { type: "string" }, minItems: 3, maxItems: 3 },
+        agent_note:       { type: "string" },
+        agent_tasks:      { type: "array", items: { type: "string" }, minItems: 3, maxItems: 3 },
+      },
+      required: ["tasks_at_risk", "protective_tasks", "agent_note", "agent_tasks"],
+      additionalProperties: false,
+    },
+  },
+}];
+
+async function callGateway(body: Record<string, unknown>, apiKey: string) {
+  return fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
 }
 
 Deno.serve(async (req) => {
@@ -110,9 +144,10 @@ Deno.serve(async (req) => {
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
     const toolsList = Array.isArray(aiTools) && aiTools.length ? aiTools.join(", ") : "none specified";
-    const userPrompt = `Generate the structured response for this person.
 
-USER CONTEXT
+    // ---------- Call 1: Honest Picture (plain prose, voice-critical) ----------
+    const hpUserPrompt = `Write the Honest Picture paragraph for this person.
+
 Occupation: ${jobTitle}
 Raw job title entered: ${rawJobTitle || jobTitle}
 Risk score: ${score}%
@@ -122,127 +157,102 @@ AI tools used: ${toolsList}
 AI relationship segment: ${aiRelationshipSegment || "unspecified"}
 NZ region: ${region || "New Zealand"}
 Industry: ${industry || "unspecified"}
-Regularly uses AI tools: ${usesAi ? "yes" : "no"}
 
-FIELDS TO RETURN
+Output only the paragraph. Maximum 4 sentences. Match the calibration voice exactly. No em dashes. No banned words.`;
 
-honest_picture: One paragraph, maximum 4 sentences. This is the most important field. Before writing it, silently check every rule below.
+    const hpResp = await callGateway({
+      model: "openai/gpt-5",
+      messages: [
+        { role: "system", content: HP_SYSTEM },
+        { role: "user",   content: hpUserPrompt },
+      ],
+    }, LOVABLE_API_KEY);
 
-  Voice anchors (match these exactly, do NOT default to consultant prose):
-  - Speak as Hillary Woods, founder, second-person, like a trusted colleague.
-  - Open with the user's situation or the NZ market reality, NOT with "AI is...", NOT with the job title, NOT with "your value is shifting".
-  - Reference the real NZ pattern when score > 55 and the role is in marketing/SEO/content/social/PR/comms/admin/data/junior-finance/customer-service: teams of three replaced by one person with the right AI setup, junior roles go first, the survivors are the ones who can direct the tools.
-  - For "avoiding" segment: validate the anxiety as accurate pattern recognition. Do not amplify it.
-  - For "curious" segment: meet them where they are. The shift is smaller than it feels.
-  - For "daily"/"building" segment: acknowledge they are ahead. Push to the next level (designing how teams use AI, becoming the AI decision-maker), not toward fear.
-  - For low-risk roles: honest that risk is lower without dismissing the broader changes.
-  - Final sentence MUST create forward momentum. The user should finish reading feeling they have a next move, not feeling stuck.
-
-  Banned words and phrases (do not use any of these):
-  em dash, "rapidly", "rapid", "landscape", "ever-changing", "evolving", "revolutionising", "revolutionizing", "navigate the", "shifting from X to Y", "your value is shifting", "leverage", "significant", "it is important", "in today's", "fundamentally rewriting", "Kiwi intuition", "high-level strategic architect", "editor-in-chief", "number cruncher", "grunt work", "heavy lifting".
-  Do not repeat the score number, band name, or tier name.
-  Do not repeat anything in agent_note or agent_tasks.
-
-tasks_at_risk: Exactly 3 short action phrases, 4 to 7 words each, specific to this role.
-
-protective_tasks: Exactly 3 short action phrases, 4 to 7 words each, specific to this role.
-
-agent_note: Name one of (Microsoft Copilot, ChatGPT, Google Gemini, Make.com, Manus) and give one concrete example of what it handles in this role. Under 30 words. For trades/healthcare/hands-on roles, write "This role has strong natural protection from AI agents because [reason]" without naming a tool.
-
-agent_tasks: Exactly 3 specific tasks AI agents are handling today in this occupation. Action verb start. Max 12 words each.
-
-No em dashes anywhere. No phrases from the banned list anywhere.`;
-
-    const tools = [{
-      type: "function",
-      function: {
-        name: "return_analysis",
-        description: "Return the honest picture and task lists for the role.",
-        parameters: {
-          type: "object",
-          properties: {
-            honest_picture: { type: "string" },
-            tasks_at_risk: {
-              type: "array",
-              items: { type: "string" },
-              minItems: 3,
-              maxItems: 3,
-            },
-            protective_tasks: {
-              type: "array",
-              items: { type: "string" },
-              minItems: 3,
-              maxItems: 3,
-            },
-            agent_note: { type: "string" },
-            agent_tasks: {
-              type: "array",
-              items: { type: "string" },
-              minItems: 3,
-              maxItems: 3,
-            },
-          },
-          required: ["honest_picture", "tasks_at_risk", "protective_tasks", "agent_note", "agent_tasks"],
-          additionalProperties: false,
-        },
-      },
-    }];
-
-    const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "openai/gpt-5",
-        messages: [
-          { role: "system", content: SYSTEM_PROMPT },
-          { role: "user", content: userPrompt },
-        ],
-        tools,
-        tool_choice: { type: "function", function: { name: "return_analysis" } },
-      }),
-    });
-
-    if (!resp.ok) {
-      if (resp.status === 429) {
+    if (!hpResp.ok) {
+      if (hpResp.status === 429) {
         return new Response(JSON.stringify({ error: "Rate limit reached. Please try again shortly." }), {
           status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      if (resp.status === 402) {
+      if (hpResp.status === 402) {
         return new Response(JSON.stringify({ error: "AI credits exhausted. Add credits in Settings → Workspace → Usage." }), {
           status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      const t = await resp.text();
-      console.error("AI gateway error", resp.status, t);
+      const t = await hpResp.text();
+      console.error("AI gateway HP error", hpResp.status, t);
       return new Response(JSON.stringify({ error: "AI gateway error" }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const data = await resp.json();
-    const msg = data.choices?.[0]?.message;
-    let parsed: { honest_picture?: string; tasks_at_risk?: string[]; protective_tasks?: string[]; agent_note?: string; agent_tasks?: string[] } = {};
+    const hpData = await hpResp.json();
+    let honest_picture = stripEmDashes(
+      (hpData.choices?.[0]?.message?.content ?? "").trim()
+        .replace(/^["'`]+|["'`]+$/g, "")
+        .trim()
+    );
 
-    const toolCall = msg?.tool_calls?.[0];
-    if (toolCall?.function?.arguments) {
-      try { parsed = JSON.parse(toolCall.function.arguments); } catch (e) { console.error("tool args parse failed", e); }
-    } else if (typeof msg?.content === "string") {
-      const cleaned = msg.content.trim().replace(/^```json\s*/i, "").replace(/```$/, "").trim();
-      try { parsed = JSON.parse(cleaned); } catch (e) { console.error("content parse failed", e); }
+    // ---------- Call 2: Task lists + agent note (structured) ----------
+    const tasksUserPrompt = `Generate task lists for this person.
+
+Occupation: ${jobTitle}
+Raw job title entered: ${rawJobTitle || jobTitle}
+Industry: ${industry || "unspecified"}
+NZ region: ${region || "New Zealand"}
+Regularly uses AI: ${usesAi ? "yes" : "no"}
+
+Return:
+- tasks_at_risk: 3 short action phrases (4 to 7 words) for the most automatable tasks in this role.
+- protective_tasks: 3 short action phrases (4 to 7 words) for what makes this role hard to fully automate.
+- agent_note: Name one of (Microsoft Copilot, ChatGPT, Google Gemini, Make.com, Manus) and give one concrete example of what it handles in this role. Under 30 words. For trades/healthcare/hands-on physical work, write "This role has strong natural protection from AI agents because [reason]" without naming a tool.
+- agent_tasks: 3 specific tasks AI agents are handling today in this occupation. Action verb start. Max 12 words each.
+
+No em dashes. No phrases ending in prepositions/conjunctions/articles.`;
+
+    const tResp = await callGateway({
+      model: "google/gemini-3-flash-preview",
+      messages: [
+        { role: "system", content: TASKS_SYSTEM },
+        { role: "user",   content: tasksUserPrompt },
+      ],
+      tools: HP_TOOL,
+      tool_choice: { type: "function", function: { name: "return_tasks" } },
+    }, LOVABLE_API_KEY);
+
+    let tasks_at_risk: string[] = [];
+    let protective_tasks: string[] = [];
+    let agent_note = "";
+    let agent_tasks: string[] = [];
+
+    if (tResp.ok) {
+      const tData = await tResp.json();
+      const msg = tData.choices?.[0]?.message;
+      const toolCall = msg?.tool_calls?.[0];
+      let parsed: { tasks_at_risk?: string[]; protective_tasks?: string[]; agent_note?: string; agent_tasks?: string[] } = {};
+      if (toolCall?.function?.arguments) {
+        try { parsed = JSON.parse(toolCall.function.arguments); } catch (e) { console.error("tool args parse failed", e); }
+      } else if (typeof msg?.content === "string") {
+        const cleaned = msg.content.trim().replace(/^```json\s*/i, "").replace(/```$/, "").trim();
+        try { parsed = JSON.parse(cleaned); } catch (e) { console.error("content parse failed", e); }
+      }
+      tasks_at_risk    = (parsed.tasks_at_risk    ?? []).map(cleanTask).filter(Boolean).slice(0, 3);
+      protective_tasks = (parsed.protective_tasks ?? []).map(cleanTask).filter(Boolean).slice(0, 3);
+      agent_note       = stripEmDashes((parsed.agent_note ?? "").trim());
+      agent_tasks      = (parsed.agent_tasks      ?? []).map(cleanTask).filter(Boolean).slice(0, 3);
+    } else {
+      console.error("AI gateway tasks error", tResp.status, await tResp.text());
     }
 
-    const honest_picture = stripEmDashes((parsed.honest_picture ?? "").trim());
-    const tasks_at_risk = (parsed.tasks_at_risk ?? []).map(cleanTask).filter(Boolean).slice(0, 3);
-    const protective_tasks = (parsed.protective_tasks ?? []).map(cleanTask).filter(Boolean).slice(0, 3);
-    const agent_note = stripEmDashes((parsed.agent_note ?? "").trim());
-    const agent_tasks = (parsed.agent_tasks ?? []).map(cleanTask).filter(Boolean).slice(0, 3);
-
     return new Response(
-      JSON.stringify({ text: honest_picture, honest_picture, tasks_at_risk, protective_tasks, agent_note, agent_tasks }),
+      JSON.stringify({
+        text: honest_picture,
+        honest_picture,
+        tasks_at_risk,
+        protective_tasks,
+        agent_note,
+        agent_tasks,
+      }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (e) {

@@ -90,6 +90,8 @@ export const Results = ({ answers, onRestart }: Props) => {
   const [planOpen, setPlanOpen] = useState(false);
   const [planEmail, setPlanEmail] = useState("");
   const [planSubmitting, setPlanSubmitting] = useState(false);
+  const [planSubmittedInModal, setPlanSubmittedInModal] = useState(false);
+  const [planSource, setPlanSource] = useState<"agent_watch_gate" | "results_email_plan">("results_email_plan");
   const [emailSubmitted, setEmailSubmitted] = useState(false);
   useAliases(); // ensure aliases are loaded/cached
   const SCORE_OVERRIDES: Record<string, { risk_score: number; risk_band: string }> = {
@@ -239,18 +241,67 @@ export const Results = ({ answers, onRestart }: Props) => {
 
   const handlePlanSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!planEmail.trim()) return;
+    const trimmed = planEmail.trim();
+    if (!trimmed) return;
     setPlanSubmitting(true);
-    const ok = await sendResultsEmail(planEmail);
-    setPlanSubmitting(false);
-    if (ok) {
-      setPlanOpen(false);
-      setPlanEmail("");
-      setEmailSubmitted(true);
-      toast.success("Check your inbox — your result and Career Insight are on the way.");
-    } else {
-      toast.error("Couldn't send the email right now. Please try again shortly.");
+
+    // Persist the lead first so we never lose it, even if email send fails.
+    try {
+      await supabase.from("email_captures").insert({
+        email: trimmed,
+        source: planSource,
+        occupation: match?.title ?? answers.jobTitle ?? null,
+        score,
+        agent_tier: agentTier,
+        segment_tag: answers.segment_tag ?? null,
+        nz_region: answers.country === "New Zealand" ? (answers.region ?? null) : null,
+      });
+    } catch (err) {
+      console.error("email_captures insert failed", err);
     }
+
+    const ok = await sendResultsEmail(trimmed);
+    setPlanSubmitting(false);
+
+    if (planSource === "agent_watch_gate") {
+      // Inline-unlock pattern: stay on the page, swap modal to confirmation.
+      setEmailSubmitted(true);
+      setPlanSubmittedInModal(true);
+      if (!ok) {
+        toast.error("Saved your email, but the report email is delayed. Check back shortly.");
+      }
+    } else {
+      if (ok) {
+        setPlanOpen(false);
+        setPlanEmail("");
+        setEmailSubmitted(true);
+        toast.success("Check your inbox — your result and Career Insight are on the way.");
+      } else {
+        toast.error("Couldn't send the email right now. Please try again shortly.");
+      }
+    }
+  };
+
+  // Sentence-count the agent_reality field for the modal subheading.
+  // Falls back to "3" when the AI hasn't returned anything yet.
+  const agentTaskCount = (() => {
+    const text = (aiTasks?.agent_reality ?? "").trim();
+    if (!text) return 3;
+    const sentences = text.split(/(?<=[.!?])\s+/).filter(s => s.trim().length > 0);
+    return Math.max(1, Math.min(sentences.length, 6));
+  })();
+
+  const matchedTitle = match?.title ?? answers.jobTitle?.trim() ?? "your role";
+
+  const openAgentWatchGate = () => {
+    setPlanSource("agent_watch_gate");
+    setPlanSubmittedInModal(false);
+    setPlanOpen(true);
+  };
+  const openPlanModal = () => {
+    setPlanSource("results_email_plan");
+    setPlanSubmittedInModal(false);
+    setPlanOpen(true);
   };
 
   return (
@@ -310,7 +361,7 @@ export const Results = ({ answers, onRestart }: Props) => {
           lockedPreview={aiTasks?.locked_preview}
           jobTitle={match?.title ?? answers.jobTitle}
           emailSubmitted={emailSubmitted}
-          onOpenEmailModal={() => setPlanOpen(true)}
+          onOpenEmailModal={openAgentWatchGate}
         />
 
         <NzMarketSignal
@@ -367,7 +418,7 @@ export const Results = ({ answers, onRestart }: Props) => {
               title="Get my full action plan"
               desc="Personalised steps emailed to you."
               cta="Email me the plan"
-              onClick={() => setPlanOpen(true)}
+              onClick={openPlanModal}
               primary
             />
             <CtaCard
@@ -391,40 +442,112 @@ export const Results = ({ answers, onRestart }: Props) => {
           Autonomous agent activity sourced from real-time AI capability analysis across 1,016 NZ occupations.
         </p>
 
-        <Dialog open={planOpen} onOpenChange={setPlanOpen}>
+        <Dialog
+          open={planOpen}
+          onOpenChange={(open) => {
+            setPlanOpen(open);
+            if (!open) {
+              // Reset transient state when the modal closes.
+              setPlanSubmittedInModal(false);
+              setPlanEmail("");
+            }
+          }}
+        >
           <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Email me my result</DialogTitle>
-              <DialogDescription>
-                We'll send your {score}% {band} Risk score and a personalised Career Insight for {match?.title ?? (answers.jobTitle?.trim() || "your role")}.
-              </DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handlePlanSubmit} className="mt-2 space-y-4">
-              <Input
-                type="email"
-                required
-                placeholder="your@email.com"
-                value={planEmail}
-                onChange={(e) => setPlanEmail(e.target.value)}
-                disabled={planSubmitting}
-                className="h-12 rounded-xl"
-              />
-              <Button
-                type="submit"
-                disabled={planSubmitting || !planEmail.trim()}
-                className="w-full rounded-full font-semibold bg-cta text-accent-foreground hover:opacity-95 disabled:opacity-50"
-              >
-                {planSubmitting ? (
-                  <span className="flex items-center gap-2">
-                    <span className="h-4 w-4 rounded-full border-2 border-accent-foreground/30 border-t-accent-foreground animate-spin" />
-                    Sending…
-                  </span>
-                ) : (
-                  "Send me my result"
-                )}
-              </Button>
-              <p className="text-center text-[11px] text-muted-foreground">No spam. Unsubscribe anytime.</p>
-            </form>
+            {planSubmittedInModal ? (
+              <>
+                <DialogHeader>
+                  <DialogTitle>On its way.</DialogTitle>
+                  <DialogDescription>
+                    Your full Agent Watch report for {matchedTitle} is in your inbox. Check your spam folder if you don't see it in two minutes.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="mt-4">
+                  <Button
+                    onClick={() => {
+                      setPlanOpen(false);
+                      setPlanSubmittedInModal(false);
+                      setPlanEmail("");
+                    }}
+                    className="w-full rounded-full font-semibold bg-cta text-accent-foreground hover:opacity-95"
+                  >
+                    See my full report below
+                  </Button>
+                </div>
+              </>
+            ) : planSource === "agent_watch_gate" ? (
+              <>
+                <DialogHeader>
+                  <DialogTitle>Your full Agent Watch report is ready.</DialogTitle>
+                  <DialogDescription>
+                    We have identified {agentTaskCount} specific tasks in {matchedTitle} roles that agents are targeting right now in NZ. Enter your email to see them.
+                  </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={handlePlanSubmit} className="mt-2 space-y-4">
+                  <Input
+                    type="email"
+                    required
+                    placeholder="your@email.com"
+                    value={planEmail}
+                    onChange={(e) => setPlanEmail(e.target.value)}
+                    disabled={planSubmitting}
+                    className="h-12 rounded-xl"
+                  />
+                  <Button
+                    type="submit"
+                    disabled={planSubmitting || !planEmail.trim()}
+                    className="w-full rounded-full font-semibold bg-cta text-accent-foreground hover:opacity-95 disabled:opacity-50"
+                  >
+                    {planSubmitting ? (
+                      <span className="flex items-center gap-2">
+                        <span className="h-4 w-4 rounded-full border-2 border-accent-foreground/30 border-t-accent-foreground animate-spin" />
+                        Sending…
+                      </span>
+                    ) : (
+                      "Show me my full report"
+                    )}
+                  </Button>
+                  <p className="text-center text-[11px] text-muted-foreground">
+                    Free. No spam. One email with your full Agent Watch breakdown.
+                  </p>
+                </form>
+              </>
+            ) : (
+              <>
+                <DialogHeader>
+                  <DialogTitle>Email me my result</DialogTitle>
+                  <DialogDescription>
+                    We'll send your {score}% {band} Risk score and a personalised Career Insight for {matchedTitle}.
+                  </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={handlePlanSubmit} className="mt-2 space-y-4">
+                  <Input
+                    type="email"
+                    required
+                    placeholder="your@email.com"
+                    value={planEmail}
+                    onChange={(e) => setPlanEmail(e.target.value)}
+                    disabled={planSubmitting}
+                    className="h-12 rounded-xl"
+                  />
+                  <Button
+                    type="submit"
+                    disabled={planSubmitting || !planEmail.trim()}
+                    className="w-full rounded-full font-semibold bg-cta text-accent-foreground hover:opacity-95 disabled:opacity-50"
+                  >
+                    {planSubmitting ? (
+                      <span className="flex items-center gap-2">
+                        <span className="h-4 w-4 rounded-full border-2 border-accent-foreground/30 border-t-accent-foreground animate-spin" />
+                        Sending…
+                      </span>
+                    ) : (
+                      "Send me my result"
+                    )}
+                  </Button>
+                  <p className="text-center text-[11px] text-muted-foreground">No spam. Unsubscribe anytime.</p>
+                </form>
+              </>
+            )}
           </DialogContent>
         </Dialog>
       </main>
@@ -521,12 +644,17 @@ const AgentWatch = ({
               <p className="mt-2 text-[15px] leading-relaxed text-primary">{yourMove}</p>
             </div>
           )}
-          <div className="rounded-xl border border-border bg-secondary/40 px-4 py-3 flex items-start gap-3 select-none">
-            <Lock className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground/50" />
-            <p className="text-sm text-muted-foreground/70 italic">
+          <button
+            type="button"
+            onClick={onOpenEmailModal}
+            className="w-full text-left rounded-xl border border-border bg-secondary/40 px-4 py-3 flex items-start gap-3 hover:bg-secondary/60 transition-smooth focus:outline-none focus:ring-2 focus:ring-accent/40"
+            aria-label="Open email gate to see your full Agent Watch report"
+          >
+            <Lock className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground/60" />
+            <span className="text-sm text-muted-foreground/80 italic">
               {lockedPreview || `What AI agents are doing in ${jobTitle} roles right now`}
-            </p>
-          </div>
+            </span>
+          </button>
           <Button
             onClick={onOpenEmailModal}
             className="rounded-full font-semibold bg-cta text-accent-foreground hover:opacity-95 text-sm px-5 h-10"

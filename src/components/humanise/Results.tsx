@@ -361,7 +361,7 @@ export const Results = ({ answers, onRestart }: Props) => {
           lockedPreview={aiTasks?.locked_preview}
           jobTitle={match?.title ?? answers.jobTitle}
           emailSubmitted={emailSubmitted}
-          onOpenEmailModal={() => setPlanOpen(true)}
+          onOpenEmailModal={openAgentWatchGate}
         />
 
         <NzMarketSignal
@@ -418,7 +418,7 @@ export const Results = ({ answers, onRestart }: Props) => {
               title="Get my full action plan"
               desc="Personalised steps emailed to you."
               cta="Email me the plan"
-              onClick={() => setPlanOpen(true)}
+              onClick={openPlanModal}
               primary
             />
             <CtaCard

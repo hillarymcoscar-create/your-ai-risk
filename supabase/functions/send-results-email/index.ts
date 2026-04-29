@@ -196,110 +196,127 @@ function buildHtml(opts: {
 
 type AwResource = { title: string; url: string; why: string; platform: string };
 
-// Hard-coded fallback resource packs keyed by industry / occupation keyword.
-// Used when no curated pack is available for the user's industry.
-function fallbackResources(occupation: string, industry: string): AwResource[] {
+// Verified live URLs as of 2026-04-29. Do NOT modify these URLs or generate
+// alternatives. Categorised by occupation/industry keyword.
+
+const GOOGLE_AI_ESSENTIALS: AwResource = {
+  title: "Google AI Essentials",
+  url: "https://www.coursera.org/specializations/ai-essentials-google",
+  platform: "Coursera (Google)",
+  why: "Free to audit. Under 10 hours. The fastest way to build a credible AI foundation that NZ employers are starting to expect as baseline.",
+};
+const MS_COPILOT: AwResource = {
+  title: "Microsoft Copilot Adoption Hub",
+  url: "https://adoption.microsoft.com/en-us/copilot/",
+  platform: "Microsoft",
+  why: "Free official Microsoft training for Copilot in Excel, Word, Outlook, and Teams. Directly relevant to how AI is being deployed in NZ teams right now.",
+};
+const LINKEDIN_AI_WORKPLACE: AwResource = {
+  title: "AI in the Workplace (LinkedIn Learning)",
+  url: "https://www.linkedin.com/learning/topics/ai-in-the-workplace",
+  platform: "LinkedIn Learning",
+  why: "Short courses on applying AI to operational and administrative workflows. Complete in your own time.",
+};
+
+const MARKETING_RESOURCES: AwResource[] = [
+  {
+    title: "AI Meets Marketing Workshop",
+    url: "https://marketing.org.nz/ai-marketing/traininghub",
+    platform: "Marketing Association NZ",
+    why: "NZ-specific AI marketing masterclass designed for Aotearoa marketers. Covers real-world AI adoption, not just tool tutorials.",
+  },
+  {
+    title: "Google AI Essentials",
+    url: "https://www.coursera.org/specializations/ai-essentials-google",
+    platform: "Coursera (Google)",
+    why: "Free to audit. Under 10 hours. The fastest way to build a credible AI foundation that NZ employers are starting to expect as baseline.",
+  },
+  {
+    title: "Advanced AI for Marketers",
+    url: "https://marketing.org.nz/advanced-ai/traininghub",
+    platform: "Marketing Association NZ",
+    why: "Goes beyond basics into automation and AI-integrated marketing workflows. Directly relevant to the agent shift happening in NZ agencies right now.",
+  },
+];
+
+const FINANCE_ADMIN_RESOURCES: AwResource[] = [
+  {
+    title: "Google AI Essentials",
+    url: "https://www.coursera.org/specializations/ai-essentials-google",
+    platform: "Coursera (Google)",
+    why: "Free to audit. Under 10 hours. Builds the AI literacy that NZ finance and admin employers are increasingly listing as a baseline requirement.",
+  },
+  {
+    title: "Microsoft Copilot Adoption Hub",
+    url: "https://adoption.microsoft.com/en-us/copilot/",
+    platform: "Microsoft",
+    why: "Free official Microsoft training for Copilot in Excel, Word, Outlook, and Teams. Directly relevant to how AI is being deployed in NZ finance and admin teams right now.",
+  },
+  LINKEDIN_AI_WORKPLACE,
+];
+
+const TECH_RESOURCES: AwResource[] = [
+  {
+    title: "Google AI Essentials",
+    url: "https://www.coursera.org/specializations/ai-essentials-google",
+    platform: "Coursera (Google)",
+    why: "Free to audit. Practical AI foundations from Google engineers. Covers prompting, responsible AI, and real workflow integration.",
+  },
+  {
+    title: "Microsoft Copilot Adoption Hub",
+    url: "https://adoption.microsoft.com/en-us/copilot/",
+    platform: "Microsoft",
+    why: "Free official training for Copilot across the Microsoft stack. Relevant for any technical role working in a Microsoft environment.",
+  },
+  {
+    title: "AI in the Workplace (LinkedIn Learning)",
+    url: "https://www.linkedin.com/learning/topics/ai-in-the-workplace",
+    platform: "LinkedIn Learning",
+    why: "Practical AI integration courses for technical professionals moving into agent and automation work.",
+  },
+];
+
+const DEFAULT_RESOURCES: AwResource[] = [
+  {
+    title: "Google AI Essentials",
+    url: "https://www.coursera.org/specializations/ai-essentials-google",
+    platform: "Coursera (Google)",
+    why: "Free to audit. Under 10 hours. The most accessible starting point for any knowledge worker building AI skills from scratch.",
+  },
+  {
+    title: "Microsoft Copilot Adoption Hub",
+    url: "https://adoption.microsoft.com/en-us/copilot/",
+    platform: "Microsoft",
+    why: "Free official Microsoft training covering Copilot across Word, Excel, Outlook, and Teams. Zero cost and immediately practical.",
+  },
+  {
+    title: "AI in the Workplace (LinkedIn Learning)",
+    url: "https://www.linkedin.com/learning/topics/ai-in-the-workplace",
+    platform: "LinkedIn Learning",
+    why: "Structured short courses on applying AI across different work functions.",
+  },
+];
+
+// Pick 3 verified resources by occupation/industry category. The upskillPack
+// argument is accepted but intentionally ignored — we only ship verified live
+// URLs in the email.
+function pickResources(_pack: unknown, occupation: string, industry: string): AwResource[] {
   const occ = (occupation || "").toLowerCase();
   const ind = (industry || "").toLowerCase();
 
-  const seo: AwResource[] = [
-    { title: "Google's AI Essentials on Coursera", url: "https://www.coursera.org/learn/google-ai-essentials", platform: "Coursera",
-      why: "The fastest way to understand how AI is changing search and content workflows from the inside." },
-    { title: "Semrush Academy AI SEO courses", url: "https://www.semrush.com/academy/", platform: "Semrush Academy",
-      why: "Free courses on using Semrush AI tools, directly relevant to the agent workflows replacing junior SEO tasks." },
-    { title: "Ahrefs Academy", url: "https://academy.ahrefs.com/", platform: "Ahrefs",
-      why: "Free SEO training kept current as agent-driven workflows change what gets ranked." },
-  ];
-  const marketing: AwResource[] = [
-    { title: "Google's AI Essentials on Coursera", url: "https://www.coursera.org/learn/google-ai-essentials", platform: "Coursera",
-      why: "Foundational AI fluency every marketer is now expected to have." },
-    { title: "HubSpot AI Marketing Certification", url: "https://academy.hubspot.com/", platform: "HubSpot Academy",
-      why: "Free certification covering AI tools for content, campaigns, and reporting." },
-    { title: "The AI Advantage on Skool", url: "https://www.skool.com/the-ai-advantage", platform: "Skool",
-      why: "Practical AI workflows for marketers, daily peer discussion and tool reviews." },
-  ];
-  const finance: AwResource[] = [
-    { title: "Excel Skills for Business on Coursera", url: "https://www.coursera.org/specializations/excel", platform: "Coursera",
-      why: "AI is changing Excel first. Stay ahead of Copilot adoption in your team." },
-    { title: "CPA Australia AI in Finance resources", url: "https://www.cpaaustralia.com.au/", platform: "CPA Australia",
-      why: "NZ-relevant guidance on AI adoption in accounting practice." },
-    { title: "CA ANZ Learning & Events", url: "https://www.charteredaccountantsanz.com/learning-and-events", platform: "Chartered Accountants ANZ",
-      why: "NZ-specific CPD on AI in finance from the local professional body." },
-  ];
-  const admin: AwResource[] = [
-    { title: "Microsoft Copilot adoption training", url: "https://adoption.microsoft.com/copilot/", platform: "Microsoft",
-      why: "Free official training for Copilot in Word, Excel, Outlook, and Teams. The tools changing your daily work." },
-    { title: "Google's AI Essentials on Coursera", url: "https://www.coursera.org/learn/google-ai-essentials", platform: "Coursera",
-      why: "Builds the cross-tool AI fluency that protects coordinator and operations roles." },
-    { title: "LinkedIn Learning: AI for Administrative Professionals", url: "https://www.linkedin.com/learning/search?keywords=AI%20administrative", platform: "LinkedIn Learning",
-      why: "Practical playbooks for the exact admin tasks agents are absorbing right now." },
-  ];
-  const legal: AwResource[] = [
-    { title: "Law Society NZ AI resources", url: "https://www.lawsociety.org.nz/", platform: "Law Society NZ",
-      why: "NZ-specific guidance on AI in legal practice and compliance." },
-    { title: "Harvey AI overview on YouTube", url: "https://www.youtube.com/results?search_query=Harvey+AI+legal+assistant+overview", platform: "YouTube",
-      why: "Understand what the AI tool reshaping legal work actually does." },
-    { title: "Google's AI Essentials on Coursera", url: "https://www.coursera.org/learn/google-ai-essentials", platform: "Coursera",
-      why: "Foundational AI fluency now expected of paralegals and junior solicitors." },
-  ];
-  const tech: AwResource[] = [
-    { title: "Anthropic Claude Skills documentation", url: "https://docs.anthropic.com/", platform: "Anthropic",
-      why: "How to build and ship agent workflows that absorb the work juniors used to do." },
-    { title: "Cursor AI editor", url: "https://www.cursor.com/", platform: "Cursor",
-      why: "The AI-native code editor that has become baseline tooling in NZ tech teams." },
-    { title: "Google's AI Essentials on Coursera", url: "https://www.coursera.org/learn/google-ai-essentials", platform: "Coursera",
-      why: "Solid grounding in AI fundamentals every engineer is expected to have." },
-  ];
-  const generic: AwResource[] = [
-    { title: "Google's AI Essentials on Coursera", url: "https://www.coursera.org/learn/google-ai-essentials", platform: "Coursera",
-      why: "Practical AI fluency that applies to almost any knowledge-work role." },
-    { title: "Microsoft Copilot adoption training", url: "https://adoption.microsoft.com/copilot/", platform: "Microsoft",
-      why: "Free official training for the AI tools showing up in NZ workplaces first." },
-    { title: "The AI Advantage on Skool", url: "https://www.skool.com/the-ai-advantage", platform: "Skool",
-      why: "Active community sharing real workflows used by professionals adapting now." },
-  ];
-
-  if (/seo|search engine/.test(occ)) return seo;
-  if (/market|content|brand|advertis|copywrit/.test(occ) || /marketing|advertis/.test(ind)) return marketing;
-  if (/account|finance|book|tax|audit|payroll/.test(occ) || /finance|account/.test(ind)) return finance;
-  if (/admin|coordinator|assistant|operation|reception|secretar|clerk/.test(occ)) return admin;
-  if (/legal|paralegal|lawyer|solicitor/.test(occ) || /legal/.test(ind)) return legal;
-  if (/develop|engineer|software|programm|data|analyst|tech/.test(occ) || /tech/.test(ind)) return tech;
-  return generic;
-}
-
-type AwPack = {
-  youtube?: Array<{ title?: string; url?: string; why?: string }>;
-  courses?: Array<{ title?: string; url?: string; why?: string; platform?: string }>;
-  nz_specific?: Array<{ title?: string; url?: string; why?: string; platform?: string }>;
-};
-
-// Pick the top 3 resources from the curated pack (NZ-specific first, then
-// courses, then YouTube). Falls back to occupation-based defaults if the
-// pack is null/empty.
-function pickResources(pack: AwPack | null | undefined, occupation: string, industry: string): AwResource[] {
-  const out: AwResource[] = [];
-  const push = (r: { title?: string; url?: string; why?: string; platform?: string }, defaultPlatform: string) => {
-    if (!r?.title || !r?.url) return;
-    if (out.length >= 3) return;
-    out.push({
-      title: String(r.title).trim(),
-      url: String(r.url).trim(),
-      why: String(r.why ?? "").trim(),
-      platform: String(r.platform ?? defaultPlatform).trim(),
-    });
-  };
-  for (const r of pack?.nz_specific ?? []) push(r, "NZ resource");
-  for (const r of pack?.courses ?? [])     push(r, "Course");
-  for (const r of pack?.youtube ?? [])     push(r, "YouTube");
-  if (out.length >= 3) return out.slice(0, 3);
-  // Fill remaining slots from fallbacks.
-  const fb = fallbackResources(occupation, industry);
-  for (const r of fb) {
-    if (out.length >= 3) break;
-    if (!out.some(x => x.url === r.url)) out.push(r);
+  if (/seo|search engine|market|content|brand|advertis|copywrit|digital|social media|communications?/.test(occ)
+      || /marketing|advertis|media|communications?/.test(ind)) {
+    return MARKETING_RESOURCES;
   }
-  return out.slice(0, 3);
+  if (/account|finance|book|tax|audit|payroll|admin|coordinator|assistant|operation|reception|secretar|clerk|office/.test(occ)
+      || /finance|account|admin/.test(ind)) {
+    return FINANCE_ADMIN_RESOURCES;
+  }
+  if (/develop|engineer|software|programm|data|analyst|tech|devops|sre|architect|qa|tester/.test(occ)
+      || /tech|software|it\b|information technology/.test(ind)) {
+    return TECH_RESOURCES;
+  }
+  return DEFAULT_RESOURCES;
 }
 
 function buildAgentWatchHtml(opts: {

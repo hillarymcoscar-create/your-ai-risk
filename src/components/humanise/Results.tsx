@@ -302,7 +302,7 @@ export const Results = ({ answers, onRestart }: Props) => {
         setPlanOpen(false);
         setPlanEmail("");
         setEmailSubmitted(true);
-        toast.success("Check your inbox — your result and Career Insight are on the way.");
+        toast.success("Check your inbox. Your result and Career Insight are on the way.");
       } else {
         toast.error("Couldn't send the email right now. Please try again shortly.");
       }

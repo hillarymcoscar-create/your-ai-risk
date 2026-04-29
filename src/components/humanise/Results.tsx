@@ -388,7 +388,7 @@ export const Results = ({ answers, onRestart }: Props) => {
         </section>
 
         <p className="mt-16 text-center text-xs text-muted-foreground/80">
-          Powered by O*NET 30.2 and AI Forum NZ research — the same data used by NZ government and industry.
+          Autonomous agent activity sourced from real-time AI capability analysis across 1,016 NZ occupations.
         </p>
 
         <Dialog open={planOpen} onOpenChange={setPlanOpen}>

@@ -92,7 +92,7 @@ export const HonestPicture = ({
         )}
       </div>
 
-      <p className="mt-4 text-[11px] text-muted-foreground/70">Powered by AI analysis</p>
+      <p className="mt-4 text-[11px] text-muted-foreground/70">Generated using O*NET 30.2 task data, Reserve Bank of NZ occupation risk research, and real-time AI capability analysis.</p>
     </section>
   );
 };

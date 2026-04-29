@@ -16,6 +16,7 @@ import { NzWorkforceData } from "@/components/humanise/NzWorkforceData";
 import { UpskillSection } from "@/components/humanise/UpskillSection";
 import { AlertTriangle, Shield, BarChart3, Mail, LineChart, Share2, RotateCcw, Lock } from "lucide-react";
 import {
+  applyAgentExposure,
   applyUplift,
   bandFromScore,
   calculateRisk,
@@ -24,6 +25,7 @@ import {
   protectiveSkills,
   riskSummary,
   tasksAtRisk,
+  type AgentTier,
   type QuizAnswers,
   type RiskBandLabel,
 } from "@/lib/humanise";

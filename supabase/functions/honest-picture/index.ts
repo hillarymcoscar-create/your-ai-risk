@@ -310,21 +310,31 @@ Output only the prose. No quotes. No labels.`;
     );
 
     // ---------- Tasks call (parallelisable but sequential is fine) ----------
-    const tasksUserPrompt = `Generate task lists for this person.
+    const tasksUserPrompt = `Generate task lists and Agent Watch fields for this person.
 
 Occupation: ${jobTitle}
 Raw job title entered: ${rawJobTitle || jobTitle}
 Industry: ${industry || "unspecified"}
 NZ region: ${region || "New Zealand"}
+Risk band: ${bandKey}
+Agent tier: ${agentTier || "unspecified"}
 Regularly uses AI: ${usesAi ? "yes" : "no"}
 
-Return:
+Return ALL of these fields:
+
+TASK LISTS
 - tasks_at_risk: 3 short action phrases (4 to 7 words) for the most automatable tasks in this role.
 - protective_tasks: 3 short action phrases (4 to 7 words) for what makes this role hard to fully automate.
 - agent_note: Name one of (Microsoft Copilot, ChatGPT, Google Gemini, Make.com, Manus) and give one concrete example of what it handles in this role. Under 30 words. For trades/healthcare/hands-on physical work, write "This role has strong natural protection from AI agents because [reason]" without naming a tool.
 - agent_tasks: 3 specific tasks AI agents are handling today in this occupation. Action verb start. Max 12 words each.
 
-No em dashes. No phrases ending in prepositions/conjunctions/articles.`;
+AGENT WATCH FIELDS
+- agent_reality: 2 to 3 sentences specific to this occupation. Describe what autonomous AI agents are doing right now in this exact role. Name 2 to 3 specific real tools (e.g. Semrush AI, BrightEdge Copilot, custom GPT-4o pipelines, Microsoft Copilot, Make.com, Manus, Claude). Be concrete about what work is being absorbed. Mention NZ digital agencies or NZ businesses where natural. Do NOT repeat the agent_note content.
+- nz_signal: 2 sentences. Include at least one specific NZ data point relevant to this occupation (e.g. AI mentions in NZ job ads have risen 143.5% since March 2025; junior coordinator roles being advertised less; senior roles increasingly listing AI proficiency as baseline). No generic global claims.
+- your_move: 2 to 3 sentences. Sentence one is one concrete 30-day action specific to this role (e.g. "Spend the next 30 days building one AI-assisted SEO workflow you own completely, site audit automation, content briefing, or monthly reporting"). Sentence two is one direct sentence about what separates the people keeping their roles from the ones being compressed. Direct, specific, no platitudes.
+- locked_preview: 1 to 2 sentences teasing premium content for this role. Frame it as "the [N] types of [role] work that agents cannot yet do, and whether your current role focuses on any of them." End with a direct question to the reader.
+
+No em dashes anywhere. No phrases ending in prepositions/conjunctions/articles in the task arrays.`;
 
     const tResp = await callGateway({
       model: "google/gemini-3-flash-preview",
@@ -340,12 +350,21 @@ No em dashes. No phrases ending in prepositions/conjunctions/articles.`;
     let protective_tasks: string[] = [];
     let agent_note = "";
     let agent_tasks: string[] = [];
+    let agent_reality = "";
+    let nz_signal = "";
+    let your_move = "";
+    let locked_preview = "";
 
     if (tResp.ok) {
       const tData = await tResp.json();
       const msg = tData.choices?.[0]?.message;
       const toolCall = msg?.tool_calls?.[0];
-      let parsed: { tasks_at_risk?: string[]; protective_tasks?: string[]; agent_note?: string; agent_tasks?: string[] } = {};
+      let parsed: {
+        tasks_at_risk?: string[]; protective_tasks?: string[];
+        agent_note?: string; agent_tasks?: string[];
+        agent_reality?: string; nz_signal?: string;
+        your_move?: string; locked_preview?: string;
+      } = {};
       if (toolCall?.function?.arguments) {
         try { parsed = JSON.parse(toolCall.function.arguments); } catch (e) { console.error("tool args parse failed", e); }
       } else if (typeof msg?.content === "string") {
@@ -356,6 +375,10 @@ No em dashes. No phrases ending in prepositions/conjunctions/articles.`;
       protective_tasks = (parsed.protective_tasks ?? []).map(cleanTask).filter(Boolean).slice(0, 3);
       agent_note       = stripEmDashes((parsed.agent_note ?? "").trim());
       agent_tasks      = (parsed.agent_tasks      ?? []).map(cleanTask).filter(Boolean).slice(0, 3);
+      agent_reality    = stripEmDashes((parsed.agent_reality ?? "").trim());
+      nz_signal        = stripEmDashes((parsed.nz_signal ?? "").trim());
+      your_move        = stripEmDashes((parsed.your_move ?? "").trim());
+      locked_preview   = stripEmDashes((parsed.locked_preview ?? "").trim());
     } else {
       console.error("AI gateway tasks error", tResp.status, await tResp.text());
     }
@@ -368,6 +391,10 @@ No em dashes. No phrases ending in prepositions/conjunctions/articles.`;
         protective_tasks,
         agent_note,
         agent_tasks,
+        agent_reality,
+        nz_signal,
+        your_move,
+        locked_preview,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );

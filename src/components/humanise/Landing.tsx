@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/humanise/Logo";
-import { ArrowRight, Clock, Lock, BookOpen } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 export const Landing = ({ onStart }: { onStart: () => void }) => {
   return (
@@ -12,109 +12,172 @@ export const Landing = ({ onStart }: { onStart: () => void }) => {
         </span>
       </header>
 
-      <main className="container max-w-3xl pt-16 sm:pt-24 pb-20 text-center">
-        <div className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1 text-xs font-medium text-muted-foreground shadow-soft animate-fade-in">
-          <span className="h-1.5 w-1.5 rounded-full bg-accent" />
-          Powered by data from 1,016 occupations
-        </div>
-
-        <h1 className="mt-6 text-4xl sm:text-6xl font-bold text-primary leading-[1.05] animate-fade-in">
-          Is AI coming for your job?
+      {/* SECTION 1 — HERO */}
+      <main className="container max-w-3xl pt-8 sm:pt-20 pb-16 text-center">
+        <h1 className="text-3xl sm:text-5xl md:text-6xl font-bold text-primary leading-[1.1] animate-fade-in">
+          Your job is mostly on a screen.
           <br />
-          <span className="text-accent">Find out in 60 seconds.</span>
+          <span className="text-accent">So is the AI coming for it.</span>
         </h1>
 
-        <p className="mt-6 text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto animate-fade-in">
-          Get your personalised automation risk score, free and instant. Based on data from
-          1,016 occupations.
+        <p className="mt-5 sm:mt-6 text-base sm:text-xl text-muted-foreground max-w-2xl mx-auto animate-fade-in">
+          Humanise scores AI risk for 1,016 jobs using real New Zealand data — Reserve Bank of NZ
+          research, SEEK hiring trends, and O*NET task analysis. Built for the workers most exposed:
+          knowledge workers, desk roles, anyone whose day is mostly tabs, docs, and meetings.
         </p>
 
-        <div className="mt-10 animate-scale-in">
+        <p className="mt-4 text-xs sm:text-sm font-medium text-muted-foreground animate-fade-in">
+          60 seconds. No email needed. No account required. Made in New Zealand.
+        </p>
+
+        <div className="mt-6 sm:mt-8 animate-scale-in">
           <Button
             size="lg"
             onClick={onStart}
             className="bg-cta hover:opacity-95 text-accent-foreground shadow-glow h-14 px-8 text-base font-semibold rounded-full"
           >
-            Check My Risk Score
+            Score my job
             <ArrowRight className="ml-2 h-5 w-5" />
           </Button>
         </div>
 
-        <div className="mt-20 grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 text-left">
-          <TrustItem icon={<Clock className="h-5 w-5" />} title="60-second quiz" desc="Five quick questions, no fluff." />
-          <TrustItem icon={<Lock className="h-5 w-5" />} title="No login required" desc="Get your score before sharing anything." />
-          <TrustItem icon={<BookOpen className="h-5 w-5" />} title="Research-backed" desc="Built on WEF & McKinsey research." />
-        </div>
+        <p className="mt-4 text-xs sm:text-sm italic text-muted-foreground max-w-xl mx-auto">
+          Works best for desk-based and knowledge work. Hands-on workers welcome — your result will
+          be honest about what we can and can't tell you.
+        </p>
       </main>
 
-      <section className="container max-w-6xl pb-24">
-        <div className="text-center max-w-2xl mx-auto">
-          <div className="inline-flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1 text-xs font-medium text-muted-foreground shadow-soft">
-            <span className="h-1.5 w-1.5 rounded-full bg-accent" />
-            Aotearoa New Zealand
-          </div>
-          <h2 className="mt-4 text-3xl sm:text-4xl font-bold text-primary">
-            Why it matters in New Zealand
-          </h2>
-        </div>
-
-        <div className="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 text-left">
-          <StatCard
-            number="2×"
-            label="NZ job losses from AI doubled in one year"
-            sub="From 7% to 14% of businesses in 12 months"
-            source="AI Forum NZ, August 2025"
+      {/* SECTION 2 — SOCIAL PROOF STRIP */}
+      <section className="container max-w-6xl pb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 text-left">
+          <Stat
+            number="14%"
+            label="of NZ businesses now attribute job losses to AI — double last year's figure."
           />
-          <StatCard
-            number="50%"
-            label="of NZ AI-using businesses need fewer staff"
-            sub="Jobs aren't just changing — they're disappearing"
-            source="AI Forum NZ, August 2025"
+          <Stat
+            number="143.5%"
+            label="rise in AI mentions in NZ job ads since March 2025."
           />
-          <StatCard
-            number="3rd"
-            label="fastest AI adopters in the world"
-            sub="Yet half of NZ businesses have no AI governance"
-            source="Microsoft NZ / Accenture, 2024"
+          <Stat
+            number="30%"
+            label="of NZ workers face high joint AI + robotics exposure (Reserve Bank of NZ)."
           />
         </div>
-
-        <p className="mt-12 text-center text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto">
-          That gap between AI adoption and worker readiness is exactly the problem Humanise is here to solve.
+        <p className="mt-6 text-center text-xs text-muted-foreground">
+          Sources: AI Forum NZ, SEEK NZ, Reserve Bank of NZ AN2026-02
         </p>
+      </section>
 
-        <div className="mt-8 text-center">
+      {/* SECTION 3 — FOUNDER VOICE */}
+      <section className="container max-w-2xl py-16 sm:py-20">
+        <h2 className="text-2xl sm:text-3xl font-bold text-primary">Why Humanise exists</h2>
+        <div className="mt-6 space-y-4 text-base sm:text-lg text-muted-foreground leading-relaxed">
+          <p>
+            Most AI risk calculators are built for the US, score 200 jobs, and tell you nothing
+            useful about your situation in New Zealand.
+          </p>
+          <p>
+            I built Humanise because the data on AI displacement is real, NZ-specific, and being
+            ignored. We score 1,016 occupations using the same research the Reserve Bank used to
+            model NZ workforce risk — plus live SEEK and Trade Me hiring data, plus te reo Māori
+            job titles, plus an honest paragraph written for your specific role.
+          </p>
+          <p>
+            The goal isn't to scare you. It's to tell you the truth, and help you do something
+            about it.
+          </p>
+        </div>
+        <p className="mt-6 italic text-primary font-medium text-right">— Hillary Woods, Founder</p>
+      </section>
+
+      {/* SECTION 4 — HOW IT WORKS */}
+      <section className="container max-w-6xl py-16 sm:py-20">
+        <h2 className="text-center text-2xl sm:text-3xl font-bold text-primary">How it works</h2>
+        <div className="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 text-left">
+          <HowCard
+            title="60-second quiz"
+            body="Six questions. No email. No account. Real NZ data behind every score."
+          />
+          <HowCard
+            title="Honest result"
+            body="Your AI risk score, your role's top 3 vulnerable tasks, your top 3 protective skills, and a paragraph written specifically for your job in New Zealand."
+          />
+          <HowCard
+            title="Real next steps"
+            body="Live NZ market signal from SEEK and Trade Me. Concrete reskilling actions. A free fortnightly Substack. Optional Premium Plan when you're ready."
+          />
+        </div>
+      </section>
+
+      {/* SECTION 5 — WHO HUMANISE IS FOR */}
+      <section className="container max-w-2xl py-16 sm:py-20">
+        <h2 className="text-2xl sm:text-3xl font-bold text-primary">Is Humanise for you?</h2>
+        <div className="mt-6 space-y-5 text-base sm:text-lg text-muted-foreground leading-relaxed">
+          <p>
+            <strong className="text-primary font-semibold">Yes, almost certainly:</strong>{" "}
+            marketing, design, finance, legal, admin, HR, project management, sales, customer
+            service, journalism, education leadership, healthcare admin, government policy,
+            technology — anyone whose day is mostly on a computer.
+          </p>
+          <p>
+            <strong className="text-primary font-semibold">Yes, with a caveat:</strong> managers
+            and business owners in trades, hospitality, healthcare, and horticulture — the admin
+            side of your work is real and is being changed by AI, even if the customer-facing side
+            isn't.
+          </p>
+          <p>
+            <strong className="text-primary font-semibold">Probably not:</strong> if your work is
+            almost entirely hands-on (most trades, manual labour, hospitality service,
+            on-the-ground healthcare, fieldwork). Take the quiz anyway if you want — your result
+            will be honest. But the tools we recommend are mostly built for screen-based work.
+          </p>
+        </div>
+      </section>
+
+      {/* SECTION 6 — RESEARCH CREDIBILITY STRIP */}
+      <section className="container max-w-4xl py-8">
+        <p className="text-center text-xs text-muted-foreground leading-relaxed">
+          Powered by O*NET 30.2 · Reserve Bank of NZ AN2026-02 · MBIE Jobs Online (66 quarters) ·
+          SEEK NZ · Trade Me Jobs · AI Forum NZ · Microsoft/Accenture (19,000+ tasks)
+        </p>
+      </section>
+
+      {/* SECTION 7 — FINAL CTA */}
+      <section className="container max-w-2xl py-16 sm:py-24 text-center">
+        <h2 className="text-2xl sm:text-3xl font-bold text-primary">
+          Ready for the honest version?
+        </h2>
+        <p className="mt-4 text-base sm:text-lg text-muted-foreground">
+          60 seconds. Six questions. A real NZ score for 1,016 occupations.
+        </p>
+        <div className="mt-8">
           <Button
             size="lg"
             onClick={onStart}
             className="bg-cta hover:opacity-95 text-accent-foreground shadow-glow h-14 px-8 text-base font-semibold rounded-full"
           >
-            Check My Risk Score
+            Score my job
             <ArrowRight className="ml-2 h-5 w-5" />
           </Button>
         </div>
+        <p className="mt-4 text-xs sm:text-sm text-muted-foreground">
+          Free forever. No account needed.
+        </p>
       </section>
     </div>
   );
 };
 
-const StatCard = ({ number, label, sub, source }: { number: string; label: string; sub: string; source: string }) => (
+const Stat = ({ number, label }: { number: string; label: string }) => (
   <div className="rounded-2xl border border-border bg-card p-6 shadow-soft flex flex-col h-full">
-    <div className="text-5xl font-bold text-accent tracking-tight">{number}</div>
-    <h3 className="mt-3 font-semibold text-primary">{label}</h3>
-    <p className="mt-1 text-sm text-muted-foreground">{sub}</p>
-    <p className="mt-4 pt-4 border-t border-border text-xs font-medium text-muted-foreground">
-      Source: {source}
-    </p>
+    <div className="text-4xl sm:text-5xl font-bold text-accent tracking-tight">{number}</div>
+    <p className="mt-3 text-sm text-muted-foreground leading-relaxed">{label}</p>
   </div>
 );
 
-const TrustItem = ({ icon, title, desc }: { icon: React.ReactNode; title: string; desc: string }) => (
-  <div className="rounded-2xl border border-border bg-card p-5 shadow-soft">
-    <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-accent">
-      {icon}
-    </div>
-    <h3 className="mt-3 font-semibold text-primary">{title}</h3>
-    <p className="mt-1 text-sm text-muted-foreground">{desc}</p>
+const HowCard = ({ title, body }: { title: string; body: string }) => (
+  <div className="rounded-2xl border border-border bg-card p-6 shadow-soft">
+    <h3 className="font-semibold text-primary text-lg">{title}</h3>
+    <p className="mt-2 text-sm sm:text-base text-muted-foreground leading-relaxed">{body}</p>
   </div>
 );

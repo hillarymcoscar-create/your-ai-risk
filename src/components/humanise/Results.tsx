@@ -303,6 +303,12 @@ export const Results = ({ answers, onRestart }: Props) => {
           industry={answers.industry}
           score={score}
           usesAi={answers.aiUsage === "Yes, regularly" || answers.aiUsage === "Sometimes"}
+          rawJobTitle={answers.jobTitle}
+          band={band}
+          agentTier={agentTier}
+          aiTools={answers.ai_tools}
+          aiRelationshipSegment={answers.segment_tag}
+          region={answers.country === "New Zealand" ? answers.region : answers.country}
           onTasks={setAiTasks}
         />
 

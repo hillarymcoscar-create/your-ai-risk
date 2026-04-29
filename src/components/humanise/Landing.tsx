@@ -8,22 +8,21 @@ export const Landing = ({ onStart }: { onStart: () => void }) => {
       <header className="container max-w-6xl py-6 flex items-center justify-between">
         <Logo />
         <span className="text-xs font-medium text-muted-foreground hidden sm:inline">
-          Free · No login
+          Free. No login.
         </span>
       </header>
 
       {/* SECTION 1 — HERO */}
       <main className="container max-w-3xl pt-8 sm:pt-20 pb-16 text-center">
-        <h1 className="text-3xl sm:text-5xl md:text-6xl font-bold text-primary leading-[1.1] animate-fade-in">
-          Your job is mostly on a screen.
-          <br />
-          <span className="text-accent">So is the AI coming for it.</span>
+        <h1 className="text-4xl sm:text-6xl md:text-7xl font-bold text-primary leading-[1.1] animate-fade-in">
+          How much of your job can AI already do?
         </h1>
 
         <p className="mt-5 sm:mt-6 text-base sm:text-xl text-muted-foreground max-w-2xl mx-auto animate-fade-in">
-          Humanise scores AI risk for 1,016 jobs using real New Zealand data — Reserve Bank of NZ
-          research, SEEK hiring trends, and O*NET task analysis. Built for the workers most exposed:
-          knowledge workers, desk roles, anyone whose day is mostly tabs, docs, and meetings.
+          Humanise scores AI risk for 1,016 jobs using real New Zealand data. Reserve Bank of NZ
+          research, published hiring trends, and O*NET task analysis. Built for the workers most
+          exposed: knowledge workers, desk roles, anyone whose day is mostly tabs, docs, and
+          meetings.
         </p>
 
         <p className="mt-4 text-xs sm:text-sm font-medium text-muted-foreground animate-fade-in">
@@ -42,7 +41,7 @@ export const Landing = ({ onStart }: { onStart: () => void }) => {
         </div>
 
         <p className="mt-4 text-xs sm:text-sm italic text-muted-foreground max-w-xl mx-auto">
-          Works best for desk-based and knowledge work. Hands-on workers welcome — your result will
+          Works best for desk-based and knowledge work. Hands-on workers welcome. Your result will
           be honest about what we can and can't tell you.
         </p>
       </main>
@@ -52,7 +51,7 @@ export const Landing = ({ onStart }: { onStart: () => void }) => {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 text-left">
           <Stat
             number="14%"
-            label="of NZ businesses now attribute job losses to AI — double last year's figure."
+            label="of NZ businesses now attribute job losses to AI, double last year's figure."
           />
           <Stat
             number="143.5%"
@@ -60,7 +59,7 @@ export const Landing = ({ onStart }: { onStart: () => void }) => {
           />
           <Stat
             number="30%"
-            label="of NZ workers face high joint AI + robotics exposure (Reserve Bank of NZ)."
+            label="of NZ workers face high joint AI and robotics exposure (Reserve Bank of NZ)."
           />
         </div>
         <p className="mt-6 text-center text-xs text-muted-foreground">
@@ -73,14 +72,17 @@ export const Landing = ({ onStart }: { onStart: () => void }) => {
         <h2 className="text-2xl sm:text-3xl font-bold text-primary">Why Humanise exists</h2>
         <div className="mt-6 space-y-4 text-base sm:text-lg text-muted-foreground leading-relaxed">
           <p>
-            Most AI risk calculators are built for the US, score 200 jobs, and tell you nothing
+            Most AI risk calculators are built for the US. They score 200 jobs and tell you nothing
             useful about your situation in New Zealand.
           </p>
           <p>
             I built Humanise because the data on AI displacement is real, NZ-specific, and being
-            ignored. We score 1,016 occupations using the same research the Reserve Bank used to
-            model NZ workforce risk — plus live SEEK and Trade Me hiring data, plus te reo Māori
-            job titles, plus an honest paragraph written for your specific role.
+            ignored. We score 1,016 occupations using the same research the Reserve Bank of NZ used
+            to model workforce risk.
+          </p>
+          <p>
+            Every score is calibrated against published NZ hiring trends and includes te reo Māori
+            job titles. Each result includes an honest paragraph written for your specific role.
           </p>
           <p>
             The goal isn't to scare you. It's to tell you the truth, and help you do something
@@ -116,20 +118,21 @@ export const Landing = ({ onStart }: { onStart: () => void }) => {
           <p>
             <strong className="text-primary font-semibold">Yes, almost certainly:</strong>{" "}
             marketing, design, finance, legal, admin, HR, project management, sales, customer
-            service, journalism, education leadership, healthcare admin, government policy,
-            technology — anyone whose day is mostly on a computer.
+            service, journalism, education leadership, healthcare admin, government policy, and
+            technology. Anyone whose day is mostly on a computer.
           </p>
           <p>
             <strong className="text-primary font-semibold">Yes, with a caveat:</strong> managers
-            and business owners in trades, hospitality, healthcare, and horticulture — the admin
-            side of your work is real and is being changed by AI, even if the customer-facing side
-            isn't.
+            and business owners in trades, hospitality, healthcare, and horticulture. The admin
+            side of your work is real, and it is being changed by AI even if the customer-facing
+            side isn't.
           </p>
           <p>
             <strong className="text-primary font-semibold">Probably not:</strong> if your work is
-            almost entirely hands-on (most trades, manual labour, hospitality service,
-            on-the-ground healthcare, fieldwork). Take the quiz anyway if you want — your result
-            will be honest. But the tools we recommend are mostly built for screen-based work.
+            almost entirely hands-on. Most trades, manual labour, hospitality service,
+            on-the-ground healthcare, and fieldwork fall into this category. Take the quiz anyway
+            if you want. Your result will be honest. But the tools we recommend are mostly built
+            for screen-based work.
           </p>
         </div>
       </section>
@@ -137,15 +140,15 @@ export const Landing = ({ onStart }: { onStart: () => void }) => {
       {/* SECTION 6 — RESEARCH CREDIBILITY STRIP */}
       <section className="container max-w-4xl py-8">
         <p className="text-center text-xs text-muted-foreground leading-relaxed">
-          Powered by O*NET 30.2 · Reserve Bank of NZ AN2026-02 · MBIE Jobs Online (66 quarters) ·
-          SEEK NZ · Trade Me Jobs · AI Forum NZ · Microsoft/Accenture (19,000+ tasks)
+          Powered by O*NET 30.2, Reserve Bank of NZ AN2026-02, MBIE Jobs Online, published NZ
+          hiring data, AI Forum NZ, and Microsoft/Accenture workforce research.
         </p>
       </section>
 
       {/* SECTION 7 — FINAL CTA */}
       <section className="container max-w-2xl py-16 sm:py-24 text-center">
         <h2 className="text-2xl sm:text-3xl font-bold text-primary">
-          Ready for the honest version?
+          Ready to find out?
         </h2>
         <p className="mt-4 text-base sm:text-lg text-muted-foreground">
           60 seconds. Six questions. A real NZ score for 1,016 occupations.

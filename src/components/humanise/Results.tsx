@@ -162,8 +162,7 @@ export const Results = ({ answers, onRestart }: Props) => {
   } else {
     // Fallback: industry-based scoring
     score = calculateRisk(answers);
-    const legacyBand = riskBand(score);
-    band = legacyBand === "low" ? "Low" : legacyBand === "medium" ? "Moderate" : "High";
+    band = bandFromScore(score);
     tasks = tasksAtRisk(answers).map(cleanTask).filter(Boolean);
     skills = protectiveSkills(answers).map(cleanTask).filter(Boolean);
     comparison = industryComparison(score, answers.industry);

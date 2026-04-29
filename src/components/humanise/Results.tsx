@@ -133,13 +133,20 @@ export const Results = ({ answers, onRestart }: Props) => {
   let tasks: string[];
   let skills: string[];
   let comparison: string;
+  let agentTier: AgentTier | null = null;
 
   if (match && occupations) {
-    // Apply knowledge-work uplift (floor + uplift) before quiz modifiers.
+    // Layer 1: O*NET base. Layer 2: knowledge-work uplift (with floor).
     const uplift = applyUplift(match.risk_score, match.title);
     answers.uplift_category = uplift.category;
     answers.uplift_applied = uplift.uplift;
-    const raw = uplift.adjustedBase + modifier;
+    // Layer 3: agent-exposure (tier floor + modifier), applied before quiz mods.
+    const agent = applyAgentExposure(uplift.adjustedBase, match.title);
+    answers.agent_tier = agent.tier;
+    answers.agent_exposure_modifier = agent.modifier;
+    agentTier = agent.tier;
+    // Layer 4: quiz modifiers.
+    const raw = agent.adjustedBase + modifier;
     score = Math.max(5, Math.min(95, Math.round(raw)));
     band = bandFromScore(score);
     const override = TASK_OVERRIDES[match.title];

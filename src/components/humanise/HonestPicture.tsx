@@ -12,7 +12,7 @@ type Props = {
   aiTools?: string[];
   aiRelationshipSegment?: string;
   region?: string;
-  onTasks?: (tasks: { tasks_at_risk: string[]; protective_tasks: string[]; honest_picture?: string; agent_note?: string; agent_tasks?: string[] }) => void;
+  onTasks?: (tasks: { tasks_at_risk: string[]; protective_tasks: string[]; honest_picture?: string; agent_note?: string; agent_tasks?: string[]; agent_reality?: string; nz_signal?: string; your_move?: string; locked_preview?: string }) => void;
 };
 
 export const HonestPicture = ({

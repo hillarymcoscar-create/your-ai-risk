@@ -574,3 +574,44 @@ const CtaCard = ({
     </Button>
   </div>
 );
+
+const SoftExitBanner = () => (
+  <section className="mt-6 rounded-2xl border border-accent/30 bg-accent/5 p-6 sm:p-7 shadow-soft animate-fade-in">
+    <h2 className="text-lg sm:text-xl font-semibold text-primary">A note before your score</h2>
+    <div className="mt-3 space-y-3 text-[15px] leading-relaxed text-muted-foreground max-w-[65ch]">
+      <p>
+        Humanise is calibrated for desk-based and knowledge work, the jobs where AI displacement is happening fastest. Based on your answers, your role is mostly hands-on or off-screen, which is genuinely lower-risk territory right now.
+      </p>
+      <p>
+        Your score below is real, but it's based on the closest occupation match we have. Take it as a signal, not a verdict.
+      </p>
+    </div>
+    <div className="mt-5 flex flex-col sm:flex-row gap-3">
+      <a
+        href="/hands-on"
+        className="inline-flex items-center justify-center rounded-full bg-cta text-accent-foreground hover:opacity-95 font-semibold h-11 px-5 text-sm"
+      >
+        Why hands-on roles are safer
+      </a>
+      <a
+        href="/hands-on"
+        className="inline-flex items-center justify-center rounded-full border border-border bg-card text-primary hover:bg-secondary font-semibold h-11 px-5 text-sm"
+      >
+        Notify me when Humanise builds a hands-on version
+      </a>
+    </div>
+  </section>
+);
+
+const ScoreCaveat = () => (
+  <section className="mt-8 rounded-2xl bg-card border border-border shadow-soft p-6 sm:p-8">
+    <h2 className="text-xl sm:text-2xl font-semibold text-primary">What this score can't tell you</h2>
+    <div className="mt-4 space-y-4 text-[15px] leading-relaxed text-muted-foreground max-w-[65ch]">
+      <p className="font-medium text-primary">This score is a signal, not a sentence.</p>
+      <p>
+        It doesn't know your specific employer. It doesn't know whether your team is already adopting AI. It doesn't know your network, your reputation, or your track record. It doesn't know how willing you are to adapt, which is, honestly, the biggest variable of all.
+      </p>
+      <p>Use this as a starting point for honest thinking. Not as a final answer.</p>
+    </div>
+  </section>
+);

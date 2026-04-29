@@ -524,7 +524,7 @@ Deno.serve(async (req) => {
             : (typeof jobTitle === "string" ? jobTitle.trim() : "your role"));
       const region = typeof nzRegion === "string" ? nzRegion : "";
       const indStr = typeof industry === "string" ? industry : "";
-      const pack = (upskillPack && typeof upskillPack === "object") ? upskillPack as AwPack : null;
+      const pack = (upskillPack && typeof upskillPack === "object") ? upskillPack : null;
       const resources = pickResources(pack, occ, indStr);
       const awOpts = {
         occupation: occ,

@@ -118,32 +118,28 @@ export const NzWorkforceData = ({ onetCode, region }: Props) => {
       aria-label="NZ workforce data"
     >
       <p className="text-[11px] font-medium uppercase tracking-[0.05em] text-accent">
-        NZ Workforce Data — Dec 2025
+        NZ Workforce Data, Dec 2025
       </p>
 
-      <ul className="mt-1.5 space-y-1.5">
+      <ul className="mt-2 space-y-2 list-disc pl-5">
         <li className="text-[15px] leading-relaxed text-primary">
-          Job ads for {group.toLowerCase()} {pctLabel(mbie.annual_change_pct)} in the past year
-          {" "}(MBIE Jobs Online, Dec 2025)
+          Job ads for {group.toLowerCase() === "professionals" ? "professional roles" : `${group.toLowerCase()} roles`} {pctLabel(mbie.annual_change_pct)} in the past year.{" "}
+          <span className="text-[11px] text-muted-foreground">(MBIE Jobs Online, Dec 2025)</span>
         </li>
 
         {regionalPct != null && region && (
           <li className="text-[15px] leading-relaxed text-primary">
-            In {region}, job ads {pctLabel(regionalPct)} annually
+            In {region}, job ads {pctLabel(regionalPct)} annually.
           </li>
         )}
 
         {showHlfs && (
           <li className="text-[15px] leading-relaxed text-primary">
-            There are approximately {hlfs.employed_thousands}k {group.toLowerCase()} workers
-            in NZ — {hlfs.nz_workforce_share_pct}% of the workforce
+            There are approximately {hlfs.employed_thousands}k {group.toLowerCase() === "professionals" ? "professional" : group.toLowerCase()} workers in NZ, making up {hlfs.nz_workforce_share_pct}% of the total workforce.{" "}
+            <span className="text-[11px] text-muted-foreground">(Stats NZ HLFS Dec 2025)</span>
           </li>
         )}
       </ul>
-
-      <p className="mt-1.5 text-[11px] text-muted-foreground">
-        Source: MBIE Jobs Online Dec 2025 · Stats NZ HLFS Dec 2025
-      </p>
     </section>
   );
 };

@@ -504,20 +504,21 @@ export const Results = ({ answers, onRestart }: Props) => {
                 <DialogHeader>
                   <DialogTitle>On its way.</DialogTitle>
                   <DialogDescription>
-                    Your full Agent Watch report for {matchedTitle} is in your inbox. Check your spam folder if you don't see it in two minutes.
+                    Your full Agent Watch report has been sent to your inbox. Check your spam folder if you do not see it within two minutes.
                   </DialogDescription>
                 </DialogHeader>
-                <div className="mt-4">
-                  <Button
+                <div className="mt-4 text-center">
+                  <button
+                    type="button"
                     onClick={() => {
                       setPlanOpen(false);
                       setPlanSubmittedInModal(false);
                       setPlanEmail("");
                     }}
-                    className="w-full rounded-full font-semibold bg-cta text-accent-foreground hover:opacity-95"
+                    className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2"
                   >
-                    See my full report below
-                  </Button>
+                    Close
+                  </button>
                 </div>
               </>
             ) : planSource === "agent_watch_gate" ? (

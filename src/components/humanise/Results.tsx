@@ -241,18 +241,67 @@ export const Results = ({ answers, onRestart }: Props) => {
 
   const handlePlanSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!planEmail.trim()) return;
+    const trimmed = planEmail.trim();
+    if (!trimmed) return;
     setPlanSubmitting(true);
-    const ok = await sendResultsEmail(planEmail);
-    setPlanSubmitting(false);
-    if (ok) {
-      setPlanOpen(false);
-      setPlanEmail("");
-      setEmailSubmitted(true);
-      toast.success("Check your inbox — your result and Career Insight are on the way.");
-    } else {
-      toast.error("Couldn't send the email right now. Please try again shortly.");
+
+    // Persist the lead first so we never lose it, even if email send fails.
+    try {
+      await supabase.from("email_captures").insert({
+        email: trimmed,
+        source: planSource,
+        occupation: match?.title ?? answers.jobTitle ?? null,
+        score,
+        agent_tier: agentTier,
+        segment_tag: answers.segment_tag ?? null,
+        nz_region: answers.country === "New Zealand" ? (answers.region ?? null) : null,
+      });
+    } catch (err) {
+      console.error("email_captures insert failed", err);
     }
+
+    const ok = await sendResultsEmail(trimmed);
+    setPlanSubmitting(false);
+
+    if (planSource === "agent_watch_gate") {
+      // Inline-unlock pattern: stay on the page, swap modal to confirmation.
+      setEmailSubmitted(true);
+      setPlanSubmittedInModal(true);
+      if (!ok) {
+        toast.error("Saved your email, but the report email is delayed. Check back shortly.");
+      }
+    } else {
+      if (ok) {
+        setPlanOpen(false);
+        setPlanEmail("");
+        setEmailSubmitted(true);
+        toast.success("Check your inbox — your result and Career Insight are on the way.");
+      } else {
+        toast.error("Couldn't send the email right now. Please try again shortly.");
+      }
+    }
+  };
+
+  // Sentence-count the agent_reality field for the modal subheading.
+  // Falls back to "3" when the AI hasn't returned anything yet.
+  const agentTaskCount = (() => {
+    const text = (aiTasks?.agent_reality ?? "").trim();
+    if (!text) return 3;
+    const sentences = text.split(/(?<=[.!?])\s+/).filter(s => s.trim().length > 0);
+    return Math.max(1, Math.min(sentences.length, 6));
+  })();
+
+  const matchedTitle = match?.title ?? answers.jobTitle?.trim() ?? "your role";
+
+  const openAgentWatchGate = () => {
+    setPlanSource("agent_watch_gate");
+    setPlanSubmittedInModal(false);
+    setPlanOpen(true);
+  };
+  const openPlanModal = () => {
+    setPlanSource("results_email_plan");
+    setPlanSubmittedInModal(false);
+    setPlanOpen(true);
   };
 
   return (

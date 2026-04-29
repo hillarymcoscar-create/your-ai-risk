@@ -14,6 +14,8 @@ export type QuizAnswers = {
 
   // Q2 — work type (1-9)
   work_type?: number;
+  // True if work_type was inferred from job-title match rather than chosen by the user.
+  work_type_inferred?: boolean;
 
   // Q3 — computer time (1-5)
   computer_time?: number;
@@ -266,4 +268,73 @@ export function industryComparison(score: number, industry: string): string {
   if (band === "low") return `You sit below the average exposure for ${label}.`;
   if (band === "medium") return `You're roughly in line with the average for ${label}.`;
   return `You're above the typical exposure for ${label}.`;
+}
+
+// ---------- Q2 inference from job title ----------
+
+/**
+ * Infer a work_type (1-9) from a matched O*NET occupation title.
+ * Returns null when the title is too generic/ambiguous to infer reliably.
+ * Only call this for HIGH-CONFIDENCE matches (exact alias hits).
+ */
+export function inferWorkTypeFromTitle(occupationTitle: string | undefined | null): number | null {
+  if (!occupationTitle) return null;
+  const t = occupationTitle.toLowerCase();
+
+  // Ambiguous bare titles: do not infer, fall through to showing Q2.
+  const AMBIGUOUS = ["manager", "managers", "director", "directors", "specialist", "specialists", "coordinator", "officer", "assistant"];
+  const tokens = t.split(/[\s,/&-]+/).filter(Boolean);
+  if (tokens.length === 1 && AMBIGUOUS.includes(tokens[0])) return null;
+
+  const has = (...keys: string[]) => keys.some((k) => t.includes(k));
+
+  // 7 — Healthcare, education, or care
+  if (has(
+    "nurse", "nursing", "physician", "doctor", "surgeon", "dentist", "paramedic",
+    "therap", "psycholog", "counsel", "social work", "midwife", "pharmac",
+    "teacher", "teaching", "tutor", "lecturer", "professor", "educator", "early childhood",
+    "kaiako", "carer", "caregiver", "care worker", "support worker",
+  )) return 7;
+
+  // 8 — Skilled trade, manual, hands-on, hospitality
+  if (has(
+    "electrician", "plumber", "carpenter", "builder", "construction", "labourer", "laborer",
+    "mechanic", "welder", "painter", "roofer", "joiner", "fitter",
+    "chef", "cook", "barista", "bartender", "waiter", "waitress", "hospitality",
+    "driver", "courier", "farm", "farmer", "horticultur", "landscap", "gardener",
+    "cleaner", "housekeep", "warehouse", "forklift", "machinist",
+    "sparky", "chippie",
+  )) return 8;
+
+  // 3 — Managing people / projects (check before 2/4 so "marketing manager" -> 3)
+  if (has("project manager", "programme manager", "program manager", "product manager",
+    "marketing manager", "operations manager", "general manager", "team lead",
+    "engineering manager", "people manager")) return 3;
+
+  // 5 — Customer-facing or sales
+  if (has("sales rep", "sales representative", "account manager", "account executive",
+    "business development", "bdm", "customer success", "customer service representative",
+    "call centre", "call center", "telemarket")) return 5;
+
+  // 6 — Administrative or operational
+  if (has("receptionist", "administrative assistant", "admin assistant", "office administrator",
+    "data entry", "secretary", "executive assistant", "ops coordinator", "operations coordinator",
+    "payroll clerk", "bookkeep")) return 6;
+
+  // 2 — Content, writing, design, marketing
+  if (has("seo", "content", "copywriter", "writer", "editor", "journalist", "designer",
+    "graphic", "ux", "ui designer", "creative", "brand", "marketing", "advertising",
+    "public relations", "communications specialist", "social media")) return 2;
+
+  // 4 — Specialist knowledge work (technical, legal, financial, research)
+  if (has("software", "developer", "engineer", "programmer", "data scientist", "data analyst",
+    "data engineer", "devops", "machine learning",
+    "lawyer", "solicitor", "barrister", "paralegal", "legal counsel",
+    "accountant", "auditor", "actuary", "financial analyst", "consultant",
+    "researcher", "scientist", "economist", "statistician")) return 4;
+
+  // 1 — Strategy, planning, analysis (non-technical)
+  if (has("strategist", "planner", "policy analyst", "business analyst", "research analyst")) return 1;
+
+  return null;
 }

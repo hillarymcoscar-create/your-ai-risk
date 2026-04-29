@@ -89,7 +89,7 @@ export const Landing = ({ onStart }: { onStart: () => void }) => {
             about it.
           </p>
         </div>
-        <p className="mt-6 italic text-primary font-medium text-right">. Hillary Woods, Founder</p>
+        <p className="mt-6 italic text-primary font-medium text-right">— Hillary Woods, Founder</p>
       </section>
 
       {/* SECTION 4 — HOW IT WORKS */}

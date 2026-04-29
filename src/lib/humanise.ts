@@ -45,6 +45,10 @@ export type QuizAnswers = {
     | "building"
     | "hands_on_waitlist";
 
+  // Knowledge-work uplift telemetry (set on results page)
+  uplift_category?: UpliftCategory;
+  uplift_applied?: number;
+
   // ---- Legacy fields kept so downstream consumers (HonestPicture, email
   // template, send-results-email) continue to receive a meaningful value.
   industry: string;

@@ -49,6 +49,10 @@ export type QuizAnswers = {
   uplift_category?: UpliftCategory;
   uplift_applied?: number;
 
+  // Agent-exposure layer telemetry (set on results page)
+  agent_tier?: AgentTier;
+  agent_exposure_modifier?: number;
+
   // ---- Legacy fields kept so downstream consumers (HonestPicture, email
   // template, send-results-email) continue to receive a meaningful value.
   industry: string;
@@ -397,6 +401,123 @@ export function applyUplift(baseScore: number, occupationTitle: string | undefin
   const flooredBase = category === "none" ? baseScore : Math.max(UPLIFT_FLOOR, baseScore);
   const adjustedBase = Math.max(0, Math.min(100, flooredBase + uplift));
   return { category, uplift, flooredBase, adjustedBase };
+}
+
+// ---------- Agent-exposure layer ----------
+
+export type AgentTier = "tier_1" | "tier_2" | "tier_3" | "tier_4";
+
+export type AgentExposureResult = {
+  tier: AgentTier;
+  modifier: number;       // +15 / +10 / +5 / 0
+  flooredBase: number;    // base after agent-tier floor
+  adjustedBase: number;   // flooredBase + modifier, clamped 0-100
+};
+
+const AGENT_TIER_MODIFIER: Record<AgentTier, number> = {
+  tier_1: 15,
+  tier_2: 10,
+  tier_3: 5,
+  tier_4: 0,
+};
+
+const AGENT_TIER_FLOOR: Record<AgentTier, number> = {
+  tier_1: 65,
+  tier_2: 55,
+  tier_3: 40,
+  tier_4: 0,
+};
+
+/** Substring-based classification of an O*NET title into an agent-exposure tier. */
+export function classifyAgentTier(occupationTitle: string | undefined | null): AgentTier {
+  if (!occupationTitle) return "tier_4";
+  const t = occupationTitle.toLowerCase();
+  const has = (...keys: string[]) => keys.some((k) => t.includes(k));
+
+  // Tier 4 hard exclusions FIRST — physical / regulated / clinical / executive
+  if (has(
+    "ceo", "chief executive", "chief financial", "chief operating", "chief technology",
+    "chief marketing", "chief people", "chief", "managing director", "general manager",
+    "board member", "company director",
+    "judge", "magistrate", "barrister",
+    "nurse", "nursing", "physician", "doctor", "surgeon", "dentist", "paramedic",
+    "midwife", "pharmacist", "therapist", "psychologist", "psychiatrist",
+    "carer", "caregiver", "care worker", "support worker", "personal care", "home health",
+    "teacher", "tutor", "lecturer", "professor", "principal", "early childhood", "kaiako",
+    "electrician", "plumber", "carpenter", "builder", "construction", "labourer", "laborer",
+    "mechanic", "welder", "painter", "roofer", "joiner", "fitter", "machinist",
+    "driver", "courier", "pilot", "captain",
+    "chef", "cook", "barista", "bartender", "waiter", "waitress", "hospitality",
+    "housekeep", "cleaner",
+    "farm", "farmer", "horticultur", "landscap", "gardener", "ranger", "forestry", "fisher",
+    "architect", // building architect — physical design discipline
+    "creative director", "art director",
+  )) return "tier_4";
+
+  // Tier 3 — seniority/judgment-led knowledge work (check before Tier 1/2 keyword sweeps)
+  if (has(
+    "senior", "principal ", "head of", "director of", "lead ",
+    "experienced", "chief of staff",
+  )) return "tier_3";
+  if (has(
+    "lawyer", "solicitor", "legal counsel", "general counsel",
+    "financial advisor", "financial adviser", "financial controller",
+    "hr business partner", "people partner",
+  )) return "tier_3";
+
+  // Tier 1 — autonomous-agent-replaceable execution roles
+  if (has(
+    "seo", "search engine optim",
+    "digital marketing specialist", "digital marketing coordinator",
+    "content writer", "copywriter", "caption writer", "proofreader",
+    "social media manager", "social media coordinator", "social media specialist",
+    "email marketing",
+    "data entry", "accounts payable", "accounts receivable", "payroll",
+    "document controller", "legal secretary", "transcriptionist",
+    "junior data analyst", "reporting analyst",
+    "customer service representative", "helpdesk", "help desk",
+    "contact centre agent", "call centre agent", "call center agent",
+    "scheduling coordinator", "travel coordinator",
+    "recruitment coordinator", "hr administrator", "human resources administrator",
+    "junior financial analyst", "junior accountant", "bookkeep",
+    "executive assistant", "personal assistant",
+    "paralegal",
+  )) return "tier_1";
+
+  // Tier 2 — execution-heavy mid roles with some judgment
+  if (has(
+    "marketing manager", "marketing coordinator", "marketing specialist",
+    "digital strategist", "content strategist",
+    "pr manager", "public relations", "communications manager", "communications advisor", "communications specialist",
+    "account manager", "project coordinator", "operations coordinator",
+    "office manager",
+    "accountant", "compliance analyst", "risk analyst",
+    "business analyst", "data analyst", "ux researcher",
+    "junior software", "qa tester", "quality assurance tester",
+    "web developer", "graphic designer", "digital designer", "web designer",
+    "junior product manager", "recruitment consultant",
+  )) return "tier_2";
+
+  // Catch-all generic "analyst" / "coordinator" / "administrator" / "clerk" → Tier 1
+  if (has("data entry operator", "clerk", "administrator", "coordinator")) return "tier_1";
+
+  // Generic management / specialist titles → Tier 3 by default
+  if (has("manager", "consultant", "advisor", "adviser", "strategist", "product manager")) return "tier_3";
+
+  // Generic developer / engineer / designer → Tier 2
+  if (has("developer", "engineer", "designer", "analyst")) return "tier_2";
+
+  return "tier_4";
+}
+
+/** Apply the agent-tier floor + modifier to a base score (post knowledge-work uplift). */
+export function applyAgentExposure(baseScore: number, occupationTitle: string | undefined | null): AgentExposureResult {
+  const tier = classifyAgentTier(occupationTitle);
+  const floor = AGENT_TIER_FLOOR[tier];
+  const modifier = AGENT_TIER_MODIFIER[tier];
+  const flooredBase = floor > 0 ? Math.max(floor, baseScore) : baseScore;
+  const adjustedBase = Math.max(0, Math.min(100, flooredBase + modifier));
+  return { tier, modifier, flooredBase, adjustedBase };
 }
 
 export function tasksAtRisk(_a: QuizAnswers): string[] {

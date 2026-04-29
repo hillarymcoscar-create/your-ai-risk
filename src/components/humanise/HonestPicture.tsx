@@ -42,13 +42,17 @@ export const HonestPicture = ({
           setError(data.error);
         } else {
           setText(data?.honest_picture ?? data?.text ?? "");
-          if (onTasks && (data?.tasks_at_risk?.length || data?.protective_tasks?.length)) {
+          if (onTasks && (data?.tasks_at_risk?.length || data?.protective_tasks?.length || data?.agent_reality)) {
             onTasks({
               tasks_at_risk: data?.tasks_at_risk ?? [],
               protective_tasks: data?.protective_tasks ?? [],
               honest_picture: data?.honest_picture ?? data?.text ?? "",
               agent_note: data?.agent_note ?? "",
               agent_tasks: data?.agent_tasks ?? [],
+              agent_reality: data?.agent_reality ?? "",
+              nz_signal: data?.nz_signal ?? "",
+              your_move: data?.your_move ?? "",
+              locked_preview: data?.locked_preview ?? "",
             });
           }
         }

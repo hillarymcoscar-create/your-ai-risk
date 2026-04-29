@@ -435,11 +435,11 @@ export const Results = ({ answers, onRestart }: Props) => {
 // Agent Watch badge mapping. Driven directly by the agent_tier value
 // computed during scoring (in src/lib/humanise.ts). Colours mirror the
 // risk gauge bands so users see the same visual language across the page.
-const AGENT_BADGE_BY_TIER: Record<AgentTier, { label: string; bg: string; fg: string }> = {
-  tier_1: { label: "HIGH AGENT EXPOSURE",        bg: "hsl(var(--danger))",         fg: "hsl(var(--danger-foreground, 0 0% 100%))" },
-  tier_2: { label: "SIGNIFICANT AGENT EXPOSURE", bg: "hsl(var(--warning-strong))", fg: "hsl(var(--warning-foreground, 0 0% 100%))" },
-  tier_3: { label: "MODERATE AGENT EXPOSURE",    bg: "hsl(var(--warning))",        fg: "hsl(var(--warning-foreground, 0 0% 100%))" },
-  tier_4: { label: "LOW AGENT EXPOSURE",         bg: "hsl(var(--success))",        fg: "hsl(var(--success-foreground, 0 0% 100%))" },
+const AGENT_BADGE_BY_TIER: Record<AgentTier, { label: string; bg: string }> = {
+  tier_1: { label: "HIGH AGENT EXPOSURE",        bg: "hsl(var(--danger))" },
+  tier_2: { label: "SIGNIFICANT AGENT EXPOSURE", bg: "hsl(var(--warning-strong))" },
+  tier_3: { label: "MODERATE AGENT EXPOSURE",    bg: "hsl(var(--warning))" },
+  tier_4: { label: "LOW AGENT EXPOSURE",         bg: "hsl(var(--success))" },
 };
 
 const AgentWatch = ({

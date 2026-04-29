@@ -16,14 +16,16 @@ import { NzWorkforceData } from "@/components/humanise/NzWorkforceData";
 import { UpskillSection } from "@/components/humanise/UpskillSection";
 import { AlertTriangle, Shield, BarChart3, Mail, LineChart, Share2, RotateCcw, Lock } from "lucide-react";
 import {
+  applyUplift,
+  bandFromScore,
   calculateRisk,
   computeModifiers,
-  riskBand,
+  industryComparison,
+  protectiveSkills,
   riskSummary,
   tasksAtRisk,
-  protectiveSkills,
-  industryComparison,
   type QuizAnswers,
+  type RiskBandLabel,
 } from "@/lib/humanise";
 import { useOccupations, useAliases, findBestMatch, findByAlias, percentile, type Occupation } from "@/lib/onet";
 import { getAnzscoGroupData } from "@/lib/nzWorkforceUtils";
@@ -36,24 +38,17 @@ type Props = {
   onRestart: () => void;
 };
 
-type Band = "Low" | "Moderate" | "High" | "Very High";
+type Band = RiskBandLabel;
 
-// Modifier weights now live in src/lib/humanise.ts (see computeModifiers).
+// Modifier weights live in src/lib/humanise.ts (see computeModifiers).
 // The agentic exposure indicator is derived from the new ai_relationship answer.
 const AGENT_BY_RELATIONSHIP: Record<number, number> = {
-  1: 12,  // avoiding -> high agent exposure (work is exposed but they're not adapting)
+  1: 12,
   2: 8,
   3: 4,
   4: -2,
   5: -8,
 };
-
-function bandFromScore(score: number): Band {
-  if (score <= 30) return "Low";
-  if (score <= 55) return "Moderate";
-  if (score <= 75) return "High";
-  return "Very High";
-}
 
 // Trailing words that indicate a sentence was cut off mid-thought
 const TRAILING_STOPWORDS = new Set([
@@ -94,14 +89,6 @@ const TASK_OVERRIDES: Record<string, { tasks_at_risk: string[]; protective_tasks
   },
 };
 
-function normaliseBand(b: string | undefined): Band {
-  const v = (b ?? "").toLowerCase();
-  if (v.startsWith("very")) return "Very High";
-  if (v.startsWith("high")) return "High";
-  if (v.startsWith("mod") || v.startsWith("med")) return "Moderate";
-  if (v.startsWith("low")) return "Low";
-  return "Moderate";
-}
 
 export const Results = ({ answers, onRestart }: Props) => {
   const occupations = useOccupations();
@@ -146,11 +133,13 @@ export const Results = ({ answers, onRestart }: Props) => {
   let comparison: string;
 
   if (match && occupations) {
-    const raw = match.risk_score + modifier;
+    // Apply knowledge-work uplift (floor + uplift) before quiz modifiers.
+    const uplift = applyUplift(match.risk_score, match.title);
+    answers.uplift_category = uplift.category;
+    answers.uplift_applied = uplift.uplift;
+    const raw = uplift.adjustedBase + modifier;
     score = Math.max(5, Math.min(95, Math.round(raw)));
     band = bandFromScore(score);
-    // Keep dataset's band if modifier is 0 to honour source labelling
-    if (modifier === 0) band = normaliseBand(match.risk_band);
     const override = TASK_OVERRIDES[match.title];
     if (override) {
       tasks = override.tasks_at_risk;
@@ -164,8 +153,7 @@ export const Results = ({ answers, onRestart }: Props) => {
   } else {
     // Fallback: industry-based scoring
     score = calculateRisk(answers);
-    const legacyBand = riskBand(score);
-    band = legacyBand === "low" ? "Low" : legacyBand === "medium" ? "Moderate" : "High";
+    band = bandFromScore(score);
     tasks = tasksAtRisk(answers).map(cleanTask).filter(Boolean);
     skills = protectiveSkills(answers).map(cleanTask).filter(Boolean);
     comparison = industryComparison(score, answers.industry);

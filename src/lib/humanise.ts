@@ -244,23 +244,152 @@ export function deriveSegmentTag(a: QuizAnswers): QuizAnswers["segment_tag"] {
 
 // ---------- Risk band & summaries ----------
 
+export type RiskBandLabel = "Low" | "Moderate" | "High" | "Very High";
+
+/** 2026-calibrated thresholds. */
+export function bandFromScore(score: number): RiskBandLabel {
+  if (score <= 34) return "Low";
+  if (score <= 54) return "Moderate";
+  if (score <= 74) return "High";
+  return "Very High";
+}
+
+/** Legacy three-tier band (kept for back-compat with fallback path / older callers). */
 export function riskBand(score: number): "low" | "medium" | "high" {
-  if (score <= 40) return "low";
-  if (score <= 70) return "medium";
+  if (score <= 34) return "low";
+  if (score <= 54) return "medium";
   return "high";
 }
 
 export function riskSummary(score: number): string {
-  const band = riskBand(score);
-  if (band === "low") return "Your role looks resilient. AI is more likely to assist you than replace you.";
-  if (band === "medium") return "Parts of your role are exposed. With the right skills, you can stay ahead.";
-  return "Your role has significant exposure to automation. Action now will make a real difference.";
+  const band = bandFromScore(score);
+  switch (band) {
+    case "Low":
+      return "Your role has strong protective factors against AI displacement. Focus on compounding what makes you hard to replace.";
+    case "Moderate":
+      return "AI will change how you work more than whether you work. The next 12 months are the right time to build AI skills into your workflow.";
+    case "High":
+      return "Your role has significant AI exposure. The people who navigate this well are the ones who start adapting now, not later.";
+    case "Very High":
+      return "Some of what you do today will be automated. The question isn't whether to adapt, it's how fast and in which direction.";
+  }
 }
 
 export function calculateRisk(a: QuizAnswers): number {
   const base = 50;
   const mods = computeModifiers(a);
   return Math.max(3, Math.min(97, Math.round(base + mods.capped_total)));
+}
+
+// ---------- Knowledge-work uplift layer ----------
+
+export type UpliftCategory =
+  | "content_design"
+  | "data_analysis"
+  | "administrative"
+  | "junior_knowledge"
+  | "specialist_senior"
+  | "none";
+
+export type UpliftResult = {
+  category: UpliftCategory;
+  uplift: number;       // points added to base
+  flooredBase: number;  // base after applying floor (before uplift)
+  adjustedBase: number; // flooredBase + uplift, clamped 0-100
+};
+
+const UPLIFT_FLOOR = 45;
+
+const UPLIFT_POINTS: Record<UpliftCategory, number> = {
+  content_design:    12,
+  data_analysis:     10,
+  administrative:    10,
+  junior_knowledge:   8,
+  specialist_senior:  5,
+  none:               0,
+};
+
+/** Substring-based classification of an O*NET title into an uplift category. */
+export function classifyUpliftCategory(occupationTitle: string | undefined | null): UpliftCategory {
+  if (!occupationTitle) return "none";
+  const t = occupationTitle.toLowerCase();
+  const has = (...keys: string[]) => keys.some((k) => t.includes(k));
+
+  // 6 — Roles NOT receiving uplift (check first; hard exclusions)
+  if (has(
+    // healthcare delivery
+    "nurse", "nursing", "physician", "doctor", "surgeon", "dentist", "paramedic",
+    "midwife", "pharmacist", "therapist", "carer", "caregiver", "care worker",
+    "support worker", "personal care", "home health",
+    // teaching / in-person education
+    "teacher", "tutor", "lecturer", "professor", "educator", "early childhood", "kaiako",
+    // trades, manual, construction, transport
+    "electrician", "plumber", "carpenter", "builder", "construction", "labourer", "laborer",
+    "mechanic", "welder", "painter", "roofer", "joiner", "fitter", "machinist",
+    "driver", "courier", "pilot", "captain",
+    // hospitality & cleaning
+    "chef", "cook", "barista", "bartender", "waiter", "waitress", "hospitality",
+    "housekeep", "cleaner",
+    // fieldwork / horticulture / primary
+    "farm", "farmer", "horticultur", "landscap", "gardener", "ranger", "forestry", "fisher",
+  )) return "none";
+
+  // 1 — Content, writing, design (highest exposure)
+  if (has(
+    "copywriter", "content writer", "content strategist", "content manager",
+    "journalist", "editor", "ux writer", "technical writer", "blogger",
+    "social media", "seo", "search engine optim",
+    "graphic designer", "digital designer", "web designer", "brand designer",
+    "communications manager", "communications advisor", "communications specialist",
+    "public relations", "pr manager",
+    "marketing coordinator", "marketing manager", "marketing specialist", "marketer",
+    "writer", "designer",
+  )) return "content_design";
+
+  // 2 — Data, analysis, reporting
+  if (has(
+    "data analyst", "business analyst", "financial analyst", "reporting analyst",
+    "insights analyst", "research analyst", "market researcher", "data entry",
+    "operations analyst", "planning analyst",
+    "management accountant", "junior accountant", "payroll", "accounts administrator",
+    "accounts clerk", "bookkeep",
+  )) return "data_analysis";
+
+  // 3 — Administrative, operational, frontline service
+  if (has(
+    "receptionist", "administrator", "office manager", "executive assistant",
+    "personal assistant", "data entry operator",
+    "operations coordinator", "project coordinator", "scheduling coordinator",
+    "customer service representative", "customer service", "contact centre",
+    "call centre", "call center", "helpdesk", "help desk",
+    "claims processor", "document controller",
+  )) return "administrative";
+
+  // 4 — Junior / mid-level knowledge work
+  if (has("graduate", "junior", "associate", "assistant ", "coordinator")) return "junior_knowledge";
+
+  // 5 — Specialist / senior knowledge
+  if (has(
+    "senior", "director", "head of", "chief", "principal",
+    "consultant", "lawyer", "solicitor", "barrister", "legal counsel",
+    "financial advisor", "financial adviser",
+    "hr manager", "human resources manager",
+    "product manager", "architect", "engineer",
+    "manager", // catch-all for non-front-line management roles
+    "developer", "software", "data scientist", "actuary", "economist",
+    "strategist", "policy",
+  )) return "specialist_senior";
+
+  return "none";
+}
+
+/** Apply floor + uplift to an O*NET base score. Categories 1-5 floor at 45 first. */
+export function applyUplift(baseScore: number, occupationTitle: string | undefined | null): UpliftResult {
+  const category = classifyUpliftCategory(occupationTitle);
+  const uplift = UPLIFT_POINTS[category];
+  const flooredBase = category === "none" ? baseScore : Math.max(UPLIFT_FLOOR, baseScore);
+  const adjustedBase = Math.max(0, Math.min(100, flooredBase + uplift));
+  return { category, uplift, flooredBase, adjustedBase };
 }
 
 export function tasksAtRisk(_a: QuizAnswers): string[] {
@@ -280,9 +409,9 @@ export function protectiveSkills(_a: QuizAnswers): string[] {
 }
 
 export function industryComparison(score: number, industry: string): string {
-  const band = riskBand(score);
+  const band = bandFromScore(score);
   const label = industry || "your work type";
-  if (band === "low") return `You sit below the average exposure for ${label}.`;
-  if (band === "medium") return `You're roughly in line with the average for ${label}.`;
+  if (band === "Low") return `You sit below the average exposure for ${label}.`;
+  if (band === "Moderate") return `You're roughly in line with the average for ${label}.`;
   return `You're above the typical exposure for ${label}.`;
 }

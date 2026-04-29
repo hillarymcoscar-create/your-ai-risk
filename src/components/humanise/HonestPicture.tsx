@@ -6,10 +6,20 @@ type Props = {
   industry: string;
   score: number;
   usesAi: boolean;
+  rawJobTitle?: string;
+  band?: string;
+  agentTier?: string | null;
+  aiTools?: string[];
+  aiRelationshipSegment?: string;
+  region?: string;
   onTasks?: (tasks: { tasks_at_risk: string[]; protective_tasks: string[]; honest_picture?: string; agent_note?: string; agent_tasks?: string[] }) => void;
 };
 
-export const HonestPicture = ({ jobTitle, industry, score, usesAi, onTasks }: Props) => {
+export const HonestPicture = ({
+  jobTitle, industry, score, usesAi,
+  rawJobTitle, band, agentTier, aiTools, aiRelationshipSegment, region,
+  onTasks,
+}: Props) => {
   const [text, setText] = useState<string>("");
   const [error, setError] = useState<string>("");
   const [loading, setLoading] = useState(true);
@@ -22,7 +32,7 @@ export const HonestPicture = ({ jobTitle, industry, score, usesAi, onTasks }: Pr
 
     supabase.functions
       .invoke("honest-picture", {
-        body: { jobTitle, industry, score, usesAi },
+        body: { jobTitle, industry, score, usesAi, rawJobTitle, band, agentTier, aiTools, aiRelationshipSegment, region },
       })
       .then(({ data, error }) => {
         if (cancelled) return;
@@ -53,7 +63,7 @@ export const HonestPicture = ({ jobTitle, industry, score, usesAi, onTasks }: Pr
     return () => {
       cancelled = true;
     };
-  }, [jobTitle, industry, score, usesAi]);
+  }, [jobTitle, industry, score, usesAi, rawJobTitle, band, agentTier, aiTools?.join(","), aiRelationshipSegment, region]);
 
   return (
     <section

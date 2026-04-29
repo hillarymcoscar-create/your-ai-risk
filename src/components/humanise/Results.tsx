@@ -313,9 +313,11 @@ export const Results = ({ answers, onRestart }: Props) => {
         />
 
         <AgentWatch
-          agenticCapped={agenticCapped}
-          agentNote={aiTasks?.agent_note}
-          agentTasks={aiTasks?.agent_tasks}
+          agentTier={agentTier}
+          agentReality={aiTasks?.agent_reality}
+          nzSignal={aiTasks?.nz_signal}
+          yourMove={aiTasks?.your_move}
+          lockedPreview={aiTasks?.locked_preview}
           jobTitle={match?.title ?? answers.jobTitle}
           emailSubmitted={emailSubmitted}
           onOpenEmailModal={() => setPlanOpen(true)}

@@ -134,11 +134,10 @@ export const Results = ({ answers, onRestart }: Props) => {
     });
   }
 
-  const agenticRaw = (Q5_MOD[answers.repeatableTasks ?? ""] ?? 0) + (Q6_MOD[answers.handoffTask ?? ""] ?? 0);
-  const agenticCapped = Math.min(15, agenticRaw);
-  const rawModifier = (Q3_MOD[answers.computerUse] ?? 0) + (Q4_MOD[answers.aiUsage] ?? 0) + agenticCapped;
-  // Cap modifier at ±15 so quiz answers personalise without overwhelming the O*NET base score
-  const modifier = Math.max(-15, Math.min(15, rawModifier));
+  const mods = computeModifiers(answers);
+  const modifier = mods.capped_total; // already clamped to ±15
+  // Agent Watch indicator now derived from the AI-relationship answer.
+  const agenticCapped = AGENT_BY_RELATIONSHIP[answers.ai_relationship ?? 0] ?? 0;
 
   let score: number;
   let band: Band;

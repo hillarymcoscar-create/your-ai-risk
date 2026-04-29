@@ -400,6 +400,7 @@ export function applyUplift(baseScore: number, occupationTitle: string | undefin
   const uplift = UPLIFT_POINTS[category];
   const flooredBase = category === "none" ? baseScore : Math.max(UPLIFT_FLOOR, baseScore);
   const adjustedBase = Math.max(0, Math.min(100, flooredBase + uplift));
+  return { category, uplift, flooredBase, adjustedBase };
 }
 
 // ---------- Agent-exposure layer ----------

@@ -470,8 +470,8 @@ const AgentWatch = ({
       </p>
       {badge && (
         <span
-          className="mt-4 inline-block rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-[0.1em]"
-          style={{ background: badge.bg, color: badge.fg }}
+          className="mt-4 inline-block rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-[0.1em] text-white"
+          style={{ background: badge.bg }}
         >
           {badge.label}
         </span>

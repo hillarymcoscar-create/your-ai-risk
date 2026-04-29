@@ -12,7 +12,7 @@ type Props = {
   aiTools?: string[];
   aiRelationshipSegment?: string;
   region?: string;
-  onTasks?: (tasks: { tasks_at_risk: string[]; protective_tasks: string[]; honest_picture?: string; agent_note?: string; agent_tasks?: string[]; agent_reality?: string; nz_signal?: string; your_move?: string; locked_preview?: string }) => void;
+  onTasks?: (tasks: { tasks_at_risk: string[]; protective_tasks: string[]; honest_picture?: string; agent_note?: string; agent_tasks?: string[]; agent_reality?: string; agent_reality_email?: string; nz_signal?: string; your_move?: string; locked_preview?: string }) => void;
 };
 
 export const HonestPicture = ({
@@ -50,6 +50,7 @@ export const HonestPicture = ({
               agent_note: data?.agent_note ?? "",
               agent_tasks: data?.agent_tasks ?? [],
               agent_reality: data?.agent_reality ?? "",
+              agent_reality_email: data?.agent_reality_email ?? "",
               nz_signal: data?.nz_signal ?? "",
               your_move: data?.your_move ?? "",
               locked_preview: data?.locked_preview ?? "",

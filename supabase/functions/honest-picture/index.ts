@@ -147,12 +147,13 @@ const HP_TOOL = [{
         agent_note:       { type: "string" },
         agent_tasks:      { type: "array", items: { type: "string" }, minItems: 3, maxItems: 3 },
         agent_reality:    { type: "string", description: "2-3 sentences specific to this occupation describing what autonomous AI agents are doing right now in this role. Name 2-3 specific real tools (e.g. Semrush AI, BrightEdge Copilot, custom GPT-4o pipelines, Microsoft Copilot, Make.com). Be concrete about what work is being absorbed." },
+        agent_reality_email: { type: "string", description: "4 to 5 sentences. A SIGNIFICANTLY EXPANDED version of agent_reality, written for the email the user just gave their address to receive. It must go deeper than agent_reality and contain information NOT visible on the results page. Name specific tools, specific NZ businesses or industry patterns where known, specific timelines, and specific tasks being automated right now. Do NOT repeat agent_reality verbatim, expand and deepen it. No em dashes." },
         nz_signal:        { type: "string", description: "2 sentences with at least one specific NZ-grounded data point (job-ad changes, hiring trend, NZ industry shift since 2025) relevant to this occupation. No generic claims." },
         your_move:        { type: "string", description: "2-3 sentences. One concrete 30-day action the user can take, then one direct sentence about what separates the people keeping their roles from the ones being compressed. Direct, specific, no platitudes." },
         locked_preview:   { type: "string", description: "Maximum 2 sentences. Write one locked teaser that creates a specific unresolved question about THIS person's situation. Reference their occupation by name and their agent tier reality. Make them feel like there is one piece of information about their specific role that would change how they think about their next 90 days. End with a direct question to the reader. Do NOT use the words unlock, discover, or exclusive. Do NOT promise tips, strategies, or insights. Do NOT sound like a marketing headline or pricing-page copy. No em dashes." },
         locked_content_full: { type: "string", description: "3 to 4 sentences. The expanded answer to the locked_preview teaser. This is the most valuable content in the Humanise product. It must contain specific, actionable intelligence about THIS occupation in NZ that is NOT visible anywhere else on the results page. Name specific tools, specific tasks, specific timelines, specific NZ regions or company types where known. Do NOT repeat anything from agent_reality, nz_signal, your_move, or locked_preview. This is the insight that makes the user think: I needed to know that. No em dashes." },
       },
-      required: ["tasks_at_risk", "protective_tasks", "agent_note", "agent_tasks", "agent_reality", "nz_signal", "your_move", "locked_preview", "locked_content_full"],
+      required: ["tasks_at_risk", "protective_tasks", "agent_note", "agent_tasks", "agent_reality", "agent_reality_email", "nz_signal", "your_move", "locked_preview", "locked_content_full"],
       additionalProperties: false,
     },
   },
@@ -330,7 +331,8 @@ TASK LISTS
 - agent_tasks: 3 specific tasks AI agents are handling today in this occupation. Action verb start. Max 12 words each.
 
 AGENT WATCH FIELDS
-- agent_reality: 2 to 3 sentences specific to this occupation. Describe what autonomous AI agents are doing right now in this exact role. Name 2 to 3 specific real tools (e.g. Semrush AI, BrightEdge Copilot, custom GPT-4o pipelines, Microsoft Copilot, Make.com, Manus, Claude). Be concrete about what work is being absorbed. Mention NZ digital agencies or NZ businesses where natural. Do NOT repeat the agent_note content.
+- agent_reality: 2 to 3 sentences specific to this occupation. Describe what autonomous AI agents are doing right now in this exact role. Name 2 to 3 specific real tools (e.g. Semrush AI, BrightEdge Copilot, custom GPT-4o pipelines, Microsoft Copilot, Make.com, Manus, Claude). Be concrete about what work is being absorbed. Mention NZ digital agencies or NZ businesses where natural. Do NOT repeat the agent_note content. THIS IS THE SHORTER RESULTS-PAGE VERSION.
+- agent_reality_email: 4 to 5 sentences. A SIGNIFICANTLY EXPANDED, deeper version of agent_reality, written for the email the user just gave their address to receive. It MUST contain information that was NOT visible on the results page. Name specific tools, specific NZ businesses or industry patterns where known, specific timelines (e.g. "in the last 6 months", "by mid 2026"), and specific tasks being automated right now in NZ. Do NOT repeat agent_reality verbatim. Treat agent_reality as the teaser and agent_reality_email as the full briefing. No em dashes.
 - nz_signal: 2 sentences. Include at least one specific NZ data point relevant to this occupation (e.g. AI mentions in NZ job ads have risen 143.5% since March 2025; junior coordinator roles being advertised less; senior roles increasingly listing AI proficiency as baseline). No generic global claims.
 - your_move: 2 to 3 sentences. Sentence one is one concrete 30-day action specific to this role (e.g. "Spend the next 30 days building one AI-assisted SEO workflow you own completely, site audit automation, content briefing, or monthly reporting"). Sentence two is one direct sentence about what separates the people keeping their roles from the ones being compressed. Direct, specific, no platitudes.
 - locked_preview: Maximum 2 sentences. Write one teaser that creates a specific, unresolved question about THIS person's situation. Reference the occupation by name and the agent tier reality. Make them feel there is one piece of information about their specific role that would change how they think about their next 90 days. End with a direct question to the reader. Banned words: unlock, discover, exclusive, tips, strategies, insights, premium. Do not sound like a marketing headline. No em dashes.
@@ -359,6 +361,7 @@ No em dashes anywhere. No phrases ending in prepositions/conjunctions/articles i
     let agent_note = "";
     let agent_tasks: string[] = [];
     let agent_reality = "";
+    let agent_reality_email = "";
     let nz_signal = "";
     let your_move = "";
     let locked_preview = "";
@@ -371,7 +374,7 @@ No em dashes anywhere. No phrases ending in prepositions/conjunctions/articles i
       let parsed: {
         tasks_at_risk?: string[]; protective_tasks?: string[];
         agent_note?: string; agent_tasks?: string[];
-        agent_reality?: string; nz_signal?: string;
+        agent_reality?: string; agent_reality_email?: string; nz_signal?: string;
         your_move?: string; locked_preview?: string;
         locked_content_full?: string;
       } = {};
@@ -386,6 +389,7 @@ No em dashes anywhere. No phrases ending in prepositions/conjunctions/articles i
       agent_note       = stripEmDashes((parsed.agent_note ?? "").trim());
       agent_tasks      = (parsed.agent_tasks      ?? []).map(cleanTask).filter(Boolean).slice(0, 3);
       agent_reality    = stripEmDashes((parsed.agent_reality ?? "").trim());
+      agent_reality_email = stripEmDashes((parsed.agent_reality_email ?? "").trim());
       nz_signal        = stripEmDashes((parsed.nz_signal ?? "").trim());
       your_move        = stripEmDashes((parsed.your_move ?? "").trim());
       locked_preview   = stripEmDashes((parsed.locked_preview ?? "").trim());
@@ -403,6 +407,7 @@ No em dashes anywhere. No phrases ending in prepositions/conjunctions/articles i
         agent_note,
         agent_tasks,
         agent_reality,
+        agent_reality_email,
         nz_signal,
         your_move,
         locked_preview,

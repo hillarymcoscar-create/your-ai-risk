@@ -86,7 +86,7 @@ const TASK_OVERRIDES: Record<string, { tasks_at_risk: string[]; protective_tasks
 
 export const Results = ({ answers, onRestart }: Props) => {
   const occupations = useOccupations();
-  const [aiTasks, setAiTasks] = useState<{ tasks_at_risk: string[]; protective_tasks: string[]; honest_picture?: string; agent_note?: string; agent_tasks?: string[]; agent_reality?: string; nz_signal?: string; your_move?: string; locked_preview?: string; locked_content_full?: string } | null>(null);
+  const [aiTasks, setAiTasks] = useState<{ tasks_at_risk: string[]; protective_tasks: string[]; honest_picture?: string; agent_note?: string; agent_tasks?: string[]; agent_reality?: string; agent_reality_email?: string; nz_signal?: string; your_move?: string; locked_preview?: string; locked_content_full?: string } | null>(null);
   const [planOpen, setPlanOpen] = useState(false);
   const [planEmail, setPlanEmail] = useState("");
   const [planSubmitting, setPlanSubmitting] = useState(false);
@@ -222,7 +222,7 @@ export const Results = ({ answers, onRestart }: Props) => {
             agentTier,
             segmentTag: answers.segment_tag ?? null,
             nzRegion: region,
-            agentReality: aiTasks?.agent_reality ?? "",
+            agentReality: (aiTasks?.agent_reality_email && aiTasks.agent_reality_email.trim()) ? aiTasks.agent_reality_email : (aiTasks?.agent_reality ?? ""),
             nzSignal: aiTasks?.nz_signal ?? "",
             yourMove: aiTasks?.your_move ?? "",
             lockedContent: aiTasks?.locked_content_full || aiTasks?.locked_preview || "",

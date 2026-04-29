@@ -573,6 +573,40 @@ const CtaCard = ({
   </div>
 );
 
+const AGENT_TIER_META: Record<AgentTier, { icon: string; label: string; tone: "danger" | "warn" | "info" | "success" }> = {
+  tier_1: { icon: "🤖", label: "High agent exposure — autonomous AI systems can already handle core tasks in your role.",     tone: "danger"  },
+  tier_2: { icon: "⚡", label: "Significant agent exposure — AI agents are absorbing the execution layer of your role.",      tone: "warn"    },
+  tier_3: { icon: "📊", label: "Moderate agent exposure — agents accelerate your work but can't yet replace your judgment.", tone: "info"    },
+  tier_4: { icon: "🛡", label: "Low agent exposure — your role depends on physical presence or human judgment agents can't replicate.", tone: "success" },
+};
+
+const AGENT_TONE_CLASSES: Record<"danger" | "warn" | "info" | "success", string> = {
+  danger:  "border-danger/40 bg-danger/10 text-danger",
+  warn:    "border-accent/40 bg-accent/10 text-accent",
+  info:    "border-primary/30 bg-primary/5 text-primary",
+  success: "border-success/40 bg-success/10 text-success",
+};
+
+const AgentExposureBadge = ({ tier }: { tier: AgentTier }) => {
+  const meta = AGENT_TIER_META[tier];
+  const showFootnote = tier === "tier_1" || tier === "tier_2";
+  return (
+    <div className="mt-5 flex flex-col items-center gap-2 px-4">
+      <span
+        className={`inline-flex items-center gap-2 rounded-full border px-4 py-1.5 text-xs sm:text-[13px] font-medium leading-snug max-w-[60ch] text-center ${AGENT_TONE_CLASSES[meta.tone]}`}
+      >
+        <span aria-hidden>{meta.icon}</span>
+        <span>{meta.label}</span>
+      </span>
+      {showFootnote && (
+        <p className="mt-1 text-[11px] sm:text-xs text-muted-foreground max-w-[60ch] leading-relaxed">
+          This score reflects not just AI tools, but autonomous AI agents that can complete your tasks end-to-end without a human in the loop, the fastest-growing source of knowledge work displacement in 2026.
+        </p>
+      )}
+    </div>
+  );
+};
+
 const SoftExitBanner = () => (
   <section className="mt-6 rounded-2xl border border-accent/30 bg-accent/5 p-6 sm:p-7 shadow-soft animate-fade-in">
     <h2 className="text-lg sm:text-xl font-semibold text-primary">A note before your score</h2>

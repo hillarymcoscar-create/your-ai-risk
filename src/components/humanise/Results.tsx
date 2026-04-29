@@ -89,14 +89,6 @@ const TASK_OVERRIDES: Record<string, { tasks_at_risk: string[]; protective_tasks
   },
 };
 
-function normaliseBand(b: string | undefined): Band {
-  const v = (b ?? "").toLowerCase();
-  if (v.startsWith("very")) return "Very High";
-  if (v.startsWith("high")) return "High";
-  if (v.startsWith("mod") || v.startsWith("med")) return "Moderate";
-  if (v.startsWith("low")) return "Low";
-  return "Moderate";
-}
 
 export const Results = ({ answers, onRestart }: Props) => {
   const occupations = useOccupations();

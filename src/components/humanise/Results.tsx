@@ -442,40 +442,112 @@ export const Results = ({ answers, onRestart }: Props) => {
           Autonomous agent activity sourced from real-time AI capability analysis across 1,016 NZ occupations.
         </p>
 
-        <Dialog open={planOpen} onOpenChange={setPlanOpen}>
+        <Dialog
+          open={planOpen}
+          onOpenChange={(open) => {
+            setPlanOpen(open);
+            if (!open) {
+              // Reset transient state when the modal closes.
+              setPlanSubmittedInModal(false);
+              setPlanEmail("");
+            }
+          }}
+        >
           <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Email me my result</DialogTitle>
-              <DialogDescription>
-                We'll send your {score}% {band} Risk score and a personalised Career Insight for {match?.title ?? (answers.jobTitle?.trim() || "your role")}.
-              </DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handlePlanSubmit} className="mt-2 space-y-4">
-              <Input
-                type="email"
-                required
-                placeholder="your@email.com"
-                value={planEmail}
-                onChange={(e) => setPlanEmail(e.target.value)}
-                disabled={planSubmitting}
-                className="h-12 rounded-xl"
-              />
-              <Button
-                type="submit"
-                disabled={planSubmitting || !planEmail.trim()}
-                className="w-full rounded-full font-semibold bg-cta text-accent-foreground hover:opacity-95 disabled:opacity-50"
-              >
-                {planSubmitting ? (
-                  <span className="flex items-center gap-2">
-                    <span className="h-4 w-4 rounded-full border-2 border-accent-foreground/30 border-t-accent-foreground animate-spin" />
-                    Sending…
-                  </span>
-                ) : (
-                  "Send me my result"
-                )}
-              </Button>
-              <p className="text-center text-[11px] text-muted-foreground">No spam. Unsubscribe anytime.</p>
-            </form>
+            {planSubmittedInModal ? (
+              <>
+                <DialogHeader>
+                  <DialogTitle>On its way.</DialogTitle>
+                  <DialogDescription>
+                    Your full Agent Watch report for {matchedTitle} is in your inbox. Check your spam folder if you don't see it in two minutes.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="mt-4">
+                  <Button
+                    onClick={() => {
+                      setPlanOpen(false);
+                      setPlanSubmittedInModal(false);
+                      setPlanEmail("");
+                    }}
+                    className="w-full rounded-full font-semibold bg-cta text-accent-foreground hover:opacity-95"
+                  >
+                    See my full report below
+                  </Button>
+                </div>
+              </>
+            ) : planSource === "agent_watch_gate" ? (
+              <>
+                <DialogHeader>
+                  <DialogTitle>Your full Agent Watch report is ready.</DialogTitle>
+                  <DialogDescription>
+                    We have identified {agentTaskCount} specific tasks in {matchedTitle} roles that agents are targeting right now in NZ. Enter your email to see them.
+                  </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={handlePlanSubmit} className="mt-2 space-y-4">
+                  <Input
+                    type="email"
+                    required
+                    placeholder="your@email.com"
+                    value={planEmail}
+                    onChange={(e) => setPlanEmail(e.target.value)}
+                    disabled={planSubmitting}
+                    className="h-12 rounded-xl"
+                  />
+                  <Button
+                    type="submit"
+                    disabled={planSubmitting || !planEmail.trim()}
+                    className="w-full rounded-full font-semibold bg-cta text-accent-foreground hover:opacity-95 disabled:opacity-50"
+                  >
+                    {planSubmitting ? (
+                      <span className="flex items-center gap-2">
+                        <span className="h-4 w-4 rounded-full border-2 border-accent-foreground/30 border-t-accent-foreground animate-spin" />
+                        Sending…
+                      </span>
+                    ) : (
+                      "Show me my full report"
+                    )}
+                  </Button>
+                  <p className="text-center text-[11px] text-muted-foreground">
+                    Free. No spam. One email with your full Agent Watch breakdown.
+                  </p>
+                </form>
+              </>
+            ) : (
+              <>
+                <DialogHeader>
+                  <DialogTitle>Email me my result</DialogTitle>
+                  <DialogDescription>
+                    We'll send your {score}% {band} Risk score and a personalised Career Insight for {matchedTitle}.
+                  </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={handlePlanSubmit} className="mt-2 space-y-4">
+                  <Input
+                    type="email"
+                    required
+                    placeholder="your@email.com"
+                    value={planEmail}
+                    onChange={(e) => setPlanEmail(e.target.value)}
+                    disabled={planSubmitting}
+                    className="h-12 rounded-xl"
+                  />
+                  <Button
+                    type="submit"
+                    disabled={planSubmitting || !planEmail.trim()}
+                    className="w-full rounded-full font-semibold bg-cta text-accent-foreground hover:opacity-95 disabled:opacity-50"
+                  >
+                    {planSubmitting ? (
+                      <span className="flex items-center gap-2">
+                        <span className="h-4 w-4 rounded-full border-2 border-accent-foreground/30 border-t-accent-foreground animate-spin" />
+                        Sending…
+                      </span>
+                    ) : (
+                      "Send me my result"
+                    )}
+                  </Button>
+                  <p className="text-center text-[11px] text-muted-foreground">No spam. Unsubscribe anytime.</p>
+                </form>
+              </>
+            )}
           </DialogContent>
         </Dialog>
       </main>

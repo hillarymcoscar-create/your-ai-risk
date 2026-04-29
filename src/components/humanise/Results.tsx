@@ -43,14 +43,6 @@ type Props = {
 type Band = RiskBandLabel;
 
 // Modifier weights live in src/lib/humanise.ts (see computeModifiers).
-// The agentic exposure indicator is derived from the new ai_relationship answer.
-const AGENT_BY_RELATIONSHIP: Record<number, number> = {
-  1: 12,
-  2: 8,
-  3: 4,
-  4: -2,
-  5: -8,
-};
 
 // Trailing words that indicate a sentence was cut off mid-thought
 const TRAILING_STOPWORDS = new Set([

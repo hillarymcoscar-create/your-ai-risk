@@ -442,28 +442,30 @@ export const Results = ({ answers, onRestart }: Props) => {
   );
 };
 
-function agentExposure(capped: number): { label: string; color: string } {
-  if (capped >= 10) return { label: "HIGH AGENT EXPOSURE",     color: "#DC2626" };
-  if (capped >= 4)  return { label: "MODERATE AGENT EXPOSURE", color: "#D97706" };
-  if (capped >= -3) return { label: "LOW AGENT EXPOSURE",      color: "#059669" };
-  return               { label: "MINIMAL AGENT EXPOSURE",   color: "#059669" };
-}
+// Agent Watch badge mapping. Driven directly by the agent_tier value
+// computed during scoring (in src/lib/humanise.ts). Colours mirror the
+// risk gauge bands so users see the same visual language across the page.
+const AGENT_BADGE_BY_TIER: Record<AgentTier, { label: string; bg: string; fg: string }> = {
+  tier_1: { label: "HIGH AGENT EXPOSURE",        bg: "hsl(var(--danger))",         fg: "hsl(var(--danger-foreground, 0 0% 100%))" },
+  tier_2: { label: "SIGNIFICANT AGENT EXPOSURE", bg: "hsl(var(--warning-strong))", fg: "hsl(var(--warning-foreground, 0 0% 100%))" },
+  tier_3: { label: "MODERATE AGENT EXPOSURE",    bg: "hsl(var(--warning))",        fg: "hsl(var(--warning-foreground, 0 0% 100%))" },
+  tier_4: { label: "LOW AGENT EXPOSURE",         bg: "hsl(var(--success))",        fg: "hsl(var(--success-foreground, 0 0% 100%))" },
+};
 
 const AgentWatch = ({
-  agenticCapped, agentNote, agentTasks, jobTitle, emailSubmitted, onOpenEmailModal,
+  agentTier, agentReality, nzSignal, yourMove, lockedPreview,
+  jobTitle, emailSubmitted, onOpenEmailModal,
 }: {
-  agenticCapped: number;
-  agentNote?: string;
-  agentTasks?: string[];
+  agentTier: AgentTier | null;
+  agentReality?: string;
+  nzSignal?: string;
+  yourMove?: string;
+  lockedPreview?: string;
   jobTitle: string;
   emailSubmitted: boolean;
   onOpenEmailModal: () => void;
 }) => {
-  const { label, color } = agentExposure(agenticCapped);
-
-  const firstSentence = agentNote
-    ? (agentNote.match(/^[^.!?]+[.!?]/) ?? [agentNote])[0]
-    : "";
+  const badge = agentTier ? AGENT_BADGE_BY_TIER[agentTier] : null;
 
   return (
     <section
@@ -476,49 +478,68 @@ const AgentWatch = ({
       <p className="mt-3 text-[15px] text-muted-foreground leading-relaxed">
         AI agents handle entire task sequences without human input. Here's what's targeting roles like yours right now.
       </p>
-      <span
-        className="mt-4 inline-block rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-[0.1em] text-white"
-        style={{ background: color }}
-      >
-        {label}
-      </span>
+      {badge && (
+        <span
+          className="mt-4 inline-block rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-[0.1em]"
+          style={{ background: badge.bg, color: badge.fg }}
+        >
+          {badge.label}
+        </span>
+      )}
 
-      {firstSentence && (
-        <p className="mt-4 text-[15px] leading-relaxed text-primary">
-          {firstSentence}{firstSentence === agentNote ? "" : "…"}
-        </p>
+      {agentReality && (
+        <p className="mt-5 text-[15px] leading-relaxed text-primary">{agentReality}</p>
       )}
 
       {emailSubmitted ? (
-        <div className="mt-5 space-y-4">
-          {agentNote && agentNote !== firstSentence && (
-            <p className="text-[15px] leading-relaxed text-primary">{agentNote}</p>
+        <div className="mt-5 space-y-5">
+          {nzSignal && (
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: "#00B5A4" }}>
+                NZ Signal
+              </p>
+              <p className="mt-2 text-[15px] leading-relaxed text-primary">{nzSignal}</p>
+            </div>
           )}
-          {agentTasks && agentTasks.length > 0 && (
-            <ul className="space-y-2">
-              {agentTasks.map((t, i) => (
-                <li key={i} className="flex gap-2 text-sm text-muted-foreground">
-                  <span className="mt-2 h-1.5 w-1.5 rounded-full shrink-0" style={{ background: "#00B5A4" }} />
-                  <span>{t}</span>
-                </li>
-              ))}
-            </ul>
+          {yourMove && (
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: "#00B5A4" }}>
+                Your Move
+              </p>
+              <p className="mt-2 text-[15px] leading-relaxed text-primary">{yourMove}</p>
+            </div>
           )}
           <p className="text-[11px] text-muted-foreground/60">
             Source: Humanise Agent Watch — updated April 2026
           </p>
         </div>
       ) : (
-        <div className="mt-5">
-          <div className="rounded-xl border border-border bg-secondary/40 px-4 py-3 flex items-center gap-3 select-none">
-            <Lock className="h-4 w-4 shrink-0 text-muted-foreground/50" />
-            <p className="text-sm text-muted-foreground/60 italic">
-              What AI agents are doing in {jobTitle} roles right now
+        <div className="mt-5 space-y-4">
+          {nzSignal && (
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: "#00B5A4" }}>
+                NZ Signal
+              </p>
+              <p className="mt-2 text-[15px] leading-relaxed text-primary">{nzSignal}</p>
+            </div>
+          )}
+          {yourMove && (
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: "#00B5A4" }}>
+                Your Move
+              </p>
+              <p className="mt-2 text-[15px] leading-relaxed text-primary">{yourMove}</p>
+            </div>
+          )}
+          <div className="rounded-xl border border-border bg-secondary/40 px-4 py-3 flex items-start gap-3 select-none">
+            <Lock className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground/50" />
+            <p className="text-sm text-muted-foreground/70 italic">
+              {lockedPreview || `What AI agents are doing in ${jobTitle} roles right now`}
             </p>
           </div>
           <Button
             onClick={onOpenEmailModal}
-            className="mt-4 rounded-full font-semibold bg-cta text-accent-foreground hover:opacity-95 text-sm px-5 h-10"
+            className="rounded-full font-semibold bg-cta text-accent-foreground hover:opacity-95 text-sm px-5 h-10"
           >
             See what AI agents are doing in your role →
           </Button>

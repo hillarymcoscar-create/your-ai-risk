@@ -193,6 +193,115 @@ function buildHtml(opts: {
 }
 
 // ── Agent Watch email ─────────────────────────────────────────────────
+
+type AwResource = { title: string; url: string; why: string; platform: string };
+
+// Hard-coded fallback resource packs keyed by industry / occupation keyword.
+// Used when no curated pack is available for the user's industry.
+function fallbackResources(occupation: string, industry: string): AwResource[] {
+  const occ = (occupation || "").toLowerCase();
+  const ind = (industry || "").toLowerCase();
+
+  const seo: AwResource[] = [
+    { title: "Google's AI Essentials on Coursera", url: "https://www.coursera.org/learn/google-ai-essentials", platform: "Coursera",
+      why: "The fastest way to understand how AI is changing search and content workflows from the inside." },
+    { title: "Semrush Academy AI SEO courses", url: "https://www.semrush.com/academy/", platform: "Semrush Academy",
+      why: "Free courses on using Semrush AI tools, directly relevant to the agent workflows replacing junior SEO tasks." },
+    { title: "Ahrefs Academy", url: "https://academy.ahrefs.com/", platform: "Ahrefs",
+      why: "Free SEO training kept current as agent-driven workflows change what gets ranked." },
+  ];
+  const marketing: AwResource[] = [
+    { title: "Google's AI Essentials on Coursera", url: "https://www.coursera.org/learn/google-ai-essentials", platform: "Coursera",
+      why: "Foundational AI fluency every marketer is now expected to have." },
+    { title: "HubSpot AI Marketing Certification", url: "https://academy.hubspot.com/", platform: "HubSpot Academy",
+      why: "Free certification covering AI tools for content, campaigns, and reporting." },
+    { title: "The AI Advantage on Skool", url: "https://www.skool.com/the-ai-advantage", platform: "Skool",
+      why: "Practical AI workflows for marketers, daily peer discussion and tool reviews." },
+  ];
+  const finance: AwResource[] = [
+    { title: "Excel Skills for Business on Coursera", url: "https://www.coursera.org/specializations/excel", platform: "Coursera",
+      why: "AI is changing Excel first. Stay ahead of Copilot adoption in your team." },
+    { title: "CPA Australia AI in Finance resources", url: "https://www.cpaaustralia.com.au/", platform: "CPA Australia",
+      why: "NZ-relevant guidance on AI adoption in accounting practice." },
+    { title: "CA ANZ Learning & Events", url: "https://www.charteredaccountantsanz.com/learning-and-events", platform: "Chartered Accountants ANZ",
+      why: "NZ-specific CPD on AI in finance from the local professional body." },
+  ];
+  const admin: AwResource[] = [
+    { title: "Microsoft Copilot adoption training", url: "https://adoption.microsoft.com/copilot/", platform: "Microsoft",
+      why: "Free official training for Copilot in Word, Excel, Outlook, and Teams. The tools changing your daily work." },
+    { title: "Google's AI Essentials on Coursera", url: "https://www.coursera.org/learn/google-ai-essentials", platform: "Coursera",
+      why: "Builds the cross-tool AI fluency that protects coordinator and operations roles." },
+    { title: "LinkedIn Learning: AI for Administrative Professionals", url: "https://www.linkedin.com/learning/search?keywords=AI%20administrative", platform: "LinkedIn Learning",
+      why: "Practical playbooks for the exact admin tasks agents are absorbing right now." },
+  ];
+  const legal: AwResource[] = [
+    { title: "Law Society NZ AI resources", url: "https://www.lawsociety.org.nz/", platform: "Law Society NZ",
+      why: "NZ-specific guidance on AI in legal practice and compliance." },
+    { title: "Harvey AI overview on YouTube", url: "https://www.youtube.com/results?search_query=Harvey+AI+legal+assistant+overview", platform: "YouTube",
+      why: "Understand what the AI tool reshaping legal work actually does." },
+    { title: "Google's AI Essentials on Coursera", url: "https://www.coursera.org/learn/google-ai-essentials", platform: "Coursera",
+      why: "Foundational AI fluency now expected of paralegals and junior solicitors." },
+  ];
+  const tech: AwResource[] = [
+    { title: "Anthropic Claude Skills documentation", url: "https://docs.anthropic.com/", platform: "Anthropic",
+      why: "How to build and ship agent workflows that absorb the work juniors used to do." },
+    { title: "Cursor AI editor", url: "https://www.cursor.com/", platform: "Cursor",
+      why: "The AI-native code editor that has become baseline tooling in NZ tech teams." },
+    { title: "Google's AI Essentials on Coursera", url: "https://www.coursera.org/learn/google-ai-essentials", platform: "Coursera",
+      why: "Solid grounding in AI fundamentals every engineer is expected to have." },
+  ];
+  const generic: AwResource[] = [
+    { title: "Google's AI Essentials on Coursera", url: "https://www.coursera.org/learn/google-ai-essentials", platform: "Coursera",
+      why: "Practical AI fluency that applies to almost any knowledge-work role." },
+    { title: "Microsoft Copilot adoption training", url: "https://adoption.microsoft.com/copilot/", platform: "Microsoft",
+      why: "Free official training for the AI tools showing up in NZ workplaces first." },
+    { title: "The AI Advantage on Skool", url: "https://www.skool.com/the-ai-advantage", platform: "Skool",
+      why: "Active community sharing real workflows used by professionals adapting now." },
+  ];
+
+  if (/seo|search engine/.test(occ)) return seo;
+  if (/market|content|brand|advertis|copywrit/.test(occ) || /marketing|advertis/.test(ind)) return marketing;
+  if (/account|finance|book|tax|audit|payroll/.test(occ) || /finance|account/.test(ind)) return finance;
+  if (/admin|coordinator|assistant|operation|reception|secretar|clerk/.test(occ)) return admin;
+  if (/legal|paralegal|lawyer|solicitor/.test(occ) || /legal/.test(ind)) return legal;
+  if (/develop|engineer|software|programm|data|analyst|tech/.test(occ) || /tech/.test(ind)) return tech;
+  return generic;
+}
+
+type AwPack = {
+  youtube?: Array<{ title?: string; url?: string; why?: string }>;
+  courses?: Array<{ title?: string; url?: string; why?: string; platform?: string }>;
+  nz_specific?: Array<{ title?: string; url?: string; why?: string; platform?: string }>;
+};
+
+// Pick the top 3 resources from the curated pack (NZ-specific first, then
+// courses, then YouTube). Falls back to occupation-based defaults if the
+// pack is null/empty.
+function pickResources(pack: AwPack | null | undefined, occupation: string, industry: string): AwResource[] {
+  const out: AwResource[] = [];
+  const push = (r: { title?: string; url?: string; why?: string; platform?: string }, defaultPlatform: string) => {
+    if (!r?.title || !r?.url) return;
+    if (out.length >= 3) return;
+    out.push({
+      title: String(r.title).trim(),
+      url: String(r.url).trim(),
+      why: String(r.why ?? "").trim(),
+      platform: String(r.platform ?? defaultPlatform).trim(),
+    });
+  };
+  for (const r of pack?.nz_specific ?? []) push(r, "NZ resource");
+  for (const r of pack?.courses ?? [])     push(r, "Course");
+  for (const r of pack?.youtube ?? [])     push(r, "YouTube");
+  if (out.length >= 3) return out.slice(0, 3);
+  // Fill remaining slots from fallbacks.
+  const fb = fallbackResources(occupation, industry);
+  for (const r of fb) {
+    if (out.length >= 3) break;
+    if (!out.some(x => x.url === r.url)) out.push(r);
+  }
+  return out.slice(0, 3);
+}
+
 function buildAgentWatchHtml(opts: {
   occupation: string;
   score: number;
@@ -202,12 +311,23 @@ function buildAgentWatchHtml(opts: {
   nzSignal?: string;
   yourMove?: string;
   lockedContent?: string;
+  resources?: AwResource[];
 }): string {
   const { occupation, score, riskBand } = opts;
   const region = opts.nzRegion && opts.nzRegion.trim() ? opts.nzRegion : "New Zealand";
   const para = (s?: string) => s && s.trim()
     ? `<p style="margin:0;font-size:14px;line-height:1.7;color:#333;">${h(s)}</p>`
     : `<p style="margin:0;font-size:14px;line-height:1.7;color:#9ca3af;">Not available.</p>`;
+
+  const resources = opts.resources ?? [];
+  const resourcesHtml = resources.length
+    ? resources.map((r) => `
+        <div style="margin:0 0 16px;font-size:14px;line-height:1.6;">
+          <a href="${h(r.url)}" style="color:${teal};text-decoration:none;font-weight:600;">${h(r.title)}</a>
+          <p style="margin:4px 0 2px;font-size:14px;line-height:1.6;color:#333;">${h(r.why)}</p>
+          <p style="margin:0;font-size:12px;color:#6b7280;">Platform: ${h(r.platform)}</p>
+        </div>`).join("")
+    : `<p style="margin:0;font-size:14px;line-height:1.7;color:#9ca3af;">Resources not available.</p>`;
 
   return `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -219,7 +339,9 @@ function buildAgentWatchHtml(opts: {
   <table width="100%" style="max-width:600px;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08);">
     <tr><td style="padding:28px 32px 8px;">
       <div style="font-size:22px;font-weight:800;color:${dark};letter-spacing:-0.01em;">Humanise</div>
-      <div style="font-size:12px;color:#9ca3af;margin-top:2px;">humanise.nz</div>
+      <div style="font-size:12px;color:#9ca3af;margin-top:2px;">
+        <a href="https://humanise.nz" style="color:#9ca3af;text-decoration:none;">humanise.nz</a>
+      </div>
     </td></tr>
     <tr><td style="padding:8px 32px 0;">
       <p style="margin:16px 0 0;font-size:14px;line-height:1.7;color:#333;">
@@ -242,9 +364,9 @@ function buildAgentWatchHtml(opts: {
 
       ${sectionLabel("The full picture")}
       ${para(opts.lockedContent)}
-      <p style="margin:8px 0 0;font-size:12px;line-height:1.6;color:#6b7280;">
-        This is the content that was locked on the results page. You unlocked it by entering your email. Here it is in full.
-      </p>
+
+      ${sectionLabel("Where to start")}
+      ${resourcesHtml}
 
       <p style="margin:24px 0 0;font-size:12px;color:#6b7280;">
         Your Humanise score: <strong style="color:${dark};">${h(score)}% (${h(riskBand)})</strong>
@@ -262,14 +384,14 @@ function buildAgentWatchHtml(opts: {
           Your Agent Watch report is the starting point. The next step is yours.
         </p>
         <p style="margin:18px 0 0;">
-          — Hillary<br>
-          <span style="color:#6b7280;font-size:13px;">Founder, Humanise · </span>
+          Hillary<br>
+          <span style="color:#6b7280;font-size:13px;">Founder, Humanise</span><br>
           <a href="https://humanise.nz" style="color:${teal};text-decoration:none;">humanise.nz</a>
         </p>
       </div>
 
       <div style="margin-top:24px;padding:14px 16px;background:#f8f9fa;border-radius:8px;font-size:13px;color:#374151;line-height:1.6;">
-        <strong>PS</strong> — Know someone in a similar role who should see their score?
+        <strong>PS:</strong> Know someone in a similar role who should see their score?
         Send them <a href="https://humanise.nz" style="color:${teal};text-decoration:none;">humanise.nz</a>.
       </div>
     </td></tr>
@@ -295,9 +417,16 @@ function buildAgentWatchText(opts: {
   nzSignal?: string;
   yourMove?: string;
   lockedContent?: string;
+  resources?: AwResource[];
 }): string {
   const region = opts.nzRegion && opts.nzRegion.trim() ? opts.nzRegion : "New Zealand";
   const v = (s?: string) => (s && s.trim()) ? s.trim() : "Not available.";
+  const resLines = (opts.resources ?? []).flatMap((r) => [
+    `- ${r.title} (${r.url})`,
+    `  ${r.why}`,
+    `  Platform: ${r.platform}`,
+    "",
+  ]);
   return [
     `Your Agent Watch report: ${opts.occupation}`,
     "---",
@@ -312,16 +441,19 @@ function buildAgentWatchText(opts: {
     "",
     "THE FULL PICTURE",
     v(opts.lockedContent),
+    "",
+    "WHERE TO START",
+    ...(resLines.length ? resLines : ["Resources not available.", ""]),
     "---",
     `Your Humanise score: ${opts.score}% (${opts.riskBand}) for ${opts.occupation} in ${region}.`,
     "",
     "The people navigating this well are not the most experienced people in their function. They are the ones who got specific about what AI can and cannot do in their role, and built one workflow deliberately.",
     "",
-    "— Hillary",
+    "Hillary",
     "Founder, Humanise",
     "humanise.nz",
     "",
-    "PS: Know someone in a similar role? Send them humanise.nz",
+    "PS: Know someone in a similar role who should see their score? Send them humanise.nz",
   ].join("\n");
 }
 

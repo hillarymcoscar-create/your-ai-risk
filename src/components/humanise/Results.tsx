@@ -16,14 +16,17 @@ import { NzWorkforceData } from "@/components/humanise/NzWorkforceData";
 import { UpskillSection } from "@/components/humanise/UpskillSection";
 import { AlertTriangle, Shield, BarChart3, Mail, LineChart, Share2, RotateCcw, Lock } from "lucide-react";
 import {
+  applyUplift,
+  bandFromScore,
   calculateRisk,
   computeModifiers,
+  industryComparison,
+  protectiveSkills,
   riskBand,
   riskSummary,
   tasksAtRisk,
-  protectiveSkills,
-  industryComparison,
   type QuizAnswers,
+  type RiskBandLabel,
 } from "@/lib/humanise";
 import { useOccupations, useAliases, findBestMatch, findByAlias, percentile, type Occupation } from "@/lib/onet";
 import { getAnzscoGroupData } from "@/lib/nzWorkforceUtils";

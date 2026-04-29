@@ -350,11 +350,13 @@ export function classifyUpliftCategory(occupationTitle: string | undefined | nul
     "writer", "designer",
   )) return "content_design";
 
-  // 2 — Data, analysis, reporting
+  // 2 — Data, analysis, reporting (broad: catches "Business Intelligence Analysts",
+  //     "Operations Analysts", "Budget Analysts", "Credit Analysts", etc.)
   if (has(
     "data analyst", "business analyst", "financial analyst", "reporting analyst",
     "insights analyst", "research analyst", "market researcher", "data entry",
-    "operations analyst", "planning analyst",
+    "operations analyst", "planning analyst", "intelligence analyst",
+    "budget analyst", "credit analyst", "analyst", "analysts",
     "management accountant", "junior accountant", "payroll", "accounts administrator",
     "accounts clerk", "bookkeep",
   )) return "data_analysis";
@@ -367,6 +369,7 @@ export function classifyUpliftCategory(occupationTitle: string | undefined | nul
     "customer service representative", "customer service", "contact centre",
     "call centre", "call center", "helpdesk", "help desk",
     "claims processor", "document controller",
+    "information clerk", "clerk", "clerks",
   )) return "administrative";
 
   // 4 — Junior / mid-level knowledge work

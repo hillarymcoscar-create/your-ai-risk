@@ -117,8 +117,6 @@ export const Results = ({ answers, onRestart }: Props) => {
 
   const mods = computeModifiers(answers);
   const modifier = mods.capped_total; // already clamped to ±15
-  // Agent Watch indicator now derived from the AI-relationship answer.
-  const agenticCapped = AGENT_BY_RELATIONSHIP[answers.ai_relationship ?? 0] ?? 0;
 
   let score: number;
   let band: Band;

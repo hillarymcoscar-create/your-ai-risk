@@ -49,6 +49,10 @@ export type QuizAnswers = {
   uplift_category?: UpliftCategory;
   uplift_applied?: number;
 
+  // Agent-exposure layer telemetry (set on results page)
+  agent_tier?: AgentTier;
+  agent_exposure_modifier?: number;
+
   // ---- Legacy fields kept so downstream consumers (HonestPicture, email
   // template, send-results-email) continue to receive a meaningful value.
   industry: string;

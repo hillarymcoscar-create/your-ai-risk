@@ -277,6 +277,8 @@ export const Results = ({ answers, onRestart }: Props) => {
       </header>
 
       <main className="container max-w-5xl pb-24">
+        {answers.soft_exit_flag && <SoftExitBanner />}
+
         <section className="mt-6 sm:mt-10 rounded-3xl bg-hero border border-border p-8 sm:p-12 text-center shadow-card animate-scale-in">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
             Your automation risk score
@@ -295,6 +297,8 @@ export const Results = ({ answers, onRestart }: Props) => {
             </p>
           )}
         </section>
+
+        <ScoreCaveat />
 
         <HonestPicture
           jobTitle={match?.title ?? answers.jobTitle}

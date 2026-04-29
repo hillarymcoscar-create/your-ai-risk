@@ -22,7 +22,7 @@ const OPENINGS: Partial<Record<Band, Partial<Record<Segment, string>>>> = {
     occasional:
       "You have already started using AI, which means you have a head start on most people in your function, the question now is whether you build on it deliberately.",
     daily:
-      "Daily AI use already puts you in the top tier of your function in NZ, the gap now is moving from using it for tasks to understanding which parts of your role it is changing structurally.",
+      "Daily AI use already puts you in the top tier of your function in NZ. The gap now is moving from using it for tasks to understanding which parts of your role it is changing structurally.",
     building:
       "Building with AI puts you ahead of almost everyone in your function, the people most at risk are the ones who have not started yet, and that is not you.",
   },

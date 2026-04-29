@@ -39,24 +39,17 @@ type Props = {
   onRestart: () => void;
 };
 
-type Band = "Low" | "Moderate" | "High" | "Very High";
+type Band = RiskBandLabel;
 
-// Modifier weights now live in src/lib/humanise.ts (see computeModifiers).
+// Modifier weights live in src/lib/humanise.ts (see computeModifiers).
 // The agentic exposure indicator is derived from the new ai_relationship answer.
 const AGENT_BY_RELATIONSHIP: Record<number, number> = {
-  1: 12,  // avoiding -> high agent exposure (work is exposed but they're not adapting)
+  1: 12,
   2: 8,
   3: 4,
   4: -2,
   5: -8,
 };
-
-function bandFromScore(score: number): Band {
-  if (score <= 30) return "Low";
-  if (score <= 55) return "Moderate";
-  if (score <= 75) return "High";
-  return "Very High";
-}
 
 // Trailing words that indicate a sentence was cut off mid-thought
 const TRAILING_STOPWORDS = new Set([

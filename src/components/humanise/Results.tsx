@@ -94,7 +94,7 @@ const TASK_OVERRIDES: Record<string, { tasks_at_risk: string[]; protective_tasks
 
 export const Results = ({ answers, onRestart }: Props) => {
   const occupations = useOccupations();
-  const [aiTasks, setAiTasks] = useState<{ tasks_at_risk: string[]; protective_tasks: string[]; honest_picture?: string; agent_note?: string; agent_tasks?: string[] } | null>(null);
+  const [aiTasks, setAiTasks] = useState<{ tasks_at_risk: string[]; protective_tasks: string[]; honest_picture?: string; agent_note?: string; agent_tasks?: string[]; agent_reality?: string; nz_signal?: string; your_move?: string; locked_preview?: string } | null>(null);
   const [planOpen, setPlanOpen] = useState(false);
   const [planEmail, setPlanEmail] = useState("");
   const [planSubmitting, setPlanSubmitting] = useState(false);

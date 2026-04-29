@@ -32,7 +32,7 @@ export const HonestPicture = ({
 
     supabase.functions
       .invoke("honest-picture", {
-        body: { jobTitle, industry, score, usesAi },
+        body: { jobTitle, industry, score, usesAi, rawJobTitle, band, agentTier, aiTools, aiRelationshipSegment, region },
       })
       .then(({ data, error }) => {
         if (cancelled) return;

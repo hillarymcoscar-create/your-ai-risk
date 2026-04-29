@@ -3,8 +3,14 @@ type NzMarketSignalProps = {
   source?: string | null;
 };
 
+// Replace em/en dashes with a comma so dynamic data renders cleanly.
+const stripDashes = (s: string) =>
+  s.replace(/\s*[—–]\s*/g, ", ").replace(/,\s*,/g, ",").replace(/\s+/g, " ").trim();
+
 export const NzMarketSignal = ({ message, source }: NzMarketSignalProps) => {
   if (!message) return null;
+  const cleanMessage = stripDashes(message).replace(/[.!?]?$/, ".");
+  const cleanSource = source ? stripDashes(source) : null;
 
   return (
     <section
@@ -15,11 +21,11 @@ export const NzMarketSignal = ({ message, source }: NzMarketSignalProps) => {
         NZ market signal
       </p>
       <p className="mt-1.5 text-[15px] leading-relaxed text-primary">
-        {message}
+        {cleanMessage}
       </p>
-      {source ? (
+      {cleanSource ? (
         <p className="mt-1.5 text-[11px] text-muted-foreground">
-          Source: {source}
+          Source: {cleanSource}
         </p>
       ) : null}
     </section>

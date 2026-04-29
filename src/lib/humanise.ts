@@ -1,49 +1,155 @@
+export type AiToolKey =
+  | "chatgpt"
+  | "claude"
+  | "copilot"
+  | "gemini"
+  | "perplexity"
+  | "industry"
+  | "tried"
+  | "none";
+
 export type QuizAnswers = {
+  // Q1 — job title (unchanged matching)
   jobTitle: string;
-  industry: string;
-  computerUse: string;
-  aiUsage: string;
-  repeatableTasks?: string;
-  handoffTask?: string;
+
+  // Q2 — work type (1-9)
+  work_type?: number;
+
+  // Q3 — computer time (1-5)
+  computer_time?: number;
+
+  // Q4 — AI tools used (multi-select)
+  ai_tools?: AiToolKey[];
+
+  // Q5 — relationship with AI (1-5)
+  ai_relationship?: number;
+
+  // Q6 — location (existing)
   country: string;
   region?: string;
+
+  // Derived flags / segments (set as the user advances)
+  soft_exit_flag?: boolean;
+  segment_tag?:
+    | "avoiding"
+    | "curious"
+    | "occasional"
+    | "daily"
+    | "building"
+    | "hands_on_waitlist";
+
+  // ---- Legacy fields kept so downstream consumers (HonestPicture, email
+  // template, send-results-email) continue to receive a meaningful value.
+  // These are derived from the new answers; they are NOT user-facing inputs.
+  industry: string;
+  aiUsage?: string;
+  computerUse?: string;
+  repeatableTasks?: string;
+  handoffTask?: string;
 };
 
-export const INDUSTRIES = [
-  "Admin & Clerical",
-  "Agriculture & Primary Industries",
-  "Arts & Creative",
-  "Community & Social Services",
-  "Construction",
-  "Education",
-  "Finance & Accounting",
-  "Government & Public Sector",
-  "Healthcare",
-  "Hospitality & Tourism",
-  "Legal",
-  "Manufacturing",
-  "Marketing & Advertising",
-  "Media & Communications",
-  "Real Estate",
-  "Retail",
-  "Technology",
-  "Transport & Logistics",
-  "Other",
+// ---------- Q2: work type ----------
+
+export type WorkTypeOption = {
+  value: number;          // 1-9
+  label: string;
+  modifier: number;
+  industryTag: string;    // legacy "industry" surface for downstream consumers
+};
+
+export const WORK_TYPES: readonly WorkTypeOption[] = [
+  { value: 1, label: "Strategy, planning, or analysis. Most of my work is thinking and decisions.",                  modifier:  5, industryTag: "Strategy & Analysis" },
+  { value: 2, label: "Creating content, writing, or design. Most of my work is producing things on a screen.",        modifier:  8, industryTag: "Content & Creative" },
+  { value: 3, label: "Managing people, projects, or processes. Most of my work is coordination and meetings.",        modifier:  3, industryTag: "Management & Operations" },
+  { value: 4, label: "Specialist knowledge work in legal, financial, technical, or research fields.",                 modifier:  5, industryTag: "Specialist Knowledge Work" },
+  { value: 5, label: "Customer-facing or sales work, mostly digital. Email, calls, CRM.",                             modifier:  3, industryTag: "Sales & Customer" },
+  { value: 6, label: "Administrative or operational work. Forms, data, systems, support.",                            modifier:  8, industryTag: "Admin & Operations" },
+  { value: 7, label: "Healthcare, education, or care work.",                                                          modifier:  0, industryTag: "Healthcare, Education & Care" },
+  { value: 8, label: "Skilled trade, manual, or hands-on work.",                                                      modifier: -10, industryTag: "Trades & Hands-on" },
+  { value: 9, label: "Mixed. I do a bit of everything.",                                                              modifier:  0, industryTag: "Mixed" },
 ] as const;
 
-export const COMPUTER_USE = [
-  "Almost all of it",
-  "About half",
-  "Less than half",
-  "Rarely - I work with my hands",
+// ---------- Q3: computer time ----------
+
+export type ComputerTimeOption = {
+  value: number;          // 1-5
+  label: string;
+  modifier: number;
+  legacyComputerUse: string; // map to old COMPUTER_USE labels
+};
+
+export const COMPUTER_TIMES: readonly ComputerTimeOption[] = [
+  { value: 1, label: "90 to 100 percent. I basically live in tabs, docs, and meetings.",                  modifier:  10, legacyComputerUse: "Almost all of it" },
+  { value: 2, label: "70 to 90 percent. Mostly on screen, with some in-person or off-screen work.",       modifier:   6, legacyComputerUse: "Almost all of it" },
+  { value: 3, label: "40 to 70 percent. A roughly even split between screen and other work.",             modifier:   0, legacyComputerUse: "About half" },
+  { value: 4, label: "10 to 40 percent. My computer is a tool I use occasionally, not constantly.",       modifier:  -8, legacyComputerUse: "Less than half" },
+  { value: 5, label: "Under 10 percent. I rarely use a computer for my work.",                            modifier: -15, legacyComputerUse: "Rarely - I work with my hands" },
 ] as const;
 
-export const AI_USAGE = [
-  "Yes, regularly",
-  "Sometimes",
-  "I've tried but don't use them",
-  "No, not at all",
+// ---------- Q4: AI tools (multi-select) ----------
+
+export type AiToolOption = { key: AiToolKey; label: string };
+
+export const AI_TOOL_OPTIONS: readonly AiToolOption[] = [
+  { key: "chatgpt",     label: "ChatGPT" },
+  { key: "claude",      label: "Claude" },
+  { key: "copilot",     label: "Microsoft Copilot in Word, Excel, or Teams" },
+  { key: "gemini",      label: "Google Gemini in Gmail, Docs, or Sheets" },
+  { key: "perplexity",  label: "Perplexity or other AI search tools" },
+  { key: "industry",    label: "Industry-specific AI tools in my CRM, design software, accounting software, or similar" },
+  { key: "tried",       label: "I've tried a few but don't use them regularly" },
+  { key: "none",        label: "I don't use any AI tools yet" },
 ] as const;
+
+const ACTIVE_TOOL_KEYS: readonly AiToolKey[] = ["chatgpt", "claude", "copilot", "gemini", "perplexity", "industry"];
+
+/** Apply Q4's highest-priority rule (modifiers do NOT sum). */
+export function aiToolsModifier(selected: AiToolKey[] | undefined): number {
+  if (!selected || selected.length === 0) return 0;
+  let s = [...selected];
+
+  // "tried" with any active tool -> drop "tried"
+  const hasActive = s.some((k) => (ACTIVE_TOOL_KEYS as readonly string[]).includes(k));
+  if (hasActive && s.includes("tried")) s = s.filter((k) => k !== "tried");
+  // "none" with anything else -> drop "none"
+  if (s.includes("none") && s.length > 1) s = s.filter((k) => k !== "none");
+
+  const activeCount = s.filter((k) => (ACTIVE_TOOL_KEYS as readonly string[]).includes(k)).length;
+  if (activeCount >= 2) return -12;
+  if (activeCount === 1) return -8;
+  if (s.length === 1 && s[0] === "tried") return -2;
+  if (s.length === 1 && s[0] === "none") return  5;
+  return 0;
+}
+
+/** Map Q4 selection back to the legacy `aiUsage` string used by HonestPicture. */
+export function deriveLegacyAiUsage(selected: AiToolKey[] | undefined): string {
+  if (!selected || selected.length === 0) return "No, not at all";
+  const activeCount = selected.filter((k) => (ACTIVE_TOOL_KEYS as readonly string[]).includes(k)).length;
+  if (activeCount >= 2) return "Yes, regularly";
+  if (activeCount === 1) return "Sometimes";
+  if (selected.includes("tried")) return "I've tried but don't use them";
+  return "No, not at all";
+}
+
+// ---------- Q5: relationship with AI ----------
+
+export type AiRelationshipOption = {
+  value: number;     // 1-5
+  label: string;
+  modifier: number;
+  segment: "avoiding" | "curious" | "occasional" | "daily" | "building";
+};
+
+export const AI_RELATIONSHIPS: readonly AiRelationshipOption[] = [
+  { value: 1, label: "I'm avoiding it. It makes me anxious or I don't trust it.",                  modifier:   0, segment: "avoiding" },
+  { value: 2, label: "I'm curious but stuck. I've tried but can't get traction.",                  modifier:  -2, segment: "curious" },
+  { value: 3, label: "I use it occasionally for specific tasks. Nothing systematic.",              modifier:  -5, segment: "occasional" },
+  { value: 4, label: "I use it daily. It's part of how I work.",                                   modifier: -10, segment: "daily" },
+  { value: 5, label: "I'm building with it. Agents, automations, or custom workflows.",            modifier: -12, segment: "building" },
+] as const;
+
+// ---------- Location ----------
 
 export const COUNTRIES = [
   "New Zealand",
@@ -80,52 +186,42 @@ export const NZ_REGIONS = [
   "Southland",
 ] as const;
 
-// Simple placeholder scoring (0–100, higher = more risk)
-export function calculateRisk(a: QuizAnswers): number {
-  let score = 35;
+// ---------- Modifier / segment computation ----------
 
-  const highRiskIndustries = ["Admin & Clerical", "Retail", "Finance & Accounting", "Marketing & Advertising", "Transport & Logistics"];
-  const lowRiskIndustries = ["Healthcare", "Construction", "Education"];
-  if (highRiskIndustries.includes(a.industry)) score += 18;
-  if (lowRiskIndustries.includes(a.industry)) score -= 15;
+export type ModifiersApplied = {
+  q2_work_type: number;
+  q3_computer_time: number;
+  q4_ai_tools: number;
+  q5_ai_relationship: number;
+  raw_total: number;
+  capped_total: number;
+};
 
-  // Modifiers for new industries (MBIE Jobs Online Dec 2025). Existing industries above unchanged.
-  const newIndustryMods: Record<string, number> = {
-    "Agriculture & Primary Industries": -8,
-    "Arts & Creative":                  -5,
-    "Community & Social Services":       2,
-    "Government & Public Sector":        0,
-    "Hospitality & Tourism":            -15,
-    "Media & Communications":            3,
-    "Real Estate":                       0,
+export const MODIFIER_CAP = 15;
+
+export function computeModifiers(a: QuizAnswers): ModifiersApplied {
+  const q2 = WORK_TYPES.find((o) => o.value === a.work_type)?.modifier ?? 0;
+  const q3 = COMPUTER_TIMES.find((o) => o.value === a.computer_time)?.modifier ?? 0;
+  const q4 = aiToolsModifier(a.ai_tools);
+  const q5 = AI_RELATIONSHIPS.find((o) => o.value === a.ai_relationship)?.modifier ?? 0;
+  const raw = q2 + q3 + q4 + q5;
+  const capped = Math.max(-MODIFIER_CAP, Math.min(MODIFIER_CAP, raw));
+  return {
+    q2_work_type: q2,
+    q3_computer_time: q3,
+    q4_ai_tools: q4,
+    q5_ai_relationship: q5,
+    raw_total: raw,
+    capped_total: capped,
   };
-  score += newIndustryMods[a.industry] ?? 0;
-
-  const computerMap: Record<string, number> = {
-    "Almost all of it": 22,
-    "About half": 8,
-    "Less than half": -6,
-    "Rarely - I work with my hands": -22,
-  };
-  score += computerMap[a.computerUse] ?? 0;
-
-  const aiMap: Record<string, number> = {
-    "Yes, regularly": -10,
-    "Sometimes": -3,
-    "I've tried but don't use them": 4,
-    "No, not at all": 8,
-  };
-  score += aiMap[a.aiUsage] ?? 0;
-
-  // Job title heuristics
-  const t = a.jobTitle.toLowerCase();
-  const risky = ["data entry", "clerk", "bookkeeper", "cashier", "telemarketer", "receptionist", "admin", "translator", "copywriter"];
-  const safe = ["nurse", "plumber", "electrician", "therapist", "teacher", "carpenter", "chef", "surgeon", "social worker"];
-  if (risky.some((k) => t.includes(k))) score += 15;
-  if (safe.some((k) => t.includes(k))) score -= 18;
-
-  return Math.max(3, Math.min(97, Math.round(score)));
 }
+
+export function deriveSegmentTag(a: QuizAnswers): QuizAnswers["segment_tag"] {
+  if (a.soft_exit_flag) return "hands_on_waitlist";
+  return AI_RELATIONSHIPS.find((o) => o.value === a.ai_relationship)?.segment;
+}
+
+// ---------- Risk band & summaries (unchanged behaviour) ----------
 
 export function riskBand(score: number): "low" | "medium" | "high" {
   if (score <= 40) return "low";
@@ -140,23 +236,23 @@ export function riskSummary(score: number): string {
   return "Your role has significant exposure to automation. Action now will make a real difference.";
 }
 
+// Fallback used only when O*NET match fails. Now keyed off work_type/computer_time
+// instead of the old industry/AI dropdowns.
+export function calculateRisk(a: QuizAnswers): number {
+  const base = 50;
+  const mods = computeModifiers(a);
+  return Math.max(3, Math.min(97, Math.round(base + mods.capped_total)));
+}
+
 export function tasksAtRisk(a: QuizAnswers): string[] {
-  const generic = [
+  return [
     "Routine data entry and report generation",
     "Drafting standard emails and documents",
     "Scheduling, summarising and basic research",
   ];
-  const byIndustry: Record<string, string[]> = {
-    "Finance & Accounting": ["Reconciliation and bookkeeping", "Standardised financial reporting", "Invoice processing"],
-    "Marketing & Advertising": ["First-draft copywriting", "Audience segmentation", "Campaign performance reporting"],
-    "Legal": ["Contract review and redlining", "Legal research and case summaries", "Document discovery"],
-    "Admin & Clerical": ["Data entry and form processing", "Calendar and inbox management", "Document templating"],
-    "Retail": ["Checkout and self-service ops", "Inventory replenishment forecasts", "Standard customer queries"],
-  };
-  return byIndustry[a.industry] ?? generic;
 }
 
-export function protectiveSkills(a: QuizAnswers): string[] {
+export function protectiveSkills(_a: QuizAnswers): string[] {
   return [
     "Complex judgement and stakeholder trust",
     "Hands-on or in-person delivery",
@@ -166,7 +262,8 @@ export function protectiveSkills(a: QuizAnswers): string[] {
 
 export function industryComparison(score: number, industry: string): string {
   const band = riskBand(score);
-  if (band === "low") return `You sit below the average exposure for ${industry || "your industry"}.`;
-  if (band === "medium") return `You're roughly in line with the average for ${industry || "your industry"}.`;
-  return `You're above the typical exposure for ${industry || "your industry"}.`;
+  const label = industry || "your work type";
+  if (band === "low") return `You sit below the average exposure for ${label}.`;
+  if (band === "medium") return `You're roughly in line with the average for ${label}.`;
+  return `You're above the typical exposure for ${label}.`;
 }

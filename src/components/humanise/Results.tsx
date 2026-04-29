@@ -17,6 +17,7 @@ import { UpskillSection } from "@/components/humanise/UpskillSection";
 import { AlertTriangle, Shield, BarChart3, Mail, LineChart, Share2, RotateCcw, Lock } from "lucide-react";
 import {
   calculateRisk,
+  computeModifiers,
   riskBand,
   riskSummary,
   tasksAtRisk,
@@ -37,29 +38,14 @@ type Props = {
 
 type Band = "Low" | "Moderate" | "High" | "Very High";
 
-const Q3_MOD: Record<string, number> = {
-  "Almost all of it": 5,
-  "About half": 0,
-  "Less than half": -10,
-  "Rarely - I work with my hands": -20,
-};
-const Q4_MOD: Record<string, number> = {
-  "Yes, regularly": -15,
-  "Sometimes": -5,
-  "I've tried but don't use them": 3,
-  "No, not at all": 8,
-};
-const Q5_MOD: Record<string, number> = {
-  "Yes, most of my day is this": 12,
-  "Some of my work is like this": 6,
-  "Only occasionally": 2,
-  "No, my work is varied and unpredictable": -5,
-};
-const Q6_MOD: Record<string, number> = {
-  "Yes — most of what I do follows a clear process": 8,
-  "Mostly, with some exceptions": 4,
-  "Somewhat — but it needs a lot of human judgment": -2,
-  "No — my work requires constant human judgment": -10,
+// Modifier weights now live in src/lib/humanise.ts (see computeModifiers).
+// The agentic exposure indicator is derived from the new ai_relationship answer.
+const AGENT_BY_RELATIONSHIP: Record<number, number> = {
+  1: 12,  // avoiding -> high agent exposure (work is exposed but they're not adapting)
+  2: 8,
+  3: 4,
+  4: -2,
+  5: -8,
 };
 
 function bandFromScore(score: number): Band {
@@ -148,11 +134,10 @@ export const Results = ({ answers, onRestart }: Props) => {
     });
   }
 
-  const agenticRaw = (Q5_MOD[answers.repeatableTasks ?? ""] ?? 0) + (Q6_MOD[answers.handoffTask ?? ""] ?? 0);
-  const agenticCapped = Math.min(15, agenticRaw);
-  const rawModifier = (Q3_MOD[answers.computerUse] ?? 0) + (Q4_MOD[answers.aiUsage] ?? 0) + agenticCapped;
-  // Cap modifier at ±15 so quiz answers personalise without overwhelming the O*NET base score
-  const modifier = Math.max(-15, Math.min(15, rawModifier));
+  const mods = computeModifiers(answers);
+  const modifier = mods.capped_total; // already clamped to ±15
+  // Agent Watch indicator now derived from the AI-relationship answer.
+  const agenticCapped = AGENT_BY_RELATIONSHIP[answers.ai_relationship ?? 0] ?? 0;
 
   let score: number;
   let band: Band;
@@ -292,6 +277,8 @@ export const Results = ({ answers, onRestart }: Props) => {
       </header>
 
       <main className="container max-w-5xl pb-24">
+        {answers.soft_exit_flag && <SoftExitBanner />}
+
         <section className="mt-6 sm:mt-10 rounded-3xl bg-hero border border-border p-8 sm:p-12 text-center shadow-card animate-scale-in">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
             Your automation risk score
@@ -310,6 +297,8 @@ export const Results = ({ answers, onRestart }: Props) => {
             </p>
           )}
         </section>
+
+        <ScoreCaveat />
 
         <HonestPicture
           jobTitle={match?.title ?? answers.jobTitle}
@@ -584,4 +573,45 @@ const CtaCard = ({
       {cta}
     </Button>
   </div>
+);
+
+const SoftExitBanner = () => (
+  <section className="mt-6 rounded-2xl border border-accent/30 bg-accent/5 p-6 sm:p-7 shadow-soft animate-fade-in">
+    <h2 className="text-lg sm:text-xl font-semibold text-primary">A note before your score</h2>
+    <div className="mt-3 space-y-3 text-[15px] leading-relaxed text-muted-foreground max-w-[65ch]">
+      <p>
+        Humanise is calibrated for desk-based and knowledge work, the jobs where AI displacement is happening fastest. Based on your answers, your role is mostly hands-on or off-screen, which is genuinely lower-risk territory right now.
+      </p>
+      <p>
+        Your score below is real, but it's based on the closest occupation match we have. Take it as a signal, not a verdict.
+      </p>
+    </div>
+    <div className="mt-5 flex flex-col sm:flex-row gap-3">
+      <a
+        href="/hands-on"
+        className="inline-flex items-center justify-center rounded-full bg-cta text-accent-foreground hover:opacity-95 font-semibold h-11 px-5 text-sm"
+      >
+        Why hands-on roles are safer
+      </a>
+      <a
+        href="/hands-on"
+        className="inline-flex items-center justify-center rounded-full border border-border bg-card text-primary hover:bg-secondary font-semibold h-11 px-5 text-sm"
+      >
+        Notify me when Humanise builds a hands-on version
+      </a>
+    </div>
+  </section>
+);
+
+const ScoreCaveat = () => (
+  <section className="mt-8 rounded-2xl bg-card border border-border shadow-soft p-6 sm:p-8">
+    <h2 className="text-xl sm:text-2xl font-semibold text-primary">What this score can't tell you</h2>
+    <div className="mt-4 space-y-4 text-[15px] leading-relaxed text-muted-foreground max-w-[65ch]">
+      <p className="font-medium text-primary">This score is a signal, not a sentence.</p>
+      <p>
+        It doesn't know your specific employer. It doesn't know whether your team is already adopting AI. It doesn't know your network, your reputation, or your track record. It doesn't know how willing you are to adapt, which is, honestly, the biggest variable of all.
+      </p>
+      <p>Use this as a starting point for honest thinking. Not as a final answer.</p>
+    </div>
+  </section>
 );

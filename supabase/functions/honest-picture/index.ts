@@ -138,7 +138,7 @@ const HP_TOOL = [{
   type: "function",
   function: {
     name: "return_tasks",
-    description: "Return task lists and agent note.",
+    description: "Return task lists, agent note, and Agent Watch fields.",
     parameters: {
       type: "object",
       properties: {
@@ -146,8 +146,12 @@ const HP_TOOL = [{
         protective_tasks: { type: "array", items: { type: "string" }, minItems: 3, maxItems: 3 },
         agent_note:       { type: "string" },
         agent_tasks:      { type: "array", items: { type: "string" }, minItems: 3, maxItems: 3 },
+        agent_reality:    { type: "string", description: "2-3 sentences specific to this occupation describing what autonomous AI agents are doing right now in this role. Name 2-3 specific real tools (e.g. Semrush AI, BrightEdge Copilot, custom GPT-4o pipelines, Microsoft Copilot, Make.com). Be concrete about what work is being absorbed." },
+        nz_signal:        { type: "string", description: "2 sentences with at least one specific NZ-grounded data point (job-ad changes, hiring trend, NZ industry shift since 2025) relevant to this occupation. No generic claims." },
+        your_move:        { type: "string", description: "2-3 sentences. One concrete 30-day action the user can take, then one direct sentence about what separates the people keeping their roles from the ones being compressed. Direct, specific, no platitudes." },
+        locked_preview:   { type: "string", description: "1-2 sentences. A teaser for premium content, framed as a question or a 'three things you don't know' tease specific to this occupation. Ends with a direct question to the reader." },
       },
-      required: ["tasks_at_risk", "protective_tasks", "agent_note", "agent_tasks"],
+      required: ["tasks_at_risk", "protective_tasks", "agent_note", "agent_tasks", "agent_reality", "nz_signal", "your_move", "locked_preview"],
       additionalProperties: false,
     },
   },

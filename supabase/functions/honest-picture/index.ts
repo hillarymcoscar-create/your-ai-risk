@@ -1,8 +1,37 @@
 import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2.95.0/cors";
 
-const SYSTEM_PROMPT = `You are Humanise, an honest and empathetic AI career advisor helping New Zealand workers understand how AI affects their specific job. You speak like a knowledgeable friend — direct, warm, and honest. You never dismiss real risks but you always find the genuine human strengths worth protecting. You reference specific AI tools and capabilities (e.g. ChatGPT, Midjourney, GitHub Copilot, Claude) where relevant.
+const SYSTEM_PROMPT = `You are Hillary Woods, founder of Humanise, a New Zealand AI workforce risk tool. You write in first-person founder voice. You are direct, warm, and honest. You do not use corporate language. You do not hedge everything. You do not catastrophise. You tell people the truth about their situation and then point them toward what they can actually do about it.
 
-Always return tasks as short action phrases of 4-7 words that are specific to the actual role, not generic. Reference real AI tools where relevant (e.g. 'AI image generation replacing stock shots' for photographers). Return ONLY valid JSON, no other text.`;
+You are writing a short paragraph called "Your Honest Picture" for someone who just completed the Humanise quiz. This paragraph appears after their risk score and after the Agent Watch section, so do not repeat anything from those sections.
+
+Your Honest Picture has one job: to make the user feel genuinely seen in their specific situation, and to leave them with one clear emotional truth they can act on.
+
+Real-world context you must factor into your response for high-risk knowledge work roles (risk score above 55%):
+New Zealand marketing agencies are already making roles redundant and replacing teams of three people with one person using AI. This is not a future prediction. It is happening now, in 2026, in NZ businesses across Auckland, Wellington, and Christchurch. The pattern is consistent: junior and coordinator-level roles go first. The person who survives is not the most experienced, it is the one who can direct AI tools and agents to do the work the team used to do.
+
+This context applies to: marketing, SEO, content, social media, digital advertising, PR, communications, admin, data analysis, junior finance, and customer service roles.
+
+For moderate-risk roles (35 to 54 percent): the disruption is real but slower. Augmentation is happening before replacement. The window to adapt is 12 to 24 months, not 6.
+
+For low-risk roles (under 35 percent): be honest that the risk is lower without being dismissive. The world around these people is still changing even if their specific role is more protected.
+
+Rules for honest_picture:
+- Never use em dashes
+- Never use the phrase "it is important"
+- Never open with the user's job title
+- Never use the word "significant"
+- Never use the word "leverage"
+- Never say "in today's rapidly changing landscape" or anything like it
+- Never repeat the risk score percentage
+- Never repeat the agent exposure tier or badge language
+- Never repeat anything from the agent_note or agent_tasks you generate
+- Maximum 4 sentences
+- Write like a trusted colleague who knows this industry, not a consultant who has read about it
+- End with a sentence that creates forward momentum, not anxiety
+
+You also generate task lists and an agent note for other parts of the page. Keep those as short, role-specific action phrases (4 to 7 words). The honest_picture must stand alone and never overlap in content with agent_note or agent_tasks.
+
+Return ONLY the structured tool call. No other text.`;
 
 const TRAILING_STOPWORDS = new Set([
   "and","or","the","a","an","of","to","for","in","on","at","by","with","from",
@@ -24,11 +53,28 @@ function cleanTask(raw: string): string {
   return out.charAt(0).toUpperCase() + out.slice(1);
 }
 
+// Strip em dashes from a string by replacing with a comma.
+function stripEmDashes(s: string): string {
+  if (!s) return "";
+  return s.replace(/\s*[—–]\s*/g, ", ").replace(/\s{2,}/g, " ").trim();
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { jobTitle, industry, score, usesAi } = await req.json();
+    const {
+      jobTitle,
+      industry,
+      score,
+      usesAi,
+      rawJobTitle,
+      band,
+      agentTier,
+      aiTools,
+      aiRelationshipSegment,
+      region,
+    } = await req.json();
     if (!jobTitle) {
       return new Response(JSON.stringify({ error: "jobTitle required" }), {
         status: 400,
@@ -39,20 +85,33 @@ Deno.serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
-    const userPrompt = `Role: ${jobTitle}
+    const toolsList = Array.isArray(aiTools) && aiTools.length ? aiTools.join(", ") : "none specified";
+    const userPrompt = `Write "Your Honest Picture" for this person.
+
+Occupation: ${jobTitle}
+Raw job title entered: ${rawJobTitle || jobTitle}
+Risk score: ${score}%
+Risk band: ${band || "Moderate"}
+Agent tier: ${agentTier || "unspecified"}
+AI tools used: ${toolsList}
+AI relationship: ${aiRelationshipSegment || "unspecified"}
+NZ region: ${region || "New Zealand"}
 Industry: ${industry || "unspecified"}
-Country: New Zealand
-Automation risk score: ${score}%
 Regularly uses AI tools: ${usesAi ? "yes" : "no"}
 
-Return a JSON object with four fields:
-- "honest_picture": a 3-4 sentence paragraph explaining what AI can and cannot ACTUALLY do to this specific role right now. Reference real AI tools where relevant. Be honest, warm, and specific.
-- "tasks_at_risk": exactly 3 short action phrases (4-7 words each) describing the most automatable tasks for this specific role.
-- "protective_tasks": exactly 3 short action phrases (4-7 words each) describing what makes this role hard to fully automate.
-- "agent_note": name one specific AI agent tool currently being used for tasks in this occupation (choose the most relevant from: Microsoft Copilot, ChatGPT, Google Gemini, Make.com, or Manus) and give one concrete example of what it handles in this role. Keep to under 30 words. If the occupation is trades, healthcare, or other hands-on physical work, write "This role has strong natural protection from AI agents because [reason]" without naming a tool.
-- "agent_tasks": exactly 3 specific tasks in this occupation that AI agents are handling today. Each must start with an action verb, be specific to the role (not generic), and be no longer than 12 words.
+Return a structured response with these fields:
 
-All task phrases must be complete, specific to the role, and never end with a preposition, conjunction, or article.`;
+1. honest_picture: One paragraph, maximum 4 sentences. Follow every rule in the system prompt. Do not repeat anything you put in agent_note or agent_tasks. Speak directly to the emotional reality of this person's situation. End with a forward-looking sentence that creates momentum, not anxiety.
+
+2. tasks_at_risk: Exactly 3 short action phrases (4 to 7 words each) describing the most automatable tasks for this specific role.
+
+3. protective_tasks: Exactly 3 short action phrases (4 to 7 words each) describing what makes this role hard to fully automate.
+
+4. agent_note: Name one specific AI agent tool currently being used for tasks in this occupation (choose the most relevant from: Microsoft Copilot, ChatGPT, Google Gemini, Make.com, or Manus) and give one concrete example of what it handles in this role. Keep to under 30 words. If the occupation is trades, healthcare, or other hands-on physical work, write "This role has strong natural protection from AI agents because [reason]" without naming a tool.
+
+5. agent_tasks: Exactly 3 specific tasks in this occupation that AI agents are handling today. Each must start with an action verb, be specific to the role (not generic), and be no longer than 12 words.
+
+All task phrases must be complete, specific to the role, and never end with a preposition, conjunction, or article. No em dashes anywhere in any field.`;
 
     const tools = [{
       type: "function",
@@ -136,10 +195,10 @@ All task phrases must be complete, specific to the role, and never end with a pr
       try { parsed = JSON.parse(cleaned); } catch (e) { console.error("content parse failed", e); }
     }
 
-    const honest_picture = (parsed.honest_picture ?? "").trim();
+    const honest_picture = stripEmDashes((parsed.honest_picture ?? "").trim());
     const tasks_at_risk = (parsed.tasks_at_risk ?? []).map(cleanTask).filter(Boolean).slice(0, 3);
     const protective_tasks = (parsed.protective_tasks ?? []).map(cleanTask).filter(Boolean).slice(0, 3);
-    const agent_note = (parsed.agent_note ?? "").trim();
+    const agent_note = stripEmDashes((parsed.agent_note ?? "").trim());
     const agent_tasks = (parsed.agent_tasks ?? []).map(cleanTask).filter(Boolean).slice(0, 3);
 
     return new Response(

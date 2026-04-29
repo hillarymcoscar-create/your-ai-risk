@@ -14,6 +14,8 @@ export type QuizAnswers = {
 
   // Q2 — work type (1-9)
   work_type?: number;
+  // True if work_type was inferred from job-title match rather than chosen by the user.
+  work_type_inferred?: boolean;
 
   // Q3 — computer time (1-5)
   computer_time?: number;

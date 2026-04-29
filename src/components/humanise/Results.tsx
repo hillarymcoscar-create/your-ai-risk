@@ -22,7 +22,6 @@ import {
   computeModifiers,
   industryComparison,
   protectiveSkills,
-  riskBand,
   riskSummary,
   tasksAtRisk,
   type QuizAnswers,

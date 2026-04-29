@@ -189,8 +189,35 @@ export const Results = ({ answers, onRestart }: Props) => {
     try {
       const jobTitle   = answers.jobTitle?.trim() || "your role";
       const industry   = answers.industry;
+      const occupationName = match?.title ?? jobTitle;
+      const region = answers.country === "New Zealand" ? (answers.region ?? "New Zealand") : "New Zealand";
 
-      // Fetch curated pack (or Claude fallback) for section 8
+      // Agent Watch path — dedicated email template, no upskill pack needed.
+      if (planSource === "agent_watch_gate") {
+        const { data, error } = await supabase.functions.invoke("send-results-email", {
+          body: {
+            emailType: "agent_watch_unlock",
+            email: trimmed,
+            occupation: occupationName,
+            jobTitle,
+            matchedTitle: match?.title ?? null,
+            score,
+            riskBand: band,
+            agentTier,
+            segmentTag: answers.segment_tag ?? null,
+            nzRegion: region,
+            agentReality: aiTasks?.agent_reality ?? "",
+            nzSignal: aiTasks?.nz_signal ?? "",
+            yourMove: aiTasks?.your_move ?? "",
+            lockedContent: aiTasks?.locked_preview ?? "",
+          },
+        });
+        if (error) throw new Error(error.message);
+        if (data?.error) throw new Error(data.error);
+        return true;
+      }
+
+      // Standard results-page email path (with curated upskill pack).
       let pack: EmailPack | null = null;
       if (CURATED_INDUSTRIES.has(industry)) {
         const resp = await fetch(`${CURATED_URL}?t=${Date.now()}`).catch(() => null);

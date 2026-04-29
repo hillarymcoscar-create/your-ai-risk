@@ -192,6 +192,139 @@ function buildHtml(opts: {
 </body></html>`;
 }
 
+// ── Agent Watch email ─────────────────────────────────────────────────
+function buildAgentWatchHtml(opts: {
+  occupation: string;
+  score: number;
+  riskBand: string;
+  nzRegion?: string;
+  agentReality?: string;
+  nzSignal?: string;
+  yourMove?: string;
+  lockedContent?: string;
+}): string {
+  const { occupation, score, riskBand } = opts;
+  const region = opts.nzRegion && opts.nzRegion.trim() ? opts.nzRegion : "New Zealand";
+  const para = (s?: string) => s && s.trim()
+    ? `<p style="margin:0;font-size:14px;line-height:1.7;color:#333;">${h(s)}</p>`
+    : `<p style="margin:0;font-size:14px;line-height:1.7;color:#9ca3af;">Not available.</p>`;
+
+  return `<!DOCTYPE html>
+<html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Your Agent Watch report</title></head>
+<body style="margin:0;padding:0;background:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+<div style="display:none;max-height:0;overflow:hidden;">Here is what autonomous AI is doing in your ${h(occupation)} role right now.</div>
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6;padding:32px 16px;">
+  <tr><td align="center">
+  <table width="100%" style="max-width:600px;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08);">
+    <tr><td style="padding:28px 32px 8px;">
+      <div style="font-size:22px;font-weight:800;color:${dark};letter-spacing:-0.01em;">Humanise</div>
+      <div style="font-size:12px;color:#9ca3af;margin-top:2px;">humanise.nz</div>
+    </td></tr>
+    <tr><td style="padding:8px 32px 0;">
+      <p style="margin:16px 0 0;font-size:14px;line-height:1.7;color:#333;">
+        You scored your role on Humanise and asked what AI agents are actually doing in
+        ${h(occupation)} positions in New Zealand right now.
+      </p>
+      <p style="margin:10px 0 0;font-size:14px;line-height:1.7;color:#333;">
+        Here is your full Agent Watch report.
+      </p>
+    </td></tr>
+    <tr><td style="padding:4px 32px 24px;">
+      ${sectionLabel("What agents are doing in your role")}
+      ${para(opts.agentReality)}
+
+      ${sectionLabel("NZ signal")}
+      ${para(opts.nzSignal)}
+
+      ${sectionLabel("Your move")}
+      ${para(opts.yourMove)}
+
+      ${sectionLabel("The full picture")}
+      ${para(opts.lockedContent)}
+      <p style="margin:8px 0 0;font-size:12px;line-height:1.6;color:#6b7280;">
+        This is the content that was locked on the results page. You unlocked it by entering your email. Here it is in full.
+      </p>
+
+      <p style="margin:24px 0 0;font-size:12px;color:#6b7280;">
+        Your Humanise score: <strong style="color:${dark};">${h(score)}% (${h(riskBand)})</strong>
+        for ${h(occupation)} in ${h(region)}.
+      </p>
+
+      <div style="border-top:1px solid #e5e7eb;margin-top:24px;padding-top:20px;font-size:14px;line-height:1.7;color:${dark};">
+        <p style="margin:0 0 12px;font-weight:600;">One honest thing before you go.</p>
+        <p style="margin:0;">
+          The people navigating this well are not the most experienced people in their function.
+          They are the ones who got specific about what AI can and cannot do in their role,
+          and built one workflow deliberately.
+        </p>
+        <p style="margin:12px 0 0;">
+          Your Agent Watch report is the starting point. The next step is yours.
+        </p>
+        <p style="margin:18px 0 0;">
+          — Hillary<br>
+          <span style="color:#6b7280;font-size:13px;">Founder, Humanise · </span>
+          <a href="https://humanise.nz" style="color:${teal};text-decoration:none;">humanise.nz</a>
+        </p>
+      </div>
+
+      <div style="margin-top:24px;padding:14px 16px;background:#f8f9fa;border-radius:8px;font-size:13px;color:#374151;line-height:1.6;">
+        <strong>PS</strong> — Know someone in a similar role who should see their score?
+        Send them <a href="https://humanise.nz" style="color:${teal};text-decoration:none;">humanise.nz</a>.
+      </div>
+    </td></tr>
+
+    <tr><td style="background:#f9fafb;border-top:1px solid #e5e7eb;padding:14px 32px;">
+      <p style="margin:0;font-size:11px;color:#9ca3af;text-align:center;line-height:1.6;">
+        You received this because you entered your email on Humanise to unlock your Agent Watch report.<br>
+        humanise.nz · Made in New Zealand
+      </p>
+    </td></tr>
+  </table>
+  </td></tr>
+</table>
+</body></html>`;
+}
+
+function buildAgentWatchText(opts: {
+  occupation: string;
+  score: number;
+  riskBand: string;
+  nzRegion?: string;
+  agentReality?: string;
+  nzSignal?: string;
+  yourMove?: string;
+  lockedContent?: string;
+}): string {
+  const region = opts.nzRegion && opts.nzRegion.trim() ? opts.nzRegion : "New Zealand";
+  const v = (s?: string) => (s && s.trim()) ? s.trim() : "Not available.";
+  return [
+    `Your Agent Watch report: ${opts.occupation}`,
+    "---",
+    "WHAT AGENTS ARE DOING IN YOUR ROLE",
+    v(opts.agentReality),
+    "",
+    "NZ SIGNAL",
+    v(opts.nzSignal),
+    "",
+    "YOUR MOVE",
+    v(opts.yourMove),
+    "",
+    "THE FULL PICTURE",
+    v(opts.lockedContent),
+    "---",
+    `Your Humanise score: ${opts.score}% (${opts.riskBand}) for ${opts.occupation} in ${region}.`,
+    "",
+    "The people navigating this well are not the most experienced people in their function. They are the ones who got specific about what AI can and cannot do in their role, and built one workflow deliberately.",
+    "",
+    "— Hillary",
+    "Founder, Humanise",
+    "humanise.nz",
+    "",
+    "PS: Know someone in a similar role? Send them humanise.nz",
+  ].join("\n");
+}
+
 // ── Handler ───────────────────────────────────────────────────────────
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -204,24 +337,21 @@ Deno.serve(async (req) => {
 
     const body = await req.json().catch(() => ({}));
     const {
+      emailType,
       email, to, jobTitle, matchedTitle, score, riskBand = "Moderate", industry,
       honestPicture, nzMarketSignalMsg, nzMarketSignalSrc,
       mbieGroup, mbieAnnualChange, mbieRegion, mbieRegionalChange,
       statsnzThousands, statsnzShare, tasksAtRisk, protectiveSkills,
       html: prebuiltHtml, subject: prebuiltSubject,
+      // Agent Watch fields
+      occupation, agentReality, nzSignal, yourMove, lockedContent, nzRegion,
     } = body ?? {};
 
     const emailStr = typeof (email ?? to) === "string" ? String(email ?? to).trim() : "";
-    const jobStr   = typeof jobTitle === "string" ? jobTitle.trim() : "";
     const scoreNum = typeof score === "number" ? score : Number(score);
 
     if (!emailStr || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailStr) || emailStr.length > 254) {
       return new Response(JSON.stringify({ error: "A valid email is required." }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-    if (!jobStr || jobStr.length > 200) {
-      return new Response(JSON.stringify({ error: "A job title is required." }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -230,31 +360,67 @@ Deno.serve(async (req) => {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-
     const finalScore = Math.round(scoreNum);
-    const html = typeof prebuiltHtml === "string" && prebuiltHtml
-      ? prebuiltHtml
-      : buildHtml({
-          jobTitle: jobStr,
-          matchedTitle: typeof matchedTitle === "string" ? matchedTitle : null,
-          score: finalScore,
-          riskBand: typeof riskBand === "string" ? riskBand : "Moderate",
-          industry: typeof industry === "string" ? industry : "",
-          honestPicture: typeof honestPicture === "string" ? honestPicture : "",
-          nzMarketSignalMsg: typeof nzMarketSignalMsg === "string" ? nzMarketSignalMsg : "",
-          nzMarketSignalSrc: typeof nzMarketSignalSrc === "string" ? nzMarketSignalSrc : "",
-          mbieGroup: typeof mbieGroup === "string" ? mbieGroup : "",
-          mbieAnnualChange: typeof mbieAnnualChange === "number" ? mbieAnnualChange : null,
-          mbieRegion: typeof mbieRegion === "string" ? mbieRegion : "",
-          mbieRegionalChange: typeof mbieRegionalChange === "number" ? mbieRegionalChange : null,
-          statsnzThousands: typeof statsnzThousands === "number" ? statsnzThousands : null,
-          statsnzShare: typeof statsnzShare === "number" ? statsnzShare : null,
-          tasksAtRisk: Array.isArray(tasksAtRisk) ? tasksAtRisk : [],
-          protectiveSkills: Array.isArray(protectiveSkills) ? protectiveSkills : [],
+    const bandStr = typeof riskBand === "string" ? riskBand : "Moderate";
+
+    let html: string;
+    let subject: string;
+    let textBody: string;
+
+    if (emailType === "agent_watch_unlock") {
+      const occ = typeof occupation === "string" && occupation.trim()
+        ? occupation.trim()
+        : (typeof matchedTitle === "string" && matchedTitle.trim()
+            ? matchedTitle.trim()
+            : (typeof jobTitle === "string" ? jobTitle.trim() : "your role"));
+      const region = typeof nzRegion === "string" ? nzRegion : "";
+      const awOpts = {
+        occupation: occ,
+        score: finalScore,
+        riskBand: bandStr,
+        nzRegion: region,
+        agentReality: typeof agentReality === "string" ? agentReality : "",
+        nzSignal: typeof nzSignal === "string" ? nzSignal : "",
+        yourMove: typeof yourMove === "string" ? yourMove : "",
+        lockedContent: typeof lockedContent === "string" ? lockedContent : "",
+      };
+      html = buildAgentWatchHtml(awOpts);
+      textBody = buildAgentWatchText(awOpts);
+      subject = typeof prebuiltSubject === "string" && prebuiltSubject
+        ? prebuiltSubject
+        : `Your Agent Watch report: ${occ}`;
+    } else {
+      const jobStr = typeof jobTitle === "string" ? jobTitle.trim() : "";
+      if (!jobStr || jobStr.length > 200) {
+        return new Response(JSON.stringify({ error: "A job title is required." }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
-    const subject = typeof prebuiltSubject === "string" && prebuiltSubject
-      ? prebuiltSubject
-      : `Your Humanise result: ${finalScore}% ${riskBand} Risk`;
+      }
+      html = typeof prebuiltHtml === "string" && prebuiltHtml
+        ? prebuiltHtml
+        : buildHtml({
+            jobTitle: jobStr,
+            matchedTitle: typeof matchedTitle === "string" ? matchedTitle : null,
+            score: finalScore,
+            riskBand: bandStr,
+            industry: typeof industry === "string" ? industry : "",
+            honestPicture: typeof honestPicture === "string" ? honestPicture : "",
+            nzMarketSignalMsg: typeof nzMarketSignalMsg === "string" ? nzMarketSignalMsg : "",
+            nzMarketSignalSrc: typeof nzMarketSignalSrc === "string" ? nzMarketSignalSrc : "",
+            mbieGroup: typeof mbieGroup === "string" ? mbieGroup : "",
+            mbieAnnualChange: typeof mbieAnnualChange === "number" ? mbieAnnualChange : null,
+            mbieRegion: typeof mbieRegion === "string" ? mbieRegion : "",
+            mbieRegionalChange: typeof mbieRegionalChange === "number" ? mbieRegionalChange : null,
+            statsnzThousands: typeof statsnzThousands === "number" ? statsnzThousands : null,
+            statsnzShare: typeof statsnzShare === "number" ? statsnzShare : null,
+            tasksAtRisk: Array.isArray(tasksAtRisk) ? tasksAtRisk : [],
+            protectiveSkills: Array.isArray(protectiveSkills) ? protectiveSkills : [],
+          });
+      subject = typeof prebuiltSubject === "string" && prebuiltSubject
+        ? prebuiltSubject
+        : `Your Humanise result: ${finalScore}% ${bandStr} Risk`;
+      textBody = `Humanise — ${finalScore}% ${bandStr} Risk\nFor: ${jobStr}`;
+    }
 
     const resendRes = await fetch(`${GATEWAY_URL}/emails`, {
       method: "POST",
@@ -264,11 +430,12 @@ Deno.serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "Hillary Woods <hillary@humanise.nz>",
+        from: "Hillary at Humanise <hillary@humanise.nz>",
+        reply_to: "hillary@humanise.nz",
         to: [emailStr],
         subject,
         html,
-        text: `Humanise — ${finalScore}% ${riskBand} Risk\nFor: ${jobStr}`,
+        text: textBody,
       }),
     });
 

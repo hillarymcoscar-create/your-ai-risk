@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -15,18 +15,28 @@ import {
   WORK_TYPES,
   deriveLegacyAiUsage,
   deriveSegmentTag,
+  inferWorkTypeFromTitle,
   type AiToolKey,
   type QuizAnswers,
 } from "@/lib/humanise";
+import { useOccupations, useAliases, findByAlias } from "@/lib/onet";
 
 type Props = {
   onComplete: (answers: QuizAnswers) => void;
   onExit: () => void;
 };
 
-const TOTAL = 6;
+/**
+ * Steps are addressed by 1-based index over the *visible* sequence.
+ * The full sequence is [1=jobTitle, 2=workType, 3=computerTime, 4=aiTools, 5=aiRelationship, 6=location].
+ * If work_type is inferred from the job title, step 2 is removed from the visible sequence.
+ */
+type StepId = "jobTitle" | "workType" | "computerTime" | "aiTools" | "aiRelationship" | "location";
 
 export const Quiz = ({ onComplete, onExit }: Props) => {
+  const occupations = useOccupations();
+  const aliases = useAliases();
+
   const [step, setStep] = useState(1);
   const [a, setA] = useState<QuizAnswers>({
     jobTitle: "",
@@ -35,6 +45,17 @@ export const Quiz = ({ onComplete, onExit }: Props) => {
     region: "",
     ai_tools: [],
   });
+
+  // Q2 visible if work_type was NOT inferred (or no inference yet attempted).
+  const showWorkType = !a.work_type_inferred;
+
+  const sequence: StepId[] = useMemo(() => {
+    const base: StepId[] = ["jobTitle", "workType", "computerTime", "aiTools", "aiRelationship", "location"];
+    return showWorkType ? base : base.filter((s) => s !== "workType");
+  }, [showWorkType]);
+
+  const total = sequence.length;
+  const currentId = sequence[Math.min(step, total) - 1];
 
   /** Apply derived/legacy fields whenever underlying answers change. */
   const finalise = (next: QuizAnswers): QuizAnswers => {
@@ -49,7 +70,6 @@ export const Quiz = ({ onComplete, onExit }: Props) => {
     const withDerived: QuizAnswers = {
       ...next,
       soft_exit_flag: softExit,
-      // Legacy fields kept in sync so HonestPicture / email keep working
       industry: workType?.industryTag ?? "",
       computerUse: compTime?.legacyComputerUse ?? "",
       aiUsage: deriveLegacyAiUsage(next.ai_tools),
@@ -60,20 +80,49 @@ export const Quiz = ({ onComplete, onExit }: Props) => {
 
   const update = (patch: Partial<QuizAnswers>) => setA((prev) => finalise({ ...prev, ...patch }));
 
+  /** Try to infer work_type from a high-confidence alias match. Returns true if inferred. */
+  const tryInferWorkType = (jobTitle: string): boolean => {
+    if (!occupations || !aliases) return false;
+    const matched = findByAlias(jobTitle, occupations);
+    if (!matched) return false;
+    const inferred = inferWorkTypeFromTitle(matched.title);
+    if (!inferred) return false;
+    setA((prev) => finalise({ ...prev, work_type: inferred, work_type_inferred: true }));
+    return true;
+  };
+
+  /** Clear any prior inference (used when user edits Q1 from a back navigation). */
+  const clearInference = () => {
+    if (a.work_type_inferred) {
+      setA((prev) => finalise({ ...prev, work_type: undefined, work_type_inferred: false }));
+    }
+  };
+
   const next = () => {
-    if (step < TOTAL) setStep(step + 1);
+    if (currentId === "jobTitle") {
+      // Re-evaluate inference at the moment of advancing from Q1.
+      const inferred = tryInferWorkType(a.jobTitle);
+      if (!inferred && a.work_type_inferred) {
+        // Job title changed and no longer infers — restore Q2.
+        setA((prev) => finalise({ ...prev, work_type: undefined, work_type_inferred: false }));
+      }
+    }
+    if (step < total) setStep(step + 1);
     else onComplete(a);
   };
+
   const back = () => (step === 1 ? onExit() : setStep(step - 1));
 
   const canAdvance = (() => {
-    if (step === 1) return a.jobTitle.trim().length > 1;
-    if (step === 2) return !!a.work_type;
-    if (step === 3) return !!a.computer_time;
-    if (step === 4) return (a.ai_tools?.length ?? 0) > 0;
-    if (step === 5) return !!a.ai_relationship;
-    if (step === 6) return !!a.country && (a.country !== "New Zealand" || !!a.region);
-    return false;
+    switch (currentId) {
+      case "jobTitle": return a.jobTitle.trim().length > 1;
+      case "workType": return !!a.work_type;
+      case "computerTime": return !!a.computer_time;
+      case "aiTools": return (a.ai_tools?.length ?? 0) > 0;
+      case "aiRelationship": return !!a.ai_relationship;
+      case "location": return !!a.country && (a.country !== "New Zealand" || !!a.region);
+      default: return false;
+    }
   })();
 
   const toggleTool = (key: AiToolKey) => {
@@ -91,15 +140,19 @@ export const Quiz = ({ onComplete, onExit }: Props) => {
       </header>
 
       <main className="container max-w-2xl pt-4 pb-20">
-        <ProgressBar current={step} total={TOTAL} />
+        <ProgressBar current={step} total={total} />
 
-        <div key={step} className="mt-12 animate-fade-in">
-          {step === 1 && (
+        <div key={currentId} className="mt-12 animate-fade-in">
+          {currentId === "jobTitle" && (
             <Question label="What's your job title?" hint="E.g. Marketing Manager, Registered Nurse, Carpenter">
               <Input
                 autoFocus
                 value={a.jobTitle}
-                onChange={(e) => update({ jobTitle: e.target.value })}
+                onChange={(e) => {
+                  // Editing Q1 invalidates any prior inference.
+                  clearInference();
+                  update({ jobTitle: e.target.value });
+                }}
                 onKeyDown={(e) => e.key === "Enter" && canAdvance && next()}
                 placeholder="Type your role..."
                 className="h-14 text-lg rounded-xl"
@@ -110,7 +163,7 @@ export const Quiz = ({ onComplete, onExit }: Props) => {
             </Question>
           )}
 
-          {step === 2 && (
+          {currentId === "workType" && (
             <Question label="Which best describes the work you actually do day-to-day?">
               <OptionGrid
                 options={WORK_TYPES.map((o) => o.label)}
@@ -118,15 +171,15 @@ export const Quiz = ({ onComplete, onExit }: Props) => {
                 onChange={(label) => {
                   const opt = WORK_TYPES.find((o) => o.label === label);
                   if (opt) {
-                    update({ work_type: opt.value });
-                    setTimeout(() => setStep(3), 180);
+                    update({ work_type: opt.value, work_type_inferred: false });
+                    setTimeout(() => setStep((s) => s + 1), 180);
                   }
                 }}
               />
             </Question>
           )}
 
-          {step === 3 && (
+          {currentId === "computerTime" && (
             <Question label="How much of your average workday is spent on a computer or screen?">
               <OptionGrid
                 options={COMPUTER_TIMES.map((o) => o.label)}
@@ -135,14 +188,14 @@ export const Quiz = ({ onComplete, onExit }: Props) => {
                   const opt = COMPUTER_TIMES.find((o) => o.label === label);
                   if (opt) {
                     update({ computer_time: opt.value });
-                    setTimeout(() => setStep(4), 180);
+                    setTimeout(() => setStep((s) => s + 1), 180);
                   }
                 }}
               />
             </Question>
           )}
 
-          {step === 4 && (
+          {currentId === "aiTools" && (
             <Question
               label="Which AI tools do you actually use?"
               hint="Tick all that apply."
@@ -175,7 +228,7 @@ export const Quiz = ({ onComplete, onExit }: Props) => {
             </Question>
           )}
 
-          {step === 5 && (
+          {currentId === "aiRelationship" && (
             <Question label="How would you describe your current relationship with AI at work?">
               <OptionGrid
                 options={AI_RELATIONSHIPS.map((o) => o.label)}
@@ -184,14 +237,14 @@ export const Quiz = ({ onComplete, onExit }: Props) => {
                   const opt = AI_RELATIONSHIPS.find((o) => o.label === label);
                   if (opt) {
                     update({ ai_relationship: opt.value });
-                    setTimeout(() => setStep(6), 180);
+                    setTimeout(() => setStep((s) => s + 1), 180);
                   }
                 }}
               />
             </Question>
           )}
 
-          {step === 6 && (
+          {currentId === "location" && (
             <Question label="Where are you based?">
               <div className="space-y-4">
                 <Select value={a.country} onValueChange={(v) => update({ country: v, region: "" })}>
@@ -229,7 +282,7 @@ export const Quiz = ({ onComplete, onExit }: Props) => {
             disabled={!canAdvance}
             className="bg-cta hover:opacity-95 text-accent-foreground h-12 px-6 rounded-full font-semibold disabled:opacity-40"
           >
-            {step === TOTAL ? "Get my score" : "Next"}
+            {step === total ? "Get my score" : "Next"}
             <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </div>

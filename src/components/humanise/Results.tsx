@@ -86,7 +86,7 @@ const TASK_OVERRIDES: Record<string, { tasks_at_risk: string[]; protective_tasks
 
 export const Results = ({ answers, onRestart }: Props) => {
   const occupations = useOccupations();
-  const [aiTasks, setAiTasks] = useState<{ tasks_at_risk: string[]; protective_tasks: string[]; honest_picture?: string; agent_note?: string; agent_tasks?: string[]; agent_reality?: string; nz_signal?: string; your_move?: string; locked_preview?: string } | null>(null);
+  const [aiTasks, setAiTasks] = useState<{ tasks_at_risk: string[]; protective_tasks: string[]; honest_picture?: string; agent_note?: string; agent_tasks?: string[]; agent_reality?: string; nz_signal?: string; your_move?: string; locked_preview?: string; locked_content_full?: string } | null>(null);
   const [planOpen, setPlanOpen] = useState(false);
   const [planEmail, setPlanEmail] = useState("");
   const [planSubmitting, setPlanSubmitting] = useState(false);
@@ -192,8 +192,24 @@ export const Results = ({ answers, onRestart }: Props) => {
       const occupationName = match?.title ?? jobTitle;
       const region = answers.country === "New Zealand" ? (answers.region ?? "New Zealand") : "New Zealand";
 
-      // Agent Watch path — dedicated email template, no upskill pack needed.
+      // Agent Watch path — dedicated email template, fetches curated upskill pack.
       if (planSource === "agent_watch_gate") {
+        // Fetch curated upskill pack for the WHERE TO START section.
+        let pack: EmailPack | null = null;
+        if (CURATED_INDUSTRIES.has(industry)) {
+          const resp = await fetch(`${CURATED_URL}?t=${Date.now()}`).catch(() => null);
+          if (resp?.ok) {
+            const data = await resp.json().catch(() => ({}));
+            pack = (data as Record<string, EmailPack>)[industry] ?? null;
+          }
+        }
+        if (!pack) {
+          const { data: packData } = await supabase.functions.invoke("upskill-pack", {
+            body: { jobTitle, industry, score },
+          }).catch(() => ({ data: null }));
+          pack = packData as EmailPack | null;
+        }
+
         const { data, error } = await supabase.functions.invoke("send-results-email", {
           body: {
             emailType: "agent_watch_unlock",
@@ -209,7 +225,9 @@ export const Results = ({ answers, onRestart }: Props) => {
             agentReality: aiTasks?.agent_reality ?? "",
             nzSignal: aiTasks?.nz_signal ?? "",
             yourMove: aiTasks?.your_move ?? "",
-            lockedContent: aiTasks?.locked_preview ?? "",
+            lockedContent: aiTasks?.locked_content_full || aiTasks?.locked_preview || "",
+            upskillPack: pack,
+            industry,
           },
         });
         if (error) throw new Error(error.message);

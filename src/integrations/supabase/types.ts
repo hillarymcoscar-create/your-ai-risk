@@ -14,7 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      email_captures: {
+        Row: {
+          agent_tier: string | null
+          created_at: string
+          email: string
+          id: string
+          nz_region: string | null
+          occupation: string | null
+          score: number | null
+          segment_tag: string | null
+          source: string
+        }
+        Insert: {
+          agent_tier?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          nz_region?: string | null
+          occupation?: string | null
+          score?: number | null
+          segment_tag?: string | null
+          source: string
+        }
+        Update: {
+          agent_tier?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          nz_region?: string | null
+          occupation?: string | null
+          score?: number | null
+          segment_tag?: string | null
+          source?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

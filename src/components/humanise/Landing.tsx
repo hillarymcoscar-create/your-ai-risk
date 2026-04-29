@@ -98,7 +98,7 @@ export const Landing = ({ onStart }: { onStart: () => void }) => {
         <div className="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 text-left">
           <HowCard
             title="60-second quiz"
-            body="Six questions. No email. No account. Real NZ data behind every score."
+            body="Five or six questions, depending on your role. No email. No account. Real NZ data behind every score."
           />
           <HowCard
             title="Honest result"

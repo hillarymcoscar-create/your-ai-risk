@@ -337,24 +337,21 @@ Deno.serve(async (req) => {
 
     const body = await req.json().catch(() => ({}));
     const {
+      emailType,
       email, to, jobTitle, matchedTitle, score, riskBand = "Moderate", industry,
       honestPicture, nzMarketSignalMsg, nzMarketSignalSrc,
       mbieGroup, mbieAnnualChange, mbieRegion, mbieRegionalChange,
       statsnzThousands, statsnzShare, tasksAtRisk, protectiveSkills,
       html: prebuiltHtml, subject: prebuiltSubject,
+      // Agent Watch fields
+      occupation, agentReality, nzSignal, yourMove, lockedContent, nzRegion,
     } = body ?? {};
 
     const emailStr = typeof (email ?? to) === "string" ? String(email ?? to).trim() : "";
-    const jobStr   = typeof jobTitle === "string" ? jobTitle.trim() : "";
     const scoreNum = typeof score === "number" ? score : Number(score);
 
     if (!emailStr || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailStr) || emailStr.length > 254) {
       return new Response(JSON.stringify({ error: "A valid email is required." }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-    if (!jobStr || jobStr.length > 200) {
-      return new Response(JSON.stringify({ error: "A job title is required." }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -363,31 +360,67 @@ Deno.serve(async (req) => {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-
     const finalScore = Math.round(scoreNum);
-    const html = typeof prebuiltHtml === "string" && prebuiltHtml
-      ? prebuiltHtml
-      : buildHtml({
-          jobTitle: jobStr,
-          matchedTitle: typeof matchedTitle === "string" ? matchedTitle : null,
-          score: finalScore,
-          riskBand: typeof riskBand === "string" ? riskBand : "Moderate",
-          industry: typeof industry === "string" ? industry : "",
-          honestPicture: typeof honestPicture === "string" ? honestPicture : "",
-          nzMarketSignalMsg: typeof nzMarketSignalMsg === "string" ? nzMarketSignalMsg : "",
-          nzMarketSignalSrc: typeof nzMarketSignalSrc === "string" ? nzMarketSignalSrc : "",
-          mbieGroup: typeof mbieGroup === "string" ? mbieGroup : "",
-          mbieAnnualChange: typeof mbieAnnualChange === "number" ? mbieAnnualChange : null,
-          mbieRegion: typeof mbieRegion === "string" ? mbieRegion : "",
-          mbieRegionalChange: typeof mbieRegionalChange === "number" ? mbieRegionalChange : null,
-          statsnzThousands: typeof statsnzThousands === "number" ? statsnzThousands : null,
-          statsnzShare: typeof statsnzShare === "number" ? statsnzShare : null,
-          tasksAtRisk: Array.isArray(tasksAtRisk) ? tasksAtRisk : [],
-          protectiveSkills: Array.isArray(protectiveSkills) ? protectiveSkills : [],
+    const bandStr = typeof riskBand === "string" ? riskBand : "Moderate";
+
+    let html: string;
+    let subject: string;
+    let textBody: string;
+
+    if (emailType === "agent_watch_unlock") {
+      const occ = typeof occupation === "string" && occupation.trim()
+        ? occupation.trim()
+        : (typeof matchedTitle === "string" && matchedTitle.trim()
+            ? matchedTitle.trim()
+            : (typeof jobTitle === "string" ? jobTitle.trim() : "your role"));
+      const region = typeof nzRegion === "string" ? nzRegion : "";
+      const awOpts = {
+        occupation: occ,
+        score: finalScore,
+        riskBand: bandStr,
+        nzRegion: region,
+        agentReality: typeof agentReality === "string" ? agentReality : "",
+        nzSignal: typeof nzSignal === "string" ? nzSignal : "",
+        yourMove: typeof yourMove === "string" ? yourMove : "",
+        lockedContent: typeof lockedContent === "string" ? lockedContent : "",
+      };
+      html = buildAgentWatchHtml(awOpts);
+      textBody = buildAgentWatchText(awOpts);
+      subject = typeof prebuiltSubject === "string" && prebuiltSubject
+        ? prebuiltSubject
+        : `Your Agent Watch report: ${occ}`;
+    } else {
+      const jobStr = typeof jobTitle === "string" ? jobTitle.trim() : "";
+      if (!jobStr || jobStr.length > 200) {
+        return new Response(JSON.stringify({ error: "A job title is required." }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
-    const subject = typeof prebuiltSubject === "string" && prebuiltSubject
-      ? prebuiltSubject
-      : `Your Humanise result: ${finalScore}% ${riskBand} Risk`;
+      }
+      html = typeof prebuiltHtml === "string" && prebuiltHtml
+        ? prebuiltHtml
+        : buildHtml({
+            jobTitle: jobStr,
+            matchedTitle: typeof matchedTitle === "string" ? matchedTitle : null,
+            score: finalScore,
+            riskBand: bandStr,
+            industry: typeof industry === "string" ? industry : "",
+            honestPicture: typeof honestPicture === "string" ? honestPicture : "",
+            nzMarketSignalMsg: typeof nzMarketSignalMsg === "string" ? nzMarketSignalMsg : "",
+            nzMarketSignalSrc: typeof nzMarketSignalSrc === "string" ? nzMarketSignalSrc : "",
+            mbieGroup: typeof mbieGroup === "string" ? mbieGroup : "",
+            mbieAnnualChange: typeof mbieAnnualChange === "number" ? mbieAnnualChange : null,
+            mbieRegion: typeof mbieRegion === "string" ? mbieRegion : "",
+            mbieRegionalChange: typeof mbieRegionalChange === "number" ? mbieRegionalChange : null,
+            statsnzThousands: typeof statsnzThousands === "number" ? statsnzThousands : null,
+            statsnzShare: typeof statsnzShare === "number" ? statsnzShare : null,
+            tasksAtRisk: Array.isArray(tasksAtRisk) ? tasksAtRisk : [],
+            protectiveSkills: Array.isArray(protectiveSkills) ? protectiveSkills : [],
+          });
+      subject = typeof prebuiltSubject === "string" && prebuiltSubject
+        ? prebuiltSubject
+        : `Your Humanise result: ${finalScore}% ${bandStr} Risk`;
+      textBody = `Humanise — ${finalScore}% ${bandStr} Risk\nFor: ${jobStr}`;
+    }
 
     const resendRes = await fetch(`${GATEWAY_URL}/emails`, {
       method: "POST",
@@ -397,11 +430,12 @@ Deno.serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "Hillary Woods <hillary@humanise.nz>",
+        from: "Hillary at Humanise <hillary@humanise.nz>",
+        reply_to: "hillary@humanise.nz",
         to: [emailStr],
         subject,
         html,
-        text: `Humanise — ${finalScore}% ${riskBand} Risk\nFor: ${jobStr}`,
+        text: textBody,
       }),
     });
 

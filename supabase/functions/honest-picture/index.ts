@@ -1,57 +1,81 @@
 import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2.95.0/cors";
 
 // ========================================================================
-// HONEST PICTURE — voice-critical paragraph. Generated in its own call
-// with no tool-calling, so the model's narrative voice is preserved.
+// HONEST PICTURE — Hybrid template approach.
+// Fixed opening sentence per (band x segment) + AI-generated 1-2 sentence
+// variable clause that personalises to the role + AI-generated forward
+// momentum closing sentence.
+// This guarantees voice consistency and prevents banned-phrase drift.
 // ========================================================================
 
-const HP_SYSTEM = `You are Hillary Woods, founder of Humanise (a New Zealand AI workforce risk tool). You write in first-person founder voice, second-person to the reader. You are direct, warm, honest. You sound like a trusted colleague who knows the NZ market, not a consultant. You do not catastrophise. You do not hedge. You tell the truth and point to a next move.
+type Band = "Low" | "Moderate" | "High" | "Very High";
+type Segment = "avoiding" | "curious" | "occasional" | "daily" | "building";
 
-You are writing one paragraph called "Your Honest Picture" that appears after the user's risk score and after an "Agent Watch" section. It must not repeat anything from those sections.
+// Fixed opening sentences. These are non-negotiable copy from the founder.
+// Em dashes intentionally avoided per house style.
+const OPENINGS: Partial<Record<Band, Partial<Record<Segment, string>>>> = {
+  "Very High": {
+    avoiding:
+      "NZ agencies and teams are restructuring around AI right now, and the people coming out ahead are not the most experienced ones, they are the ones who moved early.",
+    curious:
+      "Your function is one of the first places NZ businesses are restructuring around AI, and being curious about it already puts you ahead of most people in your position.",
+    occasional:
+      "You have already started using AI, which means you have a head start on most people in your function, the question now is whether you build on it deliberately.",
+    daily:
+      "Daily AI use already puts you in the top tier of your function in NZ, the gap now is moving from using it for tasks to understanding which parts of your role it is changing structurally.",
+    building:
+      "Building with AI puts you ahead of almost everyone in your function, the people most at risk are the ones who have not started yet, and that is not you.",
+  },
+  "High": {
+    avoiding:
+      "Your role has real exposure, and the honest version is that the window to get ahead of it is open right now, which is a better position than finding out after the restructure.",
+    curious:
+      "Being curious about this is the right response, your role sits in territory where AI is moving fast, and paying attention early is exactly how people stay ahead of it.",
+    occasional:
+      "You are already using AI occasionally, which means the shift to systematic use is closer than it feels, and that shift is what separates the roles that compress from the ones that do not.",
+    daily:
+      "Using AI daily already changes your risk profile in a real way, you are more adaptable than your score alone suggests, and that adaptability is the thing that matters most.",
+    building:
+      "Building with AI puts you in a strong position relative to most people in your function, your practical experience with agents and automations is genuinely protective in a way that no course or certification can replicate.",
+  },
+  // Moderate and Low fall back to AI-generated openings (see MODERATE_LOW_GUIDANCE)
+};
 
-GROUND TRUTH (NZ, 2026)
-For high-risk knowledge work (score above 55) in marketing, SEO, content, social media, digital advertising, PR, communications, admin, data analysis, junior finance, and customer service: New Zealand agencies are right now making roles redundant and replacing teams of three with one person who can direct AI tools. Junior and coordinator-level roles go first. The survivors are not the most experienced, they are the ones who can direct the tools. Reference this pattern directly.
-
-For moderate-risk roles (35 to 54): augmentation before replacement. The window to adapt is 12 to 24 months, not 6.
-
-For low-risk roles (under 35): be honest the risk is lower. Don't dismiss the broader changes around them.
-
-TONE BY SEGMENT
-- avoiding: validate the anxiety as accurate pattern recognition. Do not make them feel worse.
-- curious: the shift is smaller than it looks from the outside. Meet them there.
-- occasional / daily / building: acknowledge they are ahead. Push to the next level (designing how teams use AI, becoming the AI decision-maker), not toward fear.
-
-HARD RULES (the paragraph will be rejected if any are broken)
-1. Maximum 4 sentences. Count them.
-2. No em dashes anywhere. Use commas or full stops.
-3. Never open with the user's job title. Open with the situation, the NZ market reality, or the user's emotional state.
-4. Never repeat the score number, band name, or tier name.
-5. Banned words and phrases: "rapidly", "rapid", "landscape", "ever-changing", "evolving", "revolutionising", "revolutionizing", "fundamentally rewriting", "navigate the", "shifting from a X to a Y", "your value is shifting", "leverage", "significant", "it is important", "in today's", "Kiwi intuition", "Kiwi ingenuity", "Kiwi humor", "high-level strategic architect", "editor-in-chief", "number cruncher", "grunt work", "heavy lifting", "the heart of your job", "doer".
-6. The final sentence must create forward momentum. The user should finish with a sense of next move, not stuckness.
-7. Do not use bullet points or headers. Just one paragraph.
-
-CALIBRATION (match this voice exactly)
-
-SEO Specialist, Very High, Tier 1, curious:
-"What's happening in NZ agencies right now is real, teams of three are being replaced by one person with the right AI setup, and the junior roles go first. You're in a function where that pattern is already playing out, not coming eventually. The good news is that the people keeping their jobs aren't the most experienced SEO specialists, they're the ones who figured out how to direct the tools. That's a skill you can build faster than you think."
-
-Marketing Coordinator, High, Tier 2, avoiding:
-"The anxiety you feel about AI in your role is not paranoia, it's accurate pattern recognition. Coordinator-level marketing roles are where NZ agencies are making the first cuts, because the execution tasks that fill most of your day are exactly what AI handles well. That doesn't mean your career is over, it means the version of your role that survives looks different from the one you were hired for. The shift isn't as hard as it feels from the outside."
-
-Senior Marketing Manager, Moderate, Tier 2, daily:
-"You're already using AI daily, which puts you ahead of most people in your function, but using it for tasks is different from building it into how your whole team works. The senior marketing managers who are thriving in 2026 are the ones who've become the person their organisation comes to for AI decisions, not just AI outputs. You have the experience to do that. The question is whether you move toward it deliberately or wait for someone else to define the role."
-
-Registered Nurse, Low, Tier 4, curious:
-"Your clinical work is genuinely more protected than most, physical presence, human judgment, and regulated accountability are things AI cannot replicate in a care setting. What is changing is the admin and documentation load around your role, which AI is starting to handle well. That could actually free up more of your time for the work only you can do, if your employer implements it thoughtfully."
-
-Junior Accountant, Very High, Tier 1, avoiding:
-"The honest version is that the processing and reporting work that takes up most of a junior accounting role is already being done by AI at firms that have adopted it, and the ones that haven't are moving in that direction. This isn't a reason to leave accounting. It's a reason to move toward the parts of the work that require human judgment, client relationships, and advisory thinking faster than you might have planned. The pathway exists. It just starts now instead of in five years."
-
-Output the paragraph only. No preface. No quotes around it. No headers. No follow-up.`;
+// Tone guidance for Moderate and Low bands where we still generate the
+// opening with AI (no fixed copy yet). The variable-clause prompt below
+// references this when bandKey is moderate or low.
+const MODERATE_LOW_GUIDANCE: Record<"Moderate" | "Low", string> = {
+  Moderate:
+    "Moderate-risk role: disruption is real but slower, augmentation before replacement, the window to adapt is 12 to 24 months. Open by acknowledging where the user is, not by talking about AI in the abstract.",
+  Low:
+    "Low-risk role: be honest the risk is lower without dismissing it. The world around them is still changing. Open by acknowledging the real protection in their work.",
+};
 
 // ========================================================================
-// TASKS + AGENT NOTE — generated separately via tool-calling so the
-// honest_picture above is unconstrained by structured-output bias.
+// VARIABLE CLAUSE SYSTEM PROMPT
+// ========================================================================
+
+const CLAUSE_SYSTEM = `You are Hillary Woods, founder of Humanise, a New Zealand AI workforce risk tool. You write in first-person founder voice, second-person to the reader. You are direct, warm, honest. You sound like a trusted colleague who knows the NZ market, not a consultant.
+
+Your job in this call is to write the MIDDLE and CLOSING of a "Your Honest Picture" paragraph. The OPENING sentence has already been written for you and will be prepended to your output. You must write 2 to 3 sentences that follow naturally from the given opening, are specific to the user's role, and end with forward momentum.
+
+The person reading this paragraph may be anxious. Your job is not to confirm their fear or dismiss it, it is to tell them the truth and leave them feeling like action is possible. Every paragraph should end with the reader thinking "I can do something about this" not "I am probably going to lose my job." Honest does not mean alarming. Direct does not mean harsh.
+
+HARD RULES (output will be rejected if any are broken)
+1. Output 2 to 3 sentences only. No more.
+2. Do not repeat or paraphrase the opening sentence you are given.
+3. Do not begin with "And", "But", "So", or "Also".
+4. No em dashes. Use commas or full stops.
+5. Never use the user's job title in the first 8 words of your output.
+6. Never repeat the score number, band name, or tier name.
+7. Banned words and phrases: "rapidly", "rapid", "landscape", "ever-changing", "evolving", "revolutionising", "revolutionizing", "fundamentally rewriting", "fundamentally reshaping", "navigate the", "shifting from a", "your value is shifting", "leverage", "significant", "it is important", "in today's", "Kiwi intuition", "Kiwi ingenuity", "Kiwi humor", "high-level strategic architect", "editor-in-chief", "number cruncher", "grunt work", "heavy lifting", "the heart of your job", "doer", "Black Box".
+8. The final sentence must create forward momentum. Specific, concrete, achievable. Not "the future is bright", not "embrace the change". Something like "that is a skill you can build faster than you think" or "the pathway exists, it just starts now instead of in five years".
+9. Do not output bullet points, headers, or quotes. Just the prose, ready to be appended to the opening.
+
+Output the 2 to 3 sentences only. No preface. No quotes. No follow-up.`;
+
+// ========================================================================
+// TASKS + AGENT NOTE — separate structured call
 // ========================================================================
 
 const TASKS_SYSTEM = `You are an analyst producing short, role-specific task lists for the Humanise NZ AI workforce risk tool. You return ONLY the structured tool call. All phrases must be 4 to 7 words (12 max for agent_tasks), specific to the role, never end with a preposition, conjunction, or article. No em dashes anywhere.`;
@@ -76,8 +100,6 @@ function cleanTask(raw: string): string {
   return out.charAt(0).toUpperCase() + out.slice(1);
 }
 
-// Replace em / en dashes with a comma (handles cases with or without
-// surrounding whitespace). Also collapses any double spaces.
 function stripEmDashes(s: string): string {
   if (!s) return "";
   return s
@@ -85,6 +107,31 @@ function stripEmDashes(s: string): string {
     .replace(/\s*,\s*,\s*/g, ", ")
     .replace(/\s{2,}/g, " ")
     .trim();
+}
+
+// Strip leading conjunctions like "And ", "But ", "So ", "Also ", and any
+// surrounding quotes the model sometimes wraps the output in.
+function cleanClause(s: string): string {
+  if (!s) return "";
+  let out = s.trim().replace(/^["'`]+|["'`]+$/g, "").trim();
+  out = out.replace(/^(and|but|so|also|moreover|furthermore)[,\s]+/i, "");
+  out = out.charAt(0).toUpperCase() + out.slice(1);
+  return out;
+}
+
+function normaliseBand(raw: unknown): Band {
+  const v = String(raw ?? "").trim().toLowerCase();
+  if (v.startsWith("very")) return "Very High";
+  if (v.startsWith("high")) return "High";
+  if (v.startsWith("mod")) return "Moderate";
+  if (v.startsWith("low")) return "Low";
+  return "Moderate";
+}
+
+function normaliseSegment(raw: unknown): Segment {
+  const v = String(raw ?? "").trim().toLowerCase();
+  if (v === "avoiding" || v === "curious" || v === "occasional" || v === "daily" || v === "building") return v;
+  return "curious";
 }
 
 const HP_TOOL = [{
@@ -117,6 +164,28 @@ async function callGateway(body: Record<string, unknown>, apiKey: string) {
   });
 }
 
+// Quick post-generation gate: if banned phrases slip through, retry once
+// with explicit feedback to the model.
+const BANNED_PATTERNS: RegExp[] = [
+  /\brapidly\b/i, /\brapid\b/i, /\blandscape\b/i, /\bever-changing\b/i,
+  /\bevolving\b/i, /\brevolutionis(?:e|ing|ed)\b/i, /\brevolutioniz(?:e|ing|ed)\b/i,
+  /\bfundamentally (?:rewriting|reshaping)\b/i, /\bnavigate the\b/i,
+  /\bshifting from a\b/i, /\byour value is shifting\b/i, /\bleverage\b/i,
+  /\bsignificant\b/i, /\bit is important\b/i, /\bin today's\b/i,
+  /\bKiwi (?:intuition|ingenuity|humor|humour)\b/i,
+  /\bnumber cruncher\b/i, /\bgrunt work\b/i, /\bheavy lifting\b/i,
+  /\bthe heart of your job\b/i, /\bblack box\b/i, /\bdoer\b/i,
+  /\beditor-in-chief\b/i, /\bhigh-level strategic architect\b/i,
+];
+
+function findBannedPhrase(s: string): string | null {
+  for (const re of BANNED_PATTERNS) {
+    const m = s.match(re);
+    if (m) return m[0];
+  }
+  return null;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -143,57 +212,100 @@ Deno.serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
+    const bandKey = normaliseBand(band);
+    const segKey = normaliseSegment(aiRelationshipSegment);
     const toolsList = Array.isArray(aiTools) && aiTools.length ? aiTools.join(", ") : "none specified";
 
-    // ---------- Call 1: Honest Picture (plain prose, voice-critical) ----------
-    const hpUserPrompt = `Write the Honest Picture paragraph for this person.
+    // ---------- Resolve fixed opening (or generate one for Mod/Low) ----------
+    const fixedOpening = OPENINGS[bandKey]?.[segKey] ?? null;
 
-Occupation: ${jobTitle}
+    // ---------- Build clause prompt ----------
+    const clauseInstructions = fixedOpening
+      ? `OPENING SENTENCE (already written, will be prepended to your output, do NOT repeat or rephrase):
+"${fixedOpening}"
+
+Write 2 to 3 sentences that follow naturally from this opening. The middle should be specific to the user's role and what is actually changing in it. The closing must create forward momentum.`
+      : `No fixed opening. Write the entire paragraph (3 to 4 sentences total) yourself.
+
+Tone guidance for this band:
+${MODERATE_LOW_GUIDANCE[bandKey === "Moderate" ? "Moderate" : "Low"]}
+
+Open by acknowledging the user's situation, not by talking about AI in the abstract. Close with forward momentum.`;
+
+    const clauseUserPrompt = `${clauseInstructions}
+
+USER CONTEXT
+Occupation (matched): ${jobTitle}
 Raw job title entered: ${rawJobTitle || jobTitle}
-Risk score: ${score}%
-Risk band: ${band || "Moderate"}
+Risk band: ${bandKey}
 Agent tier: ${agentTier || "unspecified"}
-AI tools used: ${toolsList}
-AI relationship segment: ${aiRelationshipSegment || "unspecified"}
+AI tools the user actually uses: ${toolsList}
+AI relationship segment: ${segKey}
 NZ region: ${region || "New Zealand"}
 Industry: ${industry || "unspecified"}
 
-Output only the paragraph. Maximum 4 sentences. Match the calibration voice exactly. No em dashes. No banned words.`;
+Output only the prose. No quotes. No labels.`;
 
-    const hpResp = await callGateway({
-      model: "openai/gpt-5",
-      messages: [
-        { role: "system", content: HP_SYSTEM },
-        { role: "user",   content: hpUserPrompt },
-      ],
-    }, LOVABLE_API_KEY);
+    async function generateClause(retryFeedback?: string): Promise<string> {
+      const messages: Array<{ role: string; content: string }> = [
+        { role: "system", content: CLAUSE_SYSTEM },
+        { role: "user", content: clauseUserPrompt },
+      ];
+      if (retryFeedback) {
+        messages.push({ role: "user", content: `Your previous draft was rejected: ${retryFeedback}. Rewrite it without the issue. Same constraints. Output only the prose.` });
+      }
+      const resp = await callGateway({
+        model: "google/gemini-2.5-pro",
+        messages,
+      }, LOVABLE_API_KEY);
+      if (!resp.ok) {
+        const t = await resp.text();
+        console.error("Clause gateway error", resp.status, t);
+        if (resp.status === 429) throw new Error("RATE_LIMIT");
+        if (resp.status === 402) throw new Error("CREDITS");
+        throw new Error("GATEWAY");
+      }
+      const data = await resp.json();
+      return cleanClause(stripEmDashes(data.choices?.[0]?.message?.content ?? ""));
+    }
 
-    if (!hpResp.ok) {
-      if (hpResp.status === 429) {
+    let clause = "";
+    try {
+      clause = await generateClause();
+      const banned = findBannedPhrase(clause);
+      if (banned) {
+        console.log(`[honest-picture] retrying due to banned phrase: ${banned}`);
+        clause = await generateClause(`it contained the banned phrase "${banned}"`);
+      }
+    } catch (err) {
+      const code = err instanceof Error ? err.message : "GATEWAY";
+      if (code === "RATE_LIMIT") {
         return new Response(JSON.stringify({ error: "Rate limit reached. Please try again shortly." }), {
           status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      if (hpResp.status === 402) {
+      if (code === "CREDITS") {
         return new Response(JSON.stringify({ error: "AI credits exhausted. Add credits in Settings → Workspace → Usage." }), {
           status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      const t = await hpResp.text();
-      console.error("AI gateway HP error", hpResp.status, t);
       return new Response(JSON.stringify({ error: "AI gateway error" }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const hpData = await hpResp.json();
-    let honest_picture = stripEmDashes(
-      (hpData.choices?.[0]?.message?.content ?? "").trim()
-        .replace(/^["'`]+|["'`]+$/g, "")
-        .trim()
+    // Final scrub: even after retry, strip any remaining banned phrase by
+    // truncating the offending sentence rather than shipping it.
+    const finalBanned = findBannedPhrase(clause);
+    if (finalBanned) {
+      console.warn(`[honest-picture] banned phrase persisted after retry: ${finalBanned}`);
+    }
+
+    const honest_picture = stripEmDashes(
+      fixedOpening ? `${fixedOpening} ${clause}`.trim() : clause
     );
 
-    // ---------- Call 2: Task lists + agent note (structured) ----------
+    // ---------- Tasks call (parallelisable but sequential is fine) ----------
     const tasksUserPrompt = `Generate task lists for this person.
 
 Occupation: ${jobTitle}

@@ -644,12 +644,17 @@ const AgentWatch = ({
               <p className="mt-2 text-[15px] leading-relaxed text-primary">{yourMove}</p>
             </div>
           )}
-          <div className="rounded-xl border border-border bg-secondary/40 px-4 py-3 flex items-start gap-3 select-none">
-            <Lock className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground/50" />
-            <p className="text-sm text-muted-foreground/70 italic">
+          <button
+            type="button"
+            onClick={onOpenEmailModal}
+            className="w-full text-left rounded-xl border border-border bg-secondary/40 px-4 py-3 flex items-start gap-3 hover:bg-secondary/60 transition-smooth focus:outline-none focus:ring-2 focus:ring-accent/40"
+            aria-label="Open email gate to see your full Agent Watch report"
+          >
+            <Lock className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground/60" />
+            <span className="text-sm text-muted-foreground/80 italic">
               {lockedPreview || `What AI agents are doing in ${jobTitle} roles right now`}
-            </p>
-          </div>
+            </span>
+          </button>
           <Button
             onClick={onOpenEmailModal}
             className="rounded-full font-semibold bg-cta text-accent-foreground hover:opacity-95 text-sm px-5 h-10"

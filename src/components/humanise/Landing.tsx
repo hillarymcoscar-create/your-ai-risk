@@ -151,7 +151,7 @@ export const Landing = ({ onStart }: { onStart: () => void }) => {
           Ready to find out?
         </h2>
         <p className="mt-4 text-base sm:text-lg text-muted-foreground">
-          60 seconds. Six questions. A real NZ score for 1,016 occupations.
+          60 seconds. Five or six quick questions. A real NZ score for 1,016 occupations.
         </p>
         <div className="mt-8">
           <Button

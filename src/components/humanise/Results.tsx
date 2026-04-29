@@ -142,11 +142,13 @@ export const Results = ({ answers, onRestart }: Props) => {
   let comparison: string;
 
   if (match && occupations) {
-    const raw = match.risk_score + modifier;
+    // Apply knowledge-work uplift (floor + uplift) before quiz modifiers.
+    const uplift = applyUplift(match.risk_score, match.title);
+    answers.uplift_category = uplift.category;
+    answers.uplift_applied = uplift.uplift;
+    const raw = uplift.adjustedBase + modifier;
     score = Math.max(5, Math.min(95, Math.round(raw)));
     band = bandFromScore(score);
-    // Keep dataset's band if modifier is 0 to honour source labelling
-    if (modifier === 0) band = normaliseBand(match.risk_band);
     const override = TASK_OVERRIDES[match.title];
     if (override) {
       tasks = override.tasks_at_risk;

@@ -110,32 +110,48 @@ Deno.serve(async (req) => {
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
     const toolsList = Array.isArray(aiTools) && aiTools.length ? aiTools.join(", ") : "none specified";
-    const userPrompt = `Write "Your Honest Picture" for this person.
+    const userPrompt = `Generate the structured response for this person.
 
+USER CONTEXT
 Occupation: ${jobTitle}
 Raw job title entered: ${rawJobTitle || jobTitle}
 Risk score: ${score}%
 Risk band: ${band || "Moderate"}
 Agent tier: ${agentTier || "unspecified"}
 AI tools used: ${toolsList}
-AI relationship: ${aiRelationshipSegment || "unspecified"}
+AI relationship segment: ${aiRelationshipSegment || "unspecified"}
 NZ region: ${region || "New Zealand"}
 Industry: ${industry || "unspecified"}
 Regularly uses AI tools: ${usesAi ? "yes" : "no"}
 
-Return a structured response with these fields:
+FIELDS TO RETURN
 
-1. honest_picture: One paragraph, maximum 4 sentences. Follow every rule in the system prompt. Do not repeat anything you put in agent_note or agent_tasks. Speak directly to the emotional reality of this person's situation. End with a forward-looking sentence that creates momentum, not anxiety.
+honest_picture: One paragraph, maximum 4 sentences. This is the most important field. Before writing it, silently check every rule below.
 
-2. tasks_at_risk: Exactly 3 short action phrases (4 to 7 words each) describing the most automatable tasks for this specific role.
+  Voice anchors (match these exactly, do NOT default to consultant prose):
+  - Speak as Hillary Woods, founder, second-person, like a trusted colleague.
+  - Open with the user's situation or the NZ market reality, NOT with "AI is...", NOT with the job title, NOT with "your value is shifting".
+  - Reference the real NZ pattern when score > 55 and the role is in marketing/SEO/content/social/PR/comms/admin/data/junior-finance/customer-service: teams of three replaced by one person with the right AI setup, junior roles go first, the survivors are the ones who can direct the tools.
+  - For "avoiding" segment: validate the anxiety as accurate pattern recognition. Do not amplify it.
+  - For "curious" segment: meet them where they are. The shift is smaller than it feels.
+  - For "daily"/"building" segment: acknowledge they are ahead. Push to the next level (designing how teams use AI, becoming the AI decision-maker), not toward fear.
+  - For low-risk roles: honest that risk is lower without dismissing the broader changes.
+  - Final sentence MUST create forward momentum. The user should finish reading feeling they have a next move, not feeling stuck.
 
-3. protective_tasks: Exactly 3 short action phrases (4 to 7 words each) describing what makes this role hard to fully automate.
+  Banned words and phrases (do not use any of these):
+  em dash, "rapidly", "rapid", "landscape", "ever-changing", "evolving", "revolutionising", "revolutionizing", "navigate the", "shifting from X to Y", "your value is shifting", "leverage", "significant", "it is important", "in today's", "fundamentally rewriting", "Kiwi intuition", "high-level strategic architect", "editor-in-chief", "number cruncher", "grunt work", "heavy lifting".
+  Do not repeat the score number, band name, or tier name.
+  Do not repeat anything in agent_note or agent_tasks.
 
-4. agent_note: Name one specific AI agent tool currently being used for tasks in this occupation (choose the most relevant from: Microsoft Copilot, ChatGPT, Google Gemini, Make.com, or Manus) and give one concrete example of what it handles in this role. Keep to under 30 words. If the occupation is trades, healthcare, or other hands-on physical work, write "This role has strong natural protection from AI agents because [reason]" without naming a tool.
+tasks_at_risk: Exactly 3 short action phrases, 4 to 7 words each, specific to this role.
 
-5. agent_tasks: Exactly 3 specific tasks in this occupation that AI agents are handling today. Each must start with an action verb, be specific to the role (not generic), and be no longer than 12 words.
+protective_tasks: Exactly 3 short action phrases, 4 to 7 words each, specific to this role.
 
-All task phrases must be complete, specific to the role, and never end with a preposition, conjunction, or article. No em dashes anywhere in any field.`;
+agent_note: Name one of (Microsoft Copilot, ChatGPT, Google Gemini, Make.com, Manus) and give one concrete example of what it handles in this role. Under 30 words. For trades/healthcare/hands-on roles, write "This role has strong natural protection from AI agents because [reason]" without naming a tool.
+
+agent_tasks: Exactly 3 specific tasks AI agents are handling today in this occupation. Action verb start. Max 12 words each.
+
+No em dashes anywhere. No phrases from the banned list anywhere.`;
 
     const tools = [{
       type: "function",

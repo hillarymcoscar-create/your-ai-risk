@@ -38,29 +38,14 @@ type Props = {
 
 type Band = "Low" | "Moderate" | "High" | "Very High";
 
-const Q3_MOD: Record<string, number> = {
-  "Almost all of it": 5,
-  "About half": 0,
-  "Less than half": -10,
-  "Rarely - I work with my hands": -20,
-};
-const Q4_MOD: Record<string, number> = {
-  "Yes, regularly": -15,
-  "Sometimes": -5,
-  "I've tried but don't use them": 3,
-  "No, not at all": 8,
-};
-const Q5_MOD: Record<string, number> = {
-  "Yes, most of my day is this": 12,
-  "Some of my work is like this": 6,
-  "Only occasionally": 2,
-  "No, my work is varied and unpredictable": -5,
-};
-const Q6_MOD: Record<string, number> = {
-  "Yes — most of what I do follows a clear process": 8,
-  "Mostly, with some exceptions": 4,
-  "Somewhat — but it needs a lot of human judgment": -2,
-  "No — my work requires constant human judgment": -10,
+// Modifier weights now live in src/lib/humanise.ts (see computeModifiers).
+// The agentic exposure indicator is derived from the new ai_relationship answer.
+const AGENT_BY_RELATIONSHIP: Record<number, number> = {
+  1: 12,  // avoiding -> high agent exposure (work is exposed but they're not adapting)
+  2: 8,
+  3: 4,
+  4: -2,
+  5: -8,
 };
 
 function bandFromScore(score: number): Band {

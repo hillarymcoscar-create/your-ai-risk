@@ -12,7 +12,7 @@ type Props = {
   aiTools?: string[];
   aiRelationshipSegment?: string;
   region?: string;
-  onTasks?: (tasks: { tasks_at_risk: string[]; protective_tasks: string[]; honest_picture?: string; agent_note?: string; agent_tasks?: string[] }) => void;
+  onTasks?: (tasks: { tasks_at_risk: string[]; protective_tasks: string[]; honest_picture?: string; agent_note?: string; agent_tasks?: string[]; agent_reality?: string; nz_signal?: string; your_move?: string; locked_preview?: string }) => void;
 };
 
 export const HonestPicture = ({
@@ -42,13 +42,17 @@ export const HonestPicture = ({
           setError(data.error);
         } else {
           setText(data?.honest_picture ?? data?.text ?? "");
-          if (onTasks && (data?.tasks_at_risk?.length || data?.protective_tasks?.length)) {
+          if (onTasks && (data?.tasks_at_risk?.length || data?.protective_tasks?.length || data?.agent_reality)) {
             onTasks({
               tasks_at_risk: data?.tasks_at_risk ?? [],
               protective_tasks: data?.protective_tasks ?? [],
               honest_picture: data?.honest_picture ?? data?.text ?? "",
               agent_note: data?.agent_note ?? "",
               agent_tasks: data?.agent_tasks ?? [],
+              agent_reality: data?.agent_reality ?? "",
+              nz_signal: data?.nz_signal ?? "",
+              your_move: data?.your_move ?? "",
+              locked_preview: data?.locked_preview ?? "",
             });
           }
         }

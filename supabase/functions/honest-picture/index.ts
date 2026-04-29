@@ -22,7 +22,7 @@ const OPENINGS: Partial<Record<Band, Partial<Record<Segment, string>>>> = {
     occasional:
       "You have already started using AI, which means you have a head start on most people in your function, the question now is whether you build on it deliberately.",
     daily:
-      "Daily AI use already puts you in the top tier of your function in NZ, the gap now is moving from using it for tasks to understanding which parts of your role it is changing structurally.",
+      "Daily AI use already puts you in the top tier of your function in NZ. The gap now is moving from using it for tasks to understanding which parts of your role it is changing structurally.",
     building:
       "Building with AI puts you ahead of almost everyone in your function, the people most at risk are the ones who have not started yet, and that is not you.",
   },
@@ -34,7 +34,7 @@ const OPENINGS: Partial<Record<Band, Partial<Record<Segment, string>>>> = {
     occasional:
       "You are already using AI occasionally, which means the shift to systematic use is closer than it feels, and that shift is what separates the roles that compress from the ones that do not.",
     daily:
-      "Using AI daily already changes your risk profile in a real way, you are more adaptable than your score alone suggests, and that adaptability is the thing that matters most.",
+      "Using AI daily already changes your risk profile in a meaningful way. You are more adaptable than your score alone suggests, and that adaptability is what matters most right now.",
     building:
       "Building with AI puts you in a strong position relative to most people in your function, your practical experience with agents and automations is genuinely protective in a way that no course or certification can replicate.",
   },
@@ -138,7 +138,7 @@ const HP_TOOL = [{
   type: "function",
   function: {
     name: "return_tasks",
-    description: "Return task lists and agent note.",
+    description: "Return task lists, agent note, and Agent Watch fields.",
     parameters: {
       type: "object",
       properties: {
@@ -146,8 +146,12 @@ const HP_TOOL = [{
         protective_tasks: { type: "array", items: { type: "string" }, minItems: 3, maxItems: 3 },
         agent_note:       { type: "string" },
         agent_tasks:      { type: "array", items: { type: "string" }, minItems: 3, maxItems: 3 },
+        agent_reality:    { type: "string", description: "2-3 sentences specific to this occupation describing what autonomous AI agents are doing right now in this role. Name 2-3 specific real tools (e.g. Semrush AI, BrightEdge Copilot, custom GPT-4o pipelines, Microsoft Copilot, Make.com). Be concrete about what work is being absorbed." },
+        nz_signal:        { type: "string", description: "2 sentences with at least one specific NZ-grounded data point (job-ad changes, hiring trend, NZ industry shift since 2025) relevant to this occupation. No generic claims." },
+        your_move:        { type: "string", description: "2-3 sentences. One concrete 30-day action the user can take, then one direct sentence about what separates the people keeping their roles from the ones being compressed. Direct, specific, no platitudes." },
+        locked_preview:   { type: "string", description: "1-2 sentences. A teaser for premium content, framed as a question or a 'three things you don't know' tease specific to this occupation. Ends with a direct question to the reader." },
       },
-      required: ["tasks_at_risk", "protective_tasks", "agent_note", "agent_tasks"],
+      required: ["tasks_at_risk", "protective_tasks", "agent_note", "agent_tasks", "agent_reality", "nz_signal", "your_move", "locked_preview"],
       additionalProperties: false,
     },
   },
@@ -306,21 +310,31 @@ Output only the prose. No quotes. No labels.`;
     );
 
     // ---------- Tasks call (parallelisable but sequential is fine) ----------
-    const tasksUserPrompt = `Generate task lists for this person.
+    const tasksUserPrompt = `Generate task lists and Agent Watch fields for this person.
 
 Occupation: ${jobTitle}
 Raw job title entered: ${rawJobTitle || jobTitle}
 Industry: ${industry || "unspecified"}
 NZ region: ${region || "New Zealand"}
+Risk band: ${bandKey}
+Agent tier: ${agentTier || "unspecified"}
 Regularly uses AI: ${usesAi ? "yes" : "no"}
 
-Return:
+Return ALL of these fields:
+
+TASK LISTS
 - tasks_at_risk: 3 short action phrases (4 to 7 words) for the most automatable tasks in this role.
 - protective_tasks: 3 short action phrases (4 to 7 words) for what makes this role hard to fully automate.
 - agent_note: Name one of (Microsoft Copilot, ChatGPT, Google Gemini, Make.com, Manus) and give one concrete example of what it handles in this role. Under 30 words. For trades/healthcare/hands-on physical work, write "This role has strong natural protection from AI agents because [reason]" without naming a tool.
 - agent_tasks: 3 specific tasks AI agents are handling today in this occupation. Action verb start. Max 12 words each.
 
-No em dashes. No phrases ending in prepositions/conjunctions/articles.`;
+AGENT WATCH FIELDS
+- agent_reality: 2 to 3 sentences specific to this occupation. Describe what autonomous AI agents are doing right now in this exact role. Name 2 to 3 specific real tools (e.g. Semrush AI, BrightEdge Copilot, custom GPT-4o pipelines, Microsoft Copilot, Make.com, Manus, Claude). Be concrete about what work is being absorbed. Mention NZ digital agencies or NZ businesses where natural. Do NOT repeat the agent_note content.
+- nz_signal: 2 sentences. Include at least one specific NZ data point relevant to this occupation (e.g. AI mentions in NZ job ads have risen 143.5% since March 2025; junior coordinator roles being advertised less; senior roles increasingly listing AI proficiency as baseline). No generic global claims.
+- your_move: 2 to 3 sentences. Sentence one is one concrete 30-day action specific to this role (e.g. "Spend the next 30 days building one AI-assisted SEO workflow you own completely, site audit automation, content briefing, or monthly reporting"). Sentence two is one direct sentence about what separates the people keeping their roles from the ones being compressed. Direct, specific, no platitudes.
+- locked_preview: 1 to 2 sentences teasing premium content for this role. Frame it as "the [N] types of [role] work that agents cannot yet do, and whether your current role focuses on any of them." End with a direct question to the reader.
+
+No em dashes anywhere. No phrases ending in prepositions/conjunctions/articles in the task arrays.`;
 
     const tResp = await callGateway({
       model: "google/gemini-3-flash-preview",
@@ -336,12 +350,21 @@ No em dashes. No phrases ending in prepositions/conjunctions/articles.`;
     let protective_tasks: string[] = [];
     let agent_note = "";
     let agent_tasks: string[] = [];
+    let agent_reality = "";
+    let nz_signal = "";
+    let your_move = "";
+    let locked_preview = "";
 
     if (tResp.ok) {
       const tData = await tResp.json();
       const msg = tData.choices?.[0]?.message;
       const toolCall = msg?.tool_calls?.[0];
-      let parsed: { tasks_at_risk?: string[]; protective_tasks?: string[]; agent_note?: string; agent_tasks?: string[] } = {};
+      let parsed: {
+        tasks_at_risk?: string[]; protective_tasks?: string[];
+        agent_note?: string; agent_tasks?: string[];
+        agent_reality?: string; nz_signal?: string;
+        your_move?: string; locked_preview?: string;
+      } = {};
       if (toolCall?.function?.arguments) {
         try { parsed = JSON.parse(toolCall.function.arguments); } catch (e) { console.error("tool args parse failed", e); }
       } else if (typeof msg?.content === "string") {
@@ -352,6 +375,10 @@ No em dashes. No phrases ending in prepositions/conjunctions/articles.`;
       protective_tasks = (parsed.protective_tasks ?? []).map(cleanTask).filter(Boolean).slice(0, 3);
       agent_note       = stripEmDashes((parsed.agent_note ?? "").trim());
       agent_tasks      = (parsed.agent_tasks      ?? []).map(cleanTask).filter(Boolean).slice(0, 3);
+      agent_reality    = stripEmDashes((parsed.agent_reality ?? "").trim());
+      nz_signal        = stripEmDashes((parsed.nz_signal ?? "").trim());
+      your_move        = stripEmDashes((parsed.your_move ?? "").trim());
+      locked_preview   = stripEmDashes((parsed.locked_preview ?? "").trim());
     } else {
       console.error("AI gateway tasks error", tResp.status, await tResp.text());
     }
@@ -364,6 +391,10 @@ No em dashes. No phrases ending in prepositions/conjunctions/articles.`;
         protective_tasks,
         agent_note,
         agent_tasks,
+        agent_reality,
+        nz_signal,
+        your_move,
+        locked_preview,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );

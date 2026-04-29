@@ -476,7 +476,7 @@ Deno.serve(async (req) => {
       statsnzThousands, statsnzShare, tasksAtRisk, protectiveSkills,
       html: prebuiltHtml, subject: prebuiltSubject,
       // Agent Watch fields
-      occupation, agentReality, nzSignal, yourMove, lockedContent, nzRegion,
+      occupation, agentReality, nzSignal, yourMove, lockedContent, nzRegion, upskillPack,
     } = body ?? {};
 
     const emailStr = typeof (email ?? to) === "string" ? String(email ?? to).trim() : "";
@@ -506,6 +506,9 @@ Deno.serve(async (req) => {
             ? matchedTitle.trim()
             : (typeof jobTitle === "string" ? jobTitle.trim() : "your role"));
       const region = typeof nzRegion === "string" ? nzRegion : "";
+      const indStr = typeof industry === "string" ? industry : "";
+      const pack = (upskillPack && typeof upskillPack === "object") ? upskillPack as AwPack : null;
+      const resources = pickResources(pack, occ, indStr);
       const awOpts = {
         occupation: occ,
         score: finalScore,
@@ -515,6 +518,7 @@ Deno.serve(async (req) => {
         nzSignal: typeof nzSignal === "string" ? nzSignal : "",
         yourMove: typeof yourMove === "string" ? yourMove : "",
         lockedContent: typeof lockedContent === "string" ? lockedContent : "",
+        resources,
       };
       html = buildAgentWatchHtml(awOpts);
       textBody = buildAgentWatchText(awOpts);

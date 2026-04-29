@@ -34,7 +34,7 @@ const OPENINGS: Partial<Record<Band, Partial<Record<Segment, string>>>> = {
     occasional:
       "You are already using AI occasionally, which means the shift to systematic use is closer than it feels, and that shift is what separates the roles that compress from the ones that do not.",
     daily:
-      "Using AI daily already changes your risk profile in a real way, you are more adaptable than your score alone suggests, and that adaptability is the thing that matters most.",
+      "Using AI daily already changes your risk profile in a meaningful way. You are more adaptable than your score alone suggests, and that adaptability is what matters most right now.",
     building:
       "Building with AI puts you in a strong position relative to most people in your function, your practical experience with agents and automations is genuinely protective in a way that no course or certification can replicate.",
   },

@@ -8,29 +8,34 @@ export type AiToolKey =
   | "tried"
   | "none";
 
+export type MatchConfidence = "high" | "fuzzy" | "no_match";
+
+export type WorkTypeOverride = "knowledge" | "managing" | "care" | "trade";
+
 export type QuizAnswers = {
-  // Q1 — job title (unchanged matching)
+  // Q1 — job title
   jobTitle: string;
 
-  // Q2 — work type (1-9)
-  work_type?: number;
-  // True if work_type was inferred from job-title match rather than chosen by the user.
-  work_type_inferred?: boolean;
+  // Match confirmation (set after Q1 alias resolution)
+  job_title_matched?: string | null;
+  match_confidence?: MatchConfidence;
+  /** User's disambiguation pick (if they clicked "Not quite" or had no match). Null when accepted. */
+  work_type_override?: WorkTypeOverride | null;
 
-  // Q3 — computer time (1-5)
+  // Q2 — computer time (1-5)
   computer_time?: number;
 
-  // Q4 — AI tools used (multi-select)
+  // Q3 — AI tools used (multi-select)
   ai_tools?: AiToolKey[];
 
-  // Q5 — relationship with AI (1-5)
+  // Q4 — relationship with AI (1-5)
   ai_relationship?: number;
 
-  // Q6 — location (existing)
+  // Q5 — location
   country: string;
   region?: string;
 
-  // Derived flags / segments (set as the user advances)
+  // Derived flags / segments
   soft_exit_flag?: boolean;
   segment_tag?:
     | "avoiding"
@@ -42,7 +47,6 @@ export type QuizAnswers = {
 
   // ---- Legacy fields kept so downstream consumers (HonestPicture, email
   // template, send-results-email) continue to receive a meaningful value.
-  // These are derived from the new answers; they are NOT user-facing inputs.
   industry: string;
   aiUsage?: string;
   computerUse?: string;
@@ -50,34 +54,52 @@ export type QuizAnswers = {
   handoffTask?: string;
 };
 
-// ---------- Q2: work type ----------
+// ---------- Match confirmation: disambiguation options ----------
 
-export type WorkTypeOption = {
-  value: number;          // 1-9
+export type WorkTypeOverrideOption = {
+  value: WorkTypeOverride;
   label: string;
   modifier: number;
-  industryTag: string;    // legacy "industry" surface for downstream consumers
+  industryTag: string;
+  softExit?: boolean;
 };
 
-export const WORK_TYPES: readonly WorkTypeOption[] = [
-  { value: 1, label: "Strategy, planning, or analysis. Most of my work is thinking and decisions.",                  modifier:  5, industryTag: "Strategy & Analysis" },
-  { value: 2, label: "Creating content, writing, or design. Most of my work is producing things on a screen.",        modifier:  8, industryTag: "Content & Creative" },
-  { value: 3, label: "Managing people, projects, or processes. Most of my work is coordination and meetings.",        modifier:  3, industryTag: "Management & Operations" },
-  { value: 4, label: "Specialist knowledge work in legal, financial, technical, or research fields.",                 modifier:  5, industryTag: "Specialist Knowledge Work" },
-  { value: 5, label: "Customer-facing or sales work, mostly digital. Email, calls, CRM.",                             modifier:  3, industryTag: "Sales & Customer" },
-  { value: 6, label: "Administrative or operational work. Forms, data, systems, support.",                            modifier:  8, industryTag: "Admin & Operations" },
-  { value: 7, label: "Healthcare, education, or care work.",                                                          modifier:  0, industryTag: "Healthcare, Education & Care" },
-  { value: 8, label: "Skilled trade, manual, or hands-on work.",                                                      modifier: -10, industryTag: "Trades & Hands-on" },
-  { value: 9, label: "Mixed. I do a bit of everything.",                                                              modifier:  0, industryTag: "Mixed" },
+export const WORK_TYPE_OVERRIDES: readonly WorkTypeOverrideOption[] = [
+  {
+    value: "knowledge",
+    label:
+      "Knowledge work on a screen (writing, analysis, design, marketing, admin, customer service, finance, legal, technical)",
+    modifier: 5,
+    industryTag: "Knowledge Work",
+  },
+  {
+    value: "managing",
+    label: "Managing people, projects, or budgets",
+    modifier: 3,
+    industryTag: "Management & Operations",
+  },
+  {
+    value: "care",
+    label: "Healthcare, education, or care work",
+    modifier: 0,
+    industryTag: "Healthcare, Education & Care",
+  },
+  {
+    value: "trade",
+    label: "Skilled trade, manual, or hands-on work",
+    modifier: -10,
+    industryTag: "Trades & Hands-on",
+    softExit: true,
+  },
 ] as const;
 
-// ---------- Q3: computer time ----------
+// ---------- Q2: computer time ----------
 
 export type ComputerTimeOption = {
   value: number;          // 1-5
   label: string;
   modifier: number;
-  legacyComputerUse: string; // map to old COMPUTER_USE labels
+  legacyComputerUse: string;
 };
 
 export const COMPUTER_TIMES: readonly ComputerTimeOption[] = [
@@ -88,7 +110,7 @@ export const COMPUTER_TIMES: readonly ComputerTimeOption[] = [
   { value: 5, label: "Under 10 percent. I rarely use a computer for my work.",                            modifier: -15, legacyComputerUse: "Rarely - I work with my hands" },
 ] as const;
 
-// ---------- Q4: AI tools (multi-select) ----------
+// ---------- Q3: AI tools (multi-select) ----------
 
 export type AiToolOption = { key: AiToolKey; label: string };
 
@@ -105,15 +127,11 @@ export const AI_TOOL_OPTIONS: readonly AiToolOption[] = [
 
 const ACTIVE_TOOL_KEYS: readonly AiToolKey[] = ["chatgpt", "claude", "copilot", "gemini", "perplexity", "industry"];
 
-/** Apply Q4's highest-priority rule (modifiers do NOT sum). */
 export function aiToolsModifier(selected: AiToolKey[] | undefined): number {
   if (!selected || selected.length === 0) return 0;
   let s = [...selected];
-
-  // "tried" with any active tool -> drop "tried"
   const hasActive = s.some((k) => (ACTIVE_TOOL_KEYS as readonly string[]).includes(k));
   if (hasActive && s.includes("tried")) s = s.filter((k) => k !== "tried");
-  // "none" with anything else -> drop "none"
   if (s.includes("none") && s.length > 1) s = s.filter((k) => k !== "none");
 
   const activeCount = s.filter((k) => (ACTIVE_TOOL_KEYS as readonly string[]).includes(k)).length;
@@ -124,7 +142,6 @@ export function aiToolsModifier(selected: AiToolKey[] | undefined): number {
   return 0;
 }
 
-/** Map Q4 selection back to the legacy `aiUsage` string used by HonestPicture. */
 export function deriveLegacyAiUsage(selected: AiToolKey[] | undefined): string {
   if (!selected || selected.length === 0) return "No, not at all";
   const activeCount = selected.filter((k) => (ACTIVE_TOOL_KEYS as readonly string[]).includes(k)).length;
@@ -134,7 +151,7 @@ export function deriveLegacyAiUsage(selected: AiToolKey[] | undefined): string {
   return "No, not at all";
 }
 
-// ---------- Q5: relationship with AI ----------
+// ---------- Q4: relationship with AI ----------
 
 export type AiRelationshipOption = {
   value: number;     // 1-5
@@ -191,10 +208,10 @@ export const NZ_REGIONS = [
 // ---------- Modifier / segment computation ----------
 
 export type ModifiersApplied = {
-  q2_work_type: number;
-  q3_computer_time: number;
-  q4_ai_tools: number;
-  q5_ai_relationship: number;
+  override_work_type: number;
+  computer_time: number;
+  ai_tools: number;
+  ai_relationship: number;
   raw_total: number;
   capped_total: number;
 };
@@ -202,17 +219,19 @@ export type ModifiersApplied = {
 export const MODIFIER_CAP = 15;
 
 export function computeModifiers(a: QuizAnswers): ModifiersApplied {
-  const q2 = WORK_TYPES.find((o) => o.value === a.work_type)?.modifier ?? 0;
-  const q3 = COMPUTER_TIMES.find((o) => o.value === a.computer_time)?.modifier ?? 0;
-  const q4 = aiToolsModifier(a.ai_tools);
-  const q5 = AI_RELATIONSHIPS.find((o) => o.value === a.ai_relationship)?.modifier ?? 0;
-  const raw = q2 + q3 + q4 + q5;
+  const overrideMod = a.work_type_override
+    ? WORK_TYPE_OVERRIDES.find((o) => o.value === a.work_type_override)?.modifier ?? 0
+    : 0;
+  const ct = COMPUTER_TIMES.find((o) => o.value === a.computer_time)?.modifier ?? 0;
+  const ai = aiToolsModifier(a.ai_tools);
+  const rel = AI_RELATIONSHIPS.find((o) => o.value === a.ai_relationship)?.modifier ?? 0;
+  const raw = overrideMod + ct + ai + rel;
   const capped = Math.max(-MODIFIER_CAP, Math.min(MODIFIER_CAP, raw));
   return {
-    q2_work_type: q2,
-    q3_computer_time: q3,
-    q4_ai_tools: q4,
-    q5_ai_relationship: q5,
+    override_work_type: overrideMod,
+    computer_time: ct,
+    ai_tools: ai,
+    ai_relationship: rel,
     raw_total: raw,
     capped_total: capped,
   };
@@ -223,7 +242,7 @@ export function deriveSegmentTag(a: QuizAnswers): QuizAnswers["segment_tag"] {
   return AI_RELATIONSHIPS.find((o) => o.value === a.ai_relationship)?.segment;
 }
 
-// ---------- Risk band & summaries (unchanged behaviour) ----------
+// ---------- Risk band & summaries ----------
 
 export function riskBand(score: number): "low" | "medium" | "high" {
   if (score <= 40) return "low";
@@ -238,15 +257,13 @@ export function riskSummary(score: number): string {
   return "Your role has significant exposure to automation. Action now will make a real difference.";
 }
 
-// Fallback used only when O*NET match fails. Now keyed off work_type/computer_time
-// instead of the old industry/AI dropdowns.
 export function calculateRisk(a: QuizAnswers): number {
   const base = 50;
   const mods = computeModifiers(a);
   return Math.max(3, Math.min(97, Math.round(base + mods.capped_total)));
 }
 
-export function tasksAtRisk(a: QuizAnswers): string[] {
+export function tasksAtRisk(_a: QuizAnswers): string[] {
   return [
     "Routine data entry and report generation",
     "Drafting standard emails and documents",
@@ -268,73 +285,4 @@ export function industryComparison(score: number, industry: string): string {
   if (band === "low") return `You sit below the average exposure for ${label}.`;
   if (band === "medium") return `You're roughly in line with the average for ${label}.`;
   return `You're above the typical exposure for ${label}.`;
-}
-
-// ---------- Q2 inference from job title ----------
-
-/**
- * Infer a work_type (1-9) from a matched O*NET occupation title.
- * Returns null when the title is too generic/ambiguous to infer reliably.
- * Only call this for HIGH-CONFIDENCE matches (exact alias hits).
- */
-export function inferWorkTypeFromTitle(occupationTitle: string | undefined | null): number | null {
-  if (!occupationTitle) return null;
-  const t = occupationTitle.toLowerCase();
-
-  // Ambiguous bare titles: do not infer, fall through to showing Q2.
-  const AMBIGUOUS = ["manager", "managers", "director", "directors", "specialist", "specialists", "coordinator", "officer", "assistant"];
-  const tokens = t.split(/[\s,/&-]+/).filter(Boolean);
-  if (tokens.length === 1 && AMBIGUOUS.includes(tokens[0])) return null;
-
-  const has = (...keys: string[]) => keys.some((k) => t.includes(k));
-
-  // 7 — Healthcare, education, or care
-  if (has(
-    "nurse", "nursing", "physician", "doctor", "surgeon", "dentist", "paramedic",
-    "therap", "psycholog", "counsel", "social work", "midwife", "pharmac",
-    "teacher", "teaching", "tutor", "lecturer", "professor", "educator", "early childhood",
-    "kaiako", "carer", "caregiver", "care worker", "support worker",
-  )) return 7;
-
-  // 8 — Skilled trade, manual, hands-on, hospitality
-  if (has(
-    "electrician", "plumber", "carpenter", "builder", "construction", "labourer", "laborer",
-    "mechanic", "welder", "painter", "roofer", "joiner", "fitter",
-    "chef", "cook", "barista", "bartender", "waiter", "waitress", "hospitality",
-    "driver", "courier", "farm", "farmer", "horticultur", "landscap", "gardener",
-    "cleaner", "housekeep", "warehouse", "forklift", "machinist",
-    "sparky", "chippie",
-  )) return 8;
-
-  // 3 — Managing people / projects (check before 2/4 so "marketing manager" -> 3)
-  if (has("project manager", "programme manager", "program manager", "product manager",
-    "marketing manager", "operations manager", "general manager", "team lead",
-    "engineering manager", "people manager")) return 3;
-
-  // 5 — Customer-facing or sales
-  if (has("sales rep", "sales representative", "account manager", "account executive",
-    "business development", "bdm", "customer success", "customer service representative",
-    "call centre", "call center", "telemarket")) return 5;
-
-  // 6 — Administrative or operational
-  if (has("receptionist", "administrative assistant", "admin assistant", "office administrator",
-    "data entry", "secretary", "executive assistant", "ops coordinator", "operations coordinator",
-    "payroll clerk", "bookkeep")) return 6;
-
-  // 2 — Content, writing, design, marketing
-  if (has("seo", "content", "copywriter", "writer", "editor", "journalist", "designer",
-    "graphic", "ux", "ui designer", "creative", "brand", "marketing", "advertising",
-    "public relations", "communications specialist", "social media")) return 2;
-
-  // 4 — Specialist knowledge work (technical, legal, financial, research)
-  if (has("software", "developer", "engineer", "programmer", "data scientist", "data analyst",
-    "data engineer", "devops", "machine learning",
-    "lawyer", "solicitor", "barrister", "paralegal", "legal counsel",
-    "accountant", "auditor", "actuary", "financial analyst", "consultant",
-    "researcher", "scientist", "economist", "statistician")) return 4;
-
-  // 1 — Strategy, planning, analysis (non-technical)
-  if (has("strategist", "planner", "policy analyst", "business analyst", "research analyst")) return 1;
-
-  return null;
 }

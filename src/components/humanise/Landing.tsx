@@ -98,7 +98,7 @@ export const Landing = ({ onStart }: { onStart: () => void }) => {
         <div className="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 text-left">
           <HowCard
             title="60-second quiz"
-            body="Five or six questions, depending on your role. No email. No account. Real NZ data behind every score."
+            body="Five quick questions. No email. No account. Real NZ data behind every score."
           />
           <HowCard
             title="Honest result"
@@ -151,7 +151,7 @@ export const Landing = ({ onStart }: { onStart: () => void }) => {
           Ready to find out?
         </h2>
         <p className="mt-4 text-base sm:text-lg text-muted-foreground">
-          60 seconds. Five or six quick questions. A real NZ score for 1,016 occupations.
+          60 seconds. Five questions. A real NZ score for 1,016 occupations.
         </p>
         <div className="mt-8">
           <Button

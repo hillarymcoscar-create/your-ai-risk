@@ -17,6 +17,7 @@ import { UpskillSection } from "@/components/humanise/UpskillSection";
 import { AlertTriangle, Shield, BarChart3, Mail, LineChart, Share2, RotateCcw, Lock } from "lucide-react";
 import {
   calculateRisk,
+  computeModifiers,
   riskBand,
   riskSummary,
   tasksAtRisk,

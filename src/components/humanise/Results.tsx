@@ -283,6 +283,7 @@ export const Results = ({ answers, onRestart }: Props) => {
           <div className="mt-6 flex justify-center">
             <RiskGauge score={score} band={band} />
           </div>
+          {agentTier && <AgentExposureBadge tier={agentTier} />}
           <p className="mt-8 text-xl sm:text-2xl font-medium text-primary max-w-2xl mx-auto leading-snug">
             {summary}
           </p>

@@ -650,7 +650,7 @@ const AgentWatch = ({
             </div>
           )}
           <p className="text-[11px] text-muted-foreground/60">
-            Source: Humanise Agent Watch — updated April 2026
+            Source: Humanise Agent Watch, updated April 2026.
           </p>
         </div>
       ) : (
@@ -748,10 +748,10 @@ const CtaCard = ({
 );
 
 const AGENT_TIER_META: Record<AgentTier, { icon: string; label: string; tone: "danger" | "warn" | "info" | "success" }> = {
-  tier_1: { icon: "🤖", label: "High agent exposure — autonomous AI systems can already handle core tasks in your role.",     tone: "danger"  },
-  tier_2: { icon: "⚡", label: "Significant agent exposure — AI agents are absorbing the execution layer of your role.",      tone: "warn"    },
-  tier_3: { icon: "📊", label: "Moderate agent exposure — agents accelerate your work but can't yet replace your judgment.", tone: "info"    },
-  tier_4: { icon: "🛡", label: "Low agent exposure — your role depends on physical presence or human judgment agents can't replicate.", tone: "success" },
+  tier_1: { icon: "🤖", label: "High agent exposure. Autonomous AI systems can already handle core tasks in your role.",     tone: "danger"  },
+  tier_2: { icon: "⚡", label: "Significant agent exposure. AI agents are absorbing the execution layer of your role.",      tone: "warn"    },
+  tier_3: { icon: "📊", label: "Moderate agent exposure. Agents accelerate your work but can't yet replace your judgment.", tone: "info"    },
+  tier_4: { icon: "🛡", label: "Low agent exposure. Your role depends on physical presence or human judgment agents can't replicate.", tone: "success" },
 };
 
 const AGENT_TONE_CLASSES: Record<"danger" | "warn" | "info" | "success", string> = {

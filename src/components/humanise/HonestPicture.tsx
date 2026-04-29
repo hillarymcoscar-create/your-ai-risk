@@ -63,7 +63,7 @@ export const HonestPicture = ({
     return () => {
       cancelled = true;
     };
-  }, [jobTitle, industry, score, usesAi]);
+  }, [jobTitle, industry, score, usesAi, rawJobTitle, band, agentTier, aiTools?.join(","), aiRelationshipSegment, region]);
 
   return (
     <section

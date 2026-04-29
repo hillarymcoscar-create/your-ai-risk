@@ -150,8 +150,9 @@ const HP_TOOL = [{
         nz_signal:        { type: "string", description: "2 sentences with at least one specific NZ-grounded data point (job-ad changes, hiring trend, NZ industry shift since 2025) relevant to this occupation. No generic claims." },
         your_move:        { type: "string", description: "2-3 sentences. One concrete 30-day action the user can take, then one direct sentence about what separates the people keeping their roles from the ones being compressed. Direct, specific, no platitudes." },
         locked_preview:   { type: "string", description: "Maximum 2 sentences. Write one locked teaser that creates a specific unresolved question about THIS person's situation. Reference their occupation by name and their agent tier reality. Make them feel like there is one piece of information about their specific role that would change how they think about their next 90 days. End with a direct question to the reader. Do NOT use the words unlock, discover, or exclusive. Do NOT promise tips, strategies, or insights. Do NOT sound like a marketing headline or pricing-page copy. No em dashes." },
+        locked_content_full: { type: "string", description: "3 to 4 sentences. The expanded answer to the locked_preview teaser. This is the most valuable content in the Humanise product. It must contain specific, actionable intelligence about THIS occupation in NZ that is NOT visible anywhere else on the results page. Name specific tools, specific tasks, specific timelines, specific NZ regions or company types where known. Do NOT repeat anything from agent_reality, nz_signal, your_move, or locked_preview. This is the insight that makes the user think: I needed to know that. No em dashes." },
       },
-      required: ["tasks_at_risk", "protective_tasks", "agent_note", "agent_tasks", "agent_reality", "nz_signal", "your_move", "locked_preview"],
+      required: ["tasks_at_risk", "protective_tasks", "agent_note", "agent_tasks", "agent_reality", "nz_signal", "your_move", "locked_preview", "locked_content_full"],
       additionalProperties: false,
     },
   },
@@ -333,6 +334,7 @@ AGENT WATCH FIELDS
 - nz_signal: 2 sentences. Include at least one specific NZ data point relevant to this occupation (e.g. AI mentions in NZ job ads have risen 143.5% since March 2025; junior coordinator roles being advertised less; senior roles increasingly listing AI proficiency as baseline). No generic global claims.
 - your_move: 2 to 3 sentences. Sentence one is one concrete 30-day action specific to this role (e.g. "Spend the next 30 days building one AI-assisted SEO workflow you own completely, site audit automation, content briefing, or monthly reporting"). Sentence two is one direct sentence about what separates the people keeping their roles from the ones being compressed. Direct, specific, no platitudes.
 - locked_preview: Maximum 2 sentences. Write one teaser that creates a specific, unresolved question about THIS person's situation. Reference the occupation by name and the agent tier reality. Make them feel there is one piece of information about their specific role that would change how they think about their next 90 days. End with a direct question to the reader. Banned words: unlock, discover, exclusive, tips, strategies, insights, premium. Do not sound like a marketing headline. No em dashes.
+- locked_content_full: 3 to 4 sentences. The EXPANDED answer to the locked_preview teaser, written for the email the user just gave their address to receive. This is the deepest, most specific intelligence in the entire product. It MUST contain information not visible on the results page: name specific NZ regions, specific company types, specific tools, specific tasks, specific timelines (e.g. "Canterbury and Auckland agencies are trialling agent-first SEO workflows where one senior strategist directs a stack of agents handling audits, briefs, and reporting. The roles surviving are not generalist coordinators, they are specialists in technical architecture, client strategy, or AI workflow design. The window to make that move deliberately is roughly 6 to 12 months."). Do NOT repeat anything from agent_reality, nz_signal, your_move, or locked_preview. No em dashes.
 
 EXAMPLES OF THE RIGHT TONE FOR locked_preview (do not copy verbatim, match the structure)
 - SEO Specialist (Tier 1): "There are three specific SEO tasks agents cannot yet do reliably, and whether your current role focuses on any of them determines how exposed you actually are. Does yours?"
@@ -360,6 +362,7 @@ No em dashes anywhere. No phrases ending in prepositions/conjunctions/articles i
     let nz_signal = "";
     let your_move = "";
     let locked_preview = "";
+    let locked_content_full = "";
 
     if (tResp.ok) {
       const tData = await tResp.json();
@@ -370,6 +373,7 @@ No em dashes anywhere. No phrases ending in prepositions/conjunctions/articles i
         agent_note?: string; agent_tasks?: string[];
         agent_reality?: string; nz_signal?: string;
         your_move?: string; locked_preview?: string;
+        locked_content_full?: string;
       } = {};
       if (toolCall?.function?.arguments) {
         try { parsed = JSON.parse(toolCall.function.arguments); } catch (e) { console.error("tool args parse failed", e); }
@@ -385,6 +389,7 @@ No em dashes anywhere. No phrases ending in prepositions/conjunctions/articles i
       nz_signal        = stripEmDashes((parsed.nz_signal ?? "").trim());
       your_move        = stripEmDashes((parsed.your_move ?? "").trim());
       locked_preview   = stripEmDashes((parsed.locked_preview ?? "").trim());
+      locked_content_full = stripEmDashes((parsed.locked_content_full ?? "").trim());
     } else {
       console.error("AI gateway tasks error", tResp.status, await tResp.text());
     }
@@ -401,6 +406,7 @@ No em dashes anywhere. No phrases ending in prepositions/conjunctions/articles i
         nz_signal,
         your_move,
         locked_preview,
+        locked_content_full,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );

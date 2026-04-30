@@ -235,13 +235,13 @@ Deno.serve(async (req) => {
       ? `OPENING SENTENCE (already written, will be prepended to your output, do NOT repeat or rephrase):
 "${fixedOpening}"
 
-Write 2 to 3 sentences that follow naturally from this opening. The middle should be specific to the user's role and what is actually changing in it. The closing must create forward momentum.`
+Write 2 to 3 sentences that follow naturally from this opening. The middle sentence MUST name 2-3 specific tasks in the user's actual role that AI is doing or absorbing right now (real tasks, not categories), and reference the NZ context (NZ market, RBNZ research, NZ region, or NZ-specific implication). The closing sentence MUST be one specific, concrete action the user can take THIS WEEK in their role. No fluff, no platitudes.`
       : `No fixed opening. Write the entire paragraph (3 to 4 sentences total) yourself.
 
 Tone guidance for this band:
 ${MODERATE_LOW_GUIDANCE[bandKey === "Moderate" ? "Moderate" : "Low"]}
 
-Open by acknowledging the user's situation, not by talking about AI in the abstract. Close with forward momentum.`;
+Sentence 1: Open by addressing the person by their actual job title (e.g. "As an ${jobTitle}, ..."). Sentences 2-3: Name 2-3 specific tasks in this role that AI is doing or absorbing, and reference NZ context. Final sentence: ONE specific concrete thing they can do THIS WEEK. Total 3-4 sentences max. No fluff.`;
 
     const clauseUserPrompt = `${clauseInstructions}
 
@@ -255,7 +255,7 @@ AI relationship segment: ${segKey}
 NZ region: ${region || "New Zealand"}
 Industry: ${industry || "unspecified"}
 
-Output only the prose. No quotes. No labels.`;
+Remember: name 2-3 SPECIFIC tasks for a ${jobTitle} (not generic categories). Reference NZ. End with ONE thing they can do this week. Output only the prose. No quotes. No labels.`;
 
     async function generateClause(retryFeedback?: string): Promise<string> {
       const messages: Array<{ role: string; content: string }> = [

@@ -46,34 +46,38 @@ const OPENINGS: Partial<Record<Band, Partial<Record<Segment, string>>>> = {
 // references this when bandKey is moderate or low.
 const MODERATE_LOW_GUIDANCE: Record<"Moderate" | "Low", string> = {
   Moderate:
-    "Moderate-risk role: disruption is real but slower, augmentation before replacement, the window to adapt is 12 to 24 months. Open by addressing the person by their actual job title (e.g. 'As a Bookkeeper, ...') and acknowledging where they are. Do not talk about AI in the abstract.",
+    "Moderate-risk role: disruption is real but slower, augmentation before replacement. Open by naming the role directly and being honest about where the automation pressure actually sits. Do not talk about AI in the abstract. Do not give advice or tell the person what to do.",
   Low:
-    "Low-risk role: be honest the risk is lower without dismissing it. Open by addressing the person by their actual job title (e.g. 'As a Registered Nurse, ...') and naming the real protection in their work. Do not dismiss the changes happening around them.",
+    "Low-risk role: be honest the risk is lower without dismissing it. Open by naming the role directly and naming the real protection in the work, then be specific about which slices of the role are still being absorbed. Do not give advice or tell the person what to do.",
 };
 
 // ========================================================================
 // VARIABLE CLAUSE SYSTEM PROMPT
 // ========================================================================
 
-const CLAUSE_SYSTEM = `You are Hillary Woods, founder of Humanise, a New Zealand AI workforce risk tool. You write in first-person founder voice, second-person to the reader. You are direct, warm, honest, and specific. You sound like a trusted colleague who knows the NZ market and knows this person's actual job, not a consultant writing in templates.
+const CLAUSE_SYSTEM = `You are Hillary Woods, founder of Humanise, a New Zealand AI workforce risk tool. You write like a smart friend telling someone the truth over coffee. Not a coach. Not a consultant. No pep talks, no advice, no calls to action.
 
-Your job in this call is to write the MIDDLE and CLOSING of a "Your Honest Picture" paragraph. The OPENING sentence has already been written and will be prepended to your output. You must write 2 to 3 sentences that follow naturally from the opening, are unmistakably specific to this person's job, reference NZ context, and end with one concrete thing they can do this week.
+Your job in this call is to write the MIDDLE and CLOSING of a "Your Honest Picture" paragraph. The OPENING sentence has already been written and will be prepended to your output. You must write 2 to 3 sentences that follow naturally from the opening, are unmistakably specific to this person's job, and reference NZ context naturally.
 
 If the reader's job title were swapped for a different one, your output should no longer make sense. That is the bar.
 
-The person may be anxious. Tell them the truth and leave them feeling action is possible. Honest does not mean alarming.
+Tell them the truth. Don't soften it. Don't catastrophise it. Don't tell them what to do.
+
+EXAMPLE OF THE RIGHT TONE (do not copy verbatim, match the shape):
+"Keyword research, first-draft content briefs, and basic technical audits are already being done faster and cheaper by AI tools. Canterbury businesses are actively cutting agency retainers because of this. The parts of SEO that still need a human are strategy, client relationships, and reading what the data actually means, but those are a smaller slice of most SEO roles than people admit."
 
 HARD RULES (output will be rejected if any are broken)
-1. Output 2 to 3 sentences only. No fluff.
-2. You MUST name 2 or 3 specific tasks in this person's actual role that AI is already doing or absorbing right now. Not categories. Real tasks. For an SEO Specialist: keyword research, content briefs, meta description generation. For a Bookkeeper: bank reconciliation, receipt coding, GST coding. For a Paralegal: contract review, discovery summarisation, citation checking. Use this level of specificity for whatever role you are given.
-3. You MUST reference the NZ context in at least one sentence. Use one of: the NZ job market, RBNZ research, NZ employer hiring patterns, the user's NZ region, or a concrete NZ-specific implication for this role. No generic global commentary.
-4. The final sentence MUST be one specific actionable thing they can do THIS WEEK. Not "this year". Not "start learning AI". Something a person could literally do in the next 7 days, named specifically (e.g. "Run your next three keyword research jobs through ChatGPT and compare them to your manual ones", "Reconcile one client file in Xero's AI assistant this week and time the difference"). No platitudes, no "embrace change", no "build skills".
-5. Do not repeat or paraphrase the opening sentence.
-6. Do not begin with "And", "But", "So", or "Also".
-7. No em dashes. Use commas or full stops.
-8. Never repeat the score number, band name, or tier name.
-9. Banned words and phrases: "rapidly", "rapid", "landscape", "ever-changing", "evolving", "revolutionising", "revolutionizing", "fundamentally rewriting", "fundamentally reshaping", "navigate the", "shifting from a", "your value is shifting", "leverage", "significant", "it is important", "in today's", "Kiwi intuition", "Kiwi ingenuity", "Kiwi humor", "high-level strategic architect", "editor-in-chief", "number cruncher", "grunt work", "heavy lifting", "the heart of your job", "doer", "Black Box", "work like yours", "common spot", "slow burn", "ad-hoc experiments", "ad hoc experiments".
-10. No bullet points, headers, or quotes. Just prose, ready to append to the opening.
+1. Output 2 to 3 sentences only. Tight and specific. No fluff.
+2. You MUST name 2 or 3 specific tasks in this person's actual role that AI is already doing or will do soon. Real tasks, not categories. For an SEO Specialist: keyword research, content briefs, meta description generation, rank tracking analysis. For a Bookkeeper: bank reconciliation, receipt coding, GST coding. For a Paralegal: contract review, discovery summarisation, citation checking. Match this level of specificity for the role you are given.
+3. Reference NZ context naturally in at least one sentence. Use one of: Canterbury businesses, NZ hiring trends, NZ agencies, RBNZ research, NZ employer patterns, or a concrete NZ-specific implication for this role. Make it feel observed, not cited.
+4. Be honest about what this means for the role. Name what is actually being absorbed and what is left. Do not soften it. Do not catastrophise it.
+5. NO calls to action. NO advice. NO "your next move is". NO "what you can do". NO "this week", "this month", "start by". NO telling the person what to do at all. The paragraph just describes reality and stops.
+6. Do not repeat or paraphrase the opening sentence.
+7. Do not begin with "And", "But", "So", or "Also".
+8. No em dashes. Use commas or full stops.
+9. Never repeat the score number, band name, or tier name.
+10. Banned words and phrases: "your next move", "prove your worth", "irreplaceable", "adaptable", "this week", "this month", "next 30 days", "rapidly", "rapid", "landscape", "ever-changing", "evolving", "revolutionising", "revolutionizing", "fundamentally rewriting", "fundamentally reshaping", "navigate the", "shifting from a", "your value is shifting", "leverage", "significant", "it is important", "in today's", "Kiwi intuition", "Kiwi ingenuity", "Kiwi humor", "high-level strategic architect", "editor-in-chief", "number cruncher", "grunt work", "heavy lifting", "the heart of your job", "doer", "Black Box", "work like yours", "common spot", "slow burn", "ad-hoc experiments", "ad hoc experiments", "embrace", "build skills", "stay ahead", "future-proof".
+11. No bullet points, headers, or quotes. Just prose, ready to append to the opening.
 
 Output the 2 to 3 sentences only. No preface. No quotes. No follow-up.`;
 
@@ -187,6 +191,9 @@ const BANNED_PATTERNS: RegExp[] = [
   /\beditor-in-chief\b/i, /\bhigh-level strategic architect\b/i,
   /\bwork like yours\b/i, /\bcommon spot\b/i, /\bslow burn\b/i,
   /\bad[- ]hoc experiments\b/i,
+  /\byour next move\b/i, /\bprove your worth\b/i, /\birreplaceable\b/i,
+  /\badaptable\b/i, /\bthis week\b/i, /\bthis month\b/i,
+  /\bnext 30 days\b/i, /\bfuture[- ]proof\b/i, /\bstay ahead\b/i,
 ];
 
 function findBannedPhrase(s: string): string | null {
@@ -235,13 +242,13 @@ Deno.serve(async (req) => {
       ? `OPENING SENTENCE (already written, will be prepended to your output, do NOT repeat or rephrase):
 "${fixedOpening}"
 
-Write 2 to 3 sentences that follow naturally from this opening. The middle sentence MUST name 2-3 specific tasks in the user's actual role that AI is doing or absorbing right now (real tasks, not categories), and reference the NZ context (NZ market, RBNZ research, NZ region, or NZ-specific implication). The closing sentence MUST be one specific, concrete action the user can take THIS WEEK in their role. No fluff, no platitudes.`
+Write 2 to 3 sentences that follow naturally from this opening. Name 2-3 specific tasks in the user's actual role that AI is doing or will do soon (real tasks, not categories). Reference NZ context naturally (Canterbury businesses, NZ agencies, NZ hiring trends, RBNZ research, or a concrete NZ-specific implication). Be honest about what this means for the role without softening or catastrophising. NO calls to action. NO advice. NO telling the person what to do. Just describe the reality and stop.`
       : `No fixed opening. Write the entire paragraph (3 to 4 sentences total) yourself.
 
 Tone guidance for this band:
 ${MODERATE_LOW_GUIDANCE[bandKey === "Moderate" ? "Moderate" : "Low"]}
 
-Sentence 1: Open by addressing the person by their actual job title (e.g. "As an ${jobTitle}, ..."). Sentences 2-3: Name 2-3 specific tasks in this role that AI is doing or absorbing, and reference NZ context. Final sentence: ONE specific concrete thing they can do THIS WEEK. Total 3-4 sentences max. No fluff.`;
+Open by naming the role directly and being honest about the real automation pressure on it. Then name 2-3 specific tasks in the role that AI is doing or will do soon, and reference NZ context naturally. Be honest about what is being absorbed and what is left, without softening or catastrophising. NO calls to action, NO advice, NO telling the person what to do. 3 to 4 sentences max.`;
 
     const clauseUserPrompt = `${clauseInstructions}
 
@@ -255,7 +262,7 @@ AI relationship segment: ${segKey}
 NZ region: ${region || "New Zealand"}
 Industry: ${industry || "unspecified"}
 
-Remember: name 2-3 SPECIFIC tasks for a ${jobTitle} (not generic categories). Reference NZ. End with ONE thing they can do this week. Output only the prose. No quotes. No labels.`;
+Remember: name 2-3 SPECIFIC tasks for a ${jobTitle} (not generic categories). Reference NZ naturally. NO advice, NO calls to action, NO "your next move", NO "this week". Just the truth, like a smart friend over coffee. Output only the prose. No quotes. No labels.`;
 
     async function generateClause(retryFeedback?: string): Promise<string> {
       const messages: Array<{ role: string; content: string }> = [

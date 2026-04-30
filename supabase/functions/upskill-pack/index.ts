@@ -57,6 +57,16 @@ const TOOLS = [
             minItems: 2,
             maxItems: 2,
           },
+          skillshare: {
+            type: "object",
+            description: "A Skillshare browse-category URL most relevant to the occupation's industry.",
+            properties: {
+              title: { type: "string", description: "Short label, e.g. 'Skillshare — Marketing'." },
+              url: { type: "string", description: "A real Skillshare browse URL like https://www.skillshare.com/en/browse/<category>." },
+              why: { type: "string", description: "One short sentence on why this category fits the role." },
+            },
+            required: ["title", "url", "why"],
+          },
           quick_wins: {
             type: "array",
             items: { type: "string" },
@@ -64,7 +74,7 @@ const TOOLS = [
             maxItems: 3,
           },
         },
-        required: ["headline", "youtube", "courses", "nz_specific", "quick_wins"],
+        required: ["headline", "youtube", "courses", "nz_specific", "skillshare", "quick_wins"],
         additionalProperties: false,
       },
     },
@@ -91,10 +101,11 @@ Deno.serve(async (req) => {
 Generate a concise upskill resource list with:
 1. Two YouTube channels they should follow (real, existing channels — name and URL)
 2. Two specific courses on Coursera or LinkedIn Learning relevant to their role (real courses — name, platform, URL, cost, time commitment)
-3. Two NZ-specific resources (Careers NZ, industry bodies, or local training providers)
-4. Three quick wins they can do this week
+3. One Skillshare browse-category link most relevant to the occupation's industry. Use a real Skillshare browse URL of the form https://www.skillshare.com/en/browse/<category> (examples of valid categories: marketing, technology, finance, health-wellness, education, business-analytics, design, writing, productivity). Title it like "Skillshare — <Category>". Include a one-sentence "why".
+4. Two NZ-specific resources (Careers NZ, industry bodies, or local training providers)
+5. Three quick wins they can do this week
 
-Only include real, currently active URLs. Do not invent courses or channels.`;
+Only include real, currently active URLs. Do not invent courses, channels, or Skillshare categories.`;
 
     const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",

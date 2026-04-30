@@ -23,6 +23,7 @@ type UpskillPack = {
   headline: string;
   youtube: UpskillResource[];
   courses: UpskillCourse[];
+  skillshare?: UpskillResource;
   nz_specific: UpskillCourse[];
   quick_wins: string[];
 };
@@ -79,6 +80,21 @@ const PackDisplay = ({ pack, industry }: { pack: UpskillPack; industry: string }
             </li>
           ))}
         </ul>
+      </div>
+    )}
+
+    {pack.skillshare && (
+      <div>
+        <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-muted-foreground mb-2">
+          Skillshare
+        </p>
+        <div className="flex flex-col gap-0.5">
+          <ResourceLink title={pack.skillshare.title} url={pack.skillshare.url} />
+          <span className="text-[10px] text-muted-foreground pl-4">(free trial available)</span>
+          {pack.skillshare.why && (
+            <span className="text-xs text-muted-foreground pl-4">{pack.skillshare.why}</span>
+          )}
+        </div>
       </div>
     )}
 
@@ -230,7 +246,7 @@ export const UpskillSection = ({
           {skills.map((skill, i) => (
             <li key={i} className="py-3 first:pt-0 last:pb-0">
               <p className="text-sm font-medium text-primary">{skill}</p>
-              <div className="mt-1.5">
+              <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1.5">
                 <a
                   href={`https://www.linkedin.com/learning/search?keywords=${encodeURIComponent(skill)}`}
                   target="_blank"
@@ -240,6 +256,27 @@ export const UpskillSection = ({
                   <ExternalLink className="h-3 w-3" />
                   LinkedIn Learning
                 </a>
+                <a
+                  href={`https://www.coursera.org/search?query=${encodeURIComponent(skill)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-xs font-medium text-accent hover:underline"
+                >
+                  <ExternalLink className="h-3 w-3" />
+                  Coursera
+                </a>
+                <span className="inline-flex flex-col">
+                  <a
+                    href={`https://www.skillshare.com/en/search?query=${encodeURIComponent(skill)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-xs font-medium text-accent hover:underline"
+                  >
+                    <ExternalLink className="h-3 w-3" />
+                    Skillshare
+                  </a>
+                  <span className="text-[10px] text-muted-foreground pl-4">(free trial available)</span>
+                </span>
               </div>
             </li>
           ))}

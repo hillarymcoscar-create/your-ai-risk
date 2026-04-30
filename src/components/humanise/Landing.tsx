@@ -1,6 +1,7 @@
+import React from "react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/humanise/Logo";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Clock, Lock, BookOpen } from "lucide-react";
 
 export const Landing = ({ onStart }: { onStart: () => void }) => {
   return (
@@ -183,5 +184,15 @@ const HowCard = ({ title, body }: { title: string; body: string }) => (
   <div className="rounded-2xl border border-border bg-card p-6 shadow-soft">
     <h3 className="font-semibold text-primary text-lg">{title}</h3>
     <p className="mt-2 text-sm sm:text-base text-muted-foreground leading-relaxed">{body}</p>
+  </div>
+);
+
+const TrustItem = ({ icon, title, desc }: { icon: React.ReactNode; title: string; desc: string }) => (
+  <div className="rounded-2xl border border-border bg-card p-5 shadow-soft flex items-start gap-3">
+    <div className="mt-0.5 text-accent shrink-0">{icon}</div>
+    <div>
+      <p className="font-semibold text-primary text-sm">{title}</p>
+      <p className="mt-1 text-xs text-muted-foreground">{desc}</p>
+    </div>
   </div>
 );

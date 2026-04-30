@@ -1,0 +1,1 @@
+GRANT INSERT, UPDATE, SELECT ON TABLE public.quiz_responses TO anon, authenticated;

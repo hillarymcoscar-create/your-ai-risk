@@ -23,6 +23,7 @@ type UpskillPack = {
   headline: string;
   youtube: UpskillResource[];
   courses: UpskillCourse[];
+  skillshare?: UpskillResource;
   nz_specific: UpskillCourse[];
   quick_wins: string[];
 };

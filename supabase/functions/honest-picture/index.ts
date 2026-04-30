@@ -67,7 +67,7 @@ EXAMPLE OF THE RIGHT TONE (do not copy verbatim, match the shape):
 "Keyword research, first-draft content briefs, and basic technical audits are already being done faster and cheaper by AI tools. Canterbury businesses are actively cutting agency retainers because of this. The parts of SEO that still need a human are strategy, client relationships, and reading what the data actually means, but those are a smaller slice of most SEO roles than people admit."
 
 HARD RULES (output will be rejected if any are broken)
-1. Output 2 to 3 sentences only. Tight and specific. No fluff.
+1. Output MAXIMUM 3 sentences. Hard cap. Tight and specific. No fluff. Shorter is better.
 2. You MUST name 2 or 3 specific tasks in this person's actual role that AI is already doing or will do soon. Real tasks, not categories. For an SEO Specialist: keyword research, content briefs, meta description generation, rank tracking analysis. For a Bookkeeper: bank reconciliation, receipt coding, GST coding. For a Paralegal: contract review, discovery summarisation, citation checking. Match this level of specificity for the role you are given.
 3. Reference NZ context naturally in at least one sentence. Use one of: Canterbury businesses, NZ hiring trends, NZ agencies, RBNZ research, NZ employer patterns, or a concrete NZ-specific implication for this role. Make it feel observed, not cited.
 4. Be honest about what this means for the role. Name what is actually being absorbed and what is left. Do not soften it. Do not catastrophise it.
@@ -242,13 +242,13 @@ Deno.serve(async (req) => {
       ? `OPENING SENTENCE (already written, will be prepended to your output, do NOT repeat or rephrase):
 "${fixedOpening}"
 
-Write 2 to 3 sentences that follow naturally from this opening. Name 2-3 specific tasks in the user's actual role that AI is doing or will do soon (real tasks, not categories). Reference NZ context naturally (Canterbury businesses, NZ agencies, NZ hiring trends, RBNZ research, or a concrete NZ-specific implication). Be honest about what this means for the role without softening or catastrophising. NO calls to action. NO advice. NO telling the person what to do. Just describe the reality and stop.`
-      : `No fixed opening. Write the entire paragraph (3 to 4 sentences total) yourself.
+Write MAXIMUM 3 sentences (hard cap, shorter is better) that follow naturally from this opening. Name 2-3 specific tasks in the user's actual role that AI is doing or will do soon (real tasks, not categories). Reference NZ context naturally (Canterbury businesses, NZ agencies, NZ hiring trends, RBNZ research, or a concrete NZ-specific implication). Be honest about what this means for the role without softening or catastrophising. NO calls to action. NO advice. NO telling the person what to do. Just describe the reality and stop.`
+      : `No fixed opening. Write the ENTIRE paragraph yourself, MAXIMUM 3 sentences total (hard cap, shorter is better).
 
 Tone guidance for this band:
 ${MODERATE_LOW_GUIDANCE[bandKey === "Moderate" ? "Moderate" : "Low"]}
 
-Open by naming the role directly and being honest about the real automation pressure on it. Then name 2-3 specific tasks in the role that AI is doing or will do soon, and reference NZ context naturally. Be honest about what is being absorbed and what is left, without softening or catastrophising. NO calls to action, NO advice, NO telling the person what to do. 3 to 4 sentences max.`;
+Open by naming the role directly and being honest about the real automation pressure on it. Then name 2-3 specific tasks in the role that AI is doing or will do soon, and reference NZ context naturally. Be honest about what is being absorbed and what is left, without softening or catastrophising. NO calls to action, NO advice, NO telling the person what to do. MAXIMUM 3 sentences total. Hard cap.`;
 
     const clauseUserPrompt = `${clauseInstructions}
 
@@ -262,7 +262,7 @@ AI relationship segment: ${segKey}
 NZ region: ${region || "New Zealand"}
 Industry: ${industry || "unspecified"}
 
-Remember: name 2-3 SPECIFIC tasks for a ${jobTitle} (not generic categories). Reference NZ naturally. NO advice, NO calls to action, NO "your next move", NO "this week". Just the truth, like a smart friend over coffee. Output only the prose. No quotes. No labels.`;
+Remember: MAXIMUM 3 sentences (hard cap). Name 2-3 SPECIFIC tasks for a ${jobTitle} (not generic categories). Reference NZ naturally. NO advice, NO calls to action, NO "your next move", NO "this week". Just the truth, like a smart friend over coffee. Output only the prose. No quotes. No labels.`;
 
     async function generateClause(retryFeedback?: string): Promise<string> {
       const messages: Array<{ role: string; content: string }> = [
@@ -275,6 +275,7 @@ Remember: name 2-3 SPECIFIC tasks for a ${jobTitle} (not generic categories). Re
       const resp = await callGateway({
         model: "google/gemini-2.5-pro",
         messages,
+        max_tokens: 300,
       }, LOVABLE_API_KEY);
       if (!resp.ok) {
         const t = await resp.text();

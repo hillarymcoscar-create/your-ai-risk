@@ -171,35 +171,51 @@ export const Results = ({ answers, onRestart }: Props) => {
   const scoreReady = !!occupations; // wait until O*NET data is loaded so score is final
 
   useEffect(() => {
-    if (!scoreReady || insertAttemptedRef.current) return;
+    if (!scoreReady) {
+      console.log("[quiz_responses] waiting for scoreReady");
+      return;
+    }
+    if (insertAttemptedRef.current) return;
     insertAttemptedRef.current = true;
     const computerUsage =
       COMPUTER_TIMES.find((o) => o.value === answers.computer_time)?.label ?? null;
     const aiUsage =
       AI_RELATIONSHIPS.find((o) => o.value === answers.ai_relationship)?.label
         ?? deriveLegacyAiUsage(answers.ai_tools);
+    const payload = {
+      job_title: answers.jobTitle?.trim() || null,
+      matched_occupation: match?.title ?? null,
+      industry: answers.industry ?? null,
+      computer_usage: computerUsage,
+      ai_usage: aiUsage,
+      location_country: answers.country ?? null,
+      location_nz_region:
+        answers.country === "New Zealand" ? (answers.region ?? null) : null,
+      risk_score: score,
+      risk_band: band,
+    };
+    console.log("[quiz_responses] inserting", payload);
     (async () => {
       try {
-        const { data, error } = await supabase
+        const { data, error, status } = await supabase
           .from("quiz_responses")
-          .insert({
-            job_title: answers.jobTitle?.trim() || null,
-            matched_occupation: match?.title ?? null,
-            industry: answers.industry ?? null,
-            computer_usage: computerUsage,
-            ai_usage: aiUsage,
-            location_country: answers.country ?? null,
-            location_nz_region:
-              answers.country === "New Zealand" ? (answers.region ?? null) : null,
-            risk_score: score,
-            risk_band: band,
-          })
+          .insert(payload)
           .select("id")
           .single();
-        if (error) throw error;
+        if (error) {
+          console.error("[quiz_responses] insert error", {
+            message: error.message,
+            details: error.details,
+            hint: error.hint,
+            code: error.code,
+            status,
+          });
+          return;
+        }
         quizResponseIdRef.current = data?.id ?? null;
+        console.log("[quiz_responses] inserted id=", quizResponseIdRef.current);
       } catch (err) {
-        console.warn("quiz_responses insert failed", err);
+        console.error("[quiz_responses] insert threw", err);
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps

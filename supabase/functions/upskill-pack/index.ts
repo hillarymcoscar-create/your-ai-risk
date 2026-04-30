@@ -57,6 +57,16 @@ const TOOLS = [
             minItems: 2,
             maxItems: 2,
           },
+          skillshare: {
+            type: "object",
+            description: "A Skillshare browse-category URL most relevant to the occupation's industry.",
+            properties: {
+              title: { type: "string", description: "Short label, e.g. 'Skillshare — Marketing'." },
+              url: { type: "string", description: "A real Skillshare browse URL like https://www.skillshare.com/en/browse/<category>." },
+              why: { type: "string", description: "One short sentence on why this category fits the role." },
+            },
+            required: ["title", "url", "why"],
+          },
           quick_wins: {
             type: "array",
             items: { type: "string" },
@@ -64,7 +74,7 @@ const TOOLS = [
             maxItems: 3,
           },
         },
-        required: ["headline", "youtube", "courses", "nz_specific", "quick_wins"],
+        required: ["headline", "youtube", "courses", "nz_specific", "skillshare", "quick_wins"],
         additionalProperties: false,
       },
     },

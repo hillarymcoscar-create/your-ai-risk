@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -25,6 +25,9 @@ import {
   protectiveSkills,
   riskSummary,
   tasksAtRisk,
+  COMPUTER_TIMES,
+  AI_RELATIONSHIPS,
+  deriveLegacyAiUsage,
   type AgentTier,
   type QuizAnswers,
   type RiskBandLabel,

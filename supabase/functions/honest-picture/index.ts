@@ -191,6 +191,9 @@ const BANNED_PATTERNS: RegExp[] = [
   /\beditor-in-chief\b/i, /\bhigh-level strategic architect\b/i,
   /\bwork like yours\b/i, /\bcommon spot\b/i, /\bslow burn\b/i,
   /\bad[- ]hoc experiments\b/i,
+  /\byour next move\b/i, /\bprove your worth\b/i, /\birreplaceable\b/i,
+  /\badaptable\b/i, /\bthis week\b/i, /\bthis month\b/i,
+  /\bnext 30 days\b/i, /\bfuture[- ]proof\b/i, /\bstay ahead\b/i,
 ];
 
 function findBannedPhrase(s: string): string | null {

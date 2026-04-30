@@ -167,22 +167,22 @@ export const Results = ({ answers, onRestart }: Props) => {
 
   // ── Persist quiz response (one row per results-page mount) ────────────
   const quizResponseIdRef = useRef<string | null>(null);
+  const quizResponseInsertRef = useRef<Promise<string | null> | null>(null);
   const insertAttemptedRef = useRef(false);
   const scoreReady = !!occupations; // wait until O*NET data is loaded so score is final
 
-  useEffect(() => {
-    if (!scoreReady) {
-      console.log("[quiz_responses] waiting for scoreReady");
-      return;
-    }
-    if (insertAttemptedRef.current) return;
-    insertAttemptedRef.current = true;
+  const insertQuizResponse = async () => {
+    if (quizResponseIdRef.current) return quizResponseIdRef.current;
+    if (quizResponseInsertRef.current) return quizResponseInsertRef.current;
+
+    const id = crypto.randomUUID();
     const computerUsage =
       COMPUTER_TIMES.find((o) => o.value === answers.computer_time)?.label ?? null;
     const aiUsage =
       AI_RELATIONSHIPS.find((o) => o.value === answers.ai_relationship)?.label
         ?? deriveLegacyAiUsage(answers.ai_tools);
     const payload = {
+      id,
       job_title: answers.jobTitle?.trim() || null,
       matched_occupation: match?.title ?? null,
       industry: answers.industry ?? null,
@@ -194,43 +194,89 @@ export const Results = ({ answers, onRestart }: Props) => {
       risk_score: score,
       risk_band: band,
     };
+
     console.log("[quiz_responses] inserting", payload);
-    (async () => {
+
+    const insertPromise = (async () => {
       try {
-        const { data, error, status } = await supabase
-          .from("quiz_responses")
-          .insert(payload)
-          .select("id")
-          .single();
+        quizResponseIdRef.current = id;
+        const { error, status } = await supabase.from("quiz_responses").insert(payload);
+
         if (error) {
+          quizResponseIdRef.current = null;
+          insertAttemptedRef.current = false;
           console.error("[quiz_responses] insert error", {
             message: error.message,
             details: error.details,
             hint: error.hint,
             code: error.code,
             status,
+            payload,
           });
-          return;
+          return null;
         }
-        quizResponseIdRef.current = data?.id ?? null;
-        console.log("[quiz_responses] inserted id=", quizResponseIdRef.current);
+
+        console.log("[quiz_responses] inserted id=", id);
+        return id;
       } catch (err) {
+        quizResponseIdRef.current = null;
+        insertAttemptedRef.current = false;
         console.error("[quiz_responses] insert threw", err);
+        return null;
+      } finally {
+        quizResponseInsertRef.current = null;
       }
     })();
+
+    quizResponseInsertRef.current = insertPromise;
+    return insertPromise;
+  };
+
+  useEffect(() => {
+    if (!scoreReady) {
+      console.log("[quiz_responses] waiting for scoreReady");
+      return;
+    }
+    if (insertAttemptedRef.current) return;
+    insertAttemptedRef.current = true;
+    void insertQuizResponse();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scoreReady]);
 
   const attachEmailToQuizResponse = async (email: string) => {
-    const id = quizResponseIdRef.current;
-    if (!id) return;
+    const trimmed = email.trim();
+    if (!trimmed) return;
+
+    const id = quizResponseIdRef.current ?? await insertQuizResponse();
+    if (!id) {
+      console.error("[quiz_responses] email update skipped because no quiz response row was available", {
+        email: trimmed,
+      });
+      return;
+    }
+
     try {
-      await supabase
+      const { error, status } = await supabase
         .from("quiz_responses")
-        .update({ email: email.trim() })
+        .update({ email: trimmed })
         .eq("id", id);
+
+      if (error) {
+        console.error("[quiz_responses] email update error", {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code,
+          status,
+          id,
+          email: trimmed,
+        });
+        return;
+      }
+
+      console.log("[quiz_responses] email attached", { id, email: trimmed });
     } catch (err) {
-      console.warn("quiz_responses email update failed", err);
+      console.error("[quiz_responses] email update threw", err);
     }
   };
 

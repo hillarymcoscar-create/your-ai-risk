@@ -246,12 +246,12 @@ export const UpskillSection = ({
           {skills.map((skill, i) => (
             <li key={i} className="py-3 first:pt-0 last:pb-0">
               <p className="text-sm font-medium text-primary">{skill}</p>
-              <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1.5">
+              <div className="mt-2 grid grid-cols-3 gap-2">
                 <a
                   href={`https://www.linkedin.com/learning/search?keywords=${encodeURIComponent(skill)}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-xs font-medium text-accent hover:underline"
+                  className="inline-flex items-center justify-center gap-1 rounded-full border border-accent bg-background px-3 py-1.5 text-xs font-medium text-accent hover:bg-accent/5 transition-colors"
                 >
                   <ExternalLink className="h-3 w-3" />
                   LinkedIn Learning
@@ -260,23 +260,23 @@ export const UpskillSection = ({
                   href={`https://www.coursera.org/search?query=${encodeURIComponent(skill)}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-xs font-medium text-accent hover:underline"
+                  className="inline-flex items-center justify-center gap-1 rounded-full border border-accent bg-background px-3 py-1.5 text-xs font-medium text-accent hover:bg-accent/5 transition-colors"
                 >
                   <ExternalLink className="h-3 w-3" />
                   Coursera
                 </a>
-                <span className="inline-flex flex-col">
+                <div className="flex flex-col items-center gap-0.5">
                   <a
                     href={`https://www.skillshare.com/en/search?query=${encodeURIComponent(skill)}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-xs font-medium text-accent hover:underline"
+                    className="inline-flex w-full items-center justify-center gap-1 rounded-full border border-accent bg-background px-3 py-1.5 text-xs font-medium text-accent hover:bg-accent/5 transition-colors"
                   >
                     <ExternalLink className="h-3 w-3" />
                     Skillshare
                   </a>
-                  <span className="text-[10px] text-muted-foreground pl-4">(free trial available)</span>
-                </span>
+                  <span className="text-[10px] text-muted-foreground">(free trial available)</span>
+                </div>
               </div>
             </li>
           ))}
@@ -287,7 +287,7 @@ export const UpskillSection = ({
         {/* Email CTA */}
         <div className="mt-5 flex flex-col sm:flex-row sm:items-center gap-3 border-t border-border pt-5">
           <p className="text-sm font-medium text-primary flex-1">
-            Get your personalised {displayIndustry} upskill pack — free
+            Get your personalised industry upskill pack — free
           </p>
           <Button
             onClick={() => setModalOpen(true)}

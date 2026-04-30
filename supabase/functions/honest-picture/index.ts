@@ -185,6 +185,8 @@ const BANNED_PATTERNS: RegExp[] = [
   /\bnumber cruncher\b/i, /\bgrunt work\b/i, /\bheavy lifting\b/i,
   /\bthe heart of your job\b/i, /\bblack box\b/i, /\bdoer\b/i,
   /\beditor-in-chief\b/i, /\bhigh-level strategic architect\b/i,
+  /\bwork like yours\b/i, /\bcommon spot\b/i, /\bslow burn\b/i,
+  /\bad[- ]hoc experiments\b/i,
 ];
 
 function findBannedPhrase(s: string): string | null {

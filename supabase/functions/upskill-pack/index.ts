@@ -98,21 +98,35 @@ Deno.serve(async (req) => {
 
     const userPrompt = `You are an upskill advisor for New Zealand workers facing AI automation risk. The user works as a ${jobTitle} in the ${industry || "general"} industry in New Zealand, with a risk score of ${score}%.
 
-Generate a concise upskill resource list with:
-1. For YouTube, generate 2 search URLs in this format:
-https://www.youtube.com/results?search_query=[relevant+keywords]
+CRITICAL URL SAFETY RULES — read carefully before generating any links.
 
-Use keywords specific to the occupation and how AI affects it. For example, for a Content Creator:
+For all resource links (YouTube, LinkedIn Learning, Coursera, Skillshare), you may ONLY generate URLs that follow these exact safe patterns:
+
+SAFE URL PATTERNS ONLY:
+- YouTube: https://www.youtube.com/results?search_query=[keywords]
+  (search URLs only — NEVER /watch URLs, NEVER /@channel URLs)
+- LinkedIn Learning: https://www.linkedin.com/learning/search?keywords=[keywords]
+  (search URL only — NEVER a specific course URL)
+- Coursera: https://www.coursera.org/search?query=[keywords]
+  (search URL only — NEVER a specific course URL)
+- Skillshare: https://www.skillshare.com/en/browse/[category]
+  (browse URL only — NEVER a specific class URL)
+
+RULE: If you cannot identify a relevant browse category or search keyword for a platform that genuinely fits the occupation, OMIT that platform entirely. Do not include a link that is generic or forced.
+
+Never generate URLs to specific courses, videos, or instructor pages — these break over time. Only the safe patterns above are allowed.
+
+Generate a concise upskill resource list with:
+1. Two YouTube search URLs (using the safe pattern above) with keywords specific to the occupation and how AI affects it. For example, for a Content Creator:
 - https://www.youtube.com/results?search_query=ai+tools+for+content+creators
 - https://www.youtube.com/results?search_query=video+editing+ai+automation+2025
+The title should describe what the search returns (e.g. "AI tools for content creators — YouTube search").
+2. Two courses — each must use either the LinkedIn Learning search URL pattern or the Coursera search URL pattern above with keywords relevant to the role. Title should describe the search (e.g. "Prompt engineering — Coursera search"). Set platform to "LinkedIn Learning" or "Coursera", cost to "Free trial / paid", and time to "Self-paced".
+3. One Skillshare browse-category link using the safe pattern above. Valid categories include: marketing, technology, finance, health-wellness, education, business-analytics, design, writing, productivity. Title it like "Skillshare — <Category>". Include a one-sentence "why". If no category genuinely fits, omit Skillshare.
+4. Two NZ-specific resources (Careers NZ, industry bodies, or local training providers) — these may be real homepage URLs.
+5. Three quick wins they can do this week.
 
-Never generate youtube.com/watch or youtube.com/@channel URLs — only search URLs. These are guaranteed to work and return relevant results. For each, the title should describe what the search returns (e.g. "AI tools for content creators — YouTube search").
-2. Two specific courses on Coursera or LinkedIn Learning relevant to their role (real courses — name, platform, URL, cost, time commitment)
-3. One Skillshare browse-category link most relevant to the occupation's industry. Use a real Skillshare browse URL of the form https://www.skillshare.com/en/browse/<category> (examples of valid categories: marketing, technology, finance, health-wellness, education, business-analytics, design, writing, productivity). Title it like "Skillshare — <Category>". Include a one-sentence "why".
-4. Two NZ-specific resources (Careers NZ, industry bodies, or local training providers)
-5. Three quick wins they can do this week
-
-Only include real, currently active URLs for courses, NZ resources, and Skillshare categories. Do not invent them.`;
+Only use the safe URL patterns above for YouTube, LinkedIn Learning, Coursera, and Skillshare. Do not invent specific course, video, or class URLs.`;
 
     const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",

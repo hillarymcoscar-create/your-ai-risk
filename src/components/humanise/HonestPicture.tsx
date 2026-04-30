@@ -82,11 +82,9 @@ export const HonestPicture = ({
 
       <div className="mt-3 min-h-[4.5rem]">
         {loading ? (
-          <div className="space-y-2 animate-pulse" aria-label="Generating your honest picture">
-            <div className="h-4 rounded bg-muted/70 w-[95%]" />
-            <div className="h-4 rounded bg-muted/70 w-[88%]" />
-            <div className="h-4 rounded bg-muted/70 w-[72%]" />
-          </div>
+          <p className="text-[11px] italic text-muted-foreground/70" aria-label="Generating your honest picture">
+            Pulling your honest picture — this takes a few seconds...
+          </p>
         ) : error ? (
           <p className="text-[15px] text-muted-foreground">{error}</p>
         ) : (

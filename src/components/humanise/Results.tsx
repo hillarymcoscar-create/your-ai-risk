@@ -361,6 +361,9 @@ export const Results = ({ answers, onRestart }: Props) => {
       console.error("email_captures insert failed", err);
     }
 
+    // Attach email to this session's quiz_responses row.
+    void attachEmailToQuizResponse(trimmed);
+
     const ok = await sendResultsEmail(trimmed);
     setPlanSubmitting(false);
 

@@ -50,6 +50,51 @@ export type Database = {
         }
         Relationships: []
       }
+      quiz_responses: {
+        Row: {
+          ai_usage: string | null
+          computer_usage: string | null
+          created_at: string
+          email: string | null
+          id: string
+          industry: string | null
+          job_title: string | null
+          location_country: string | null
+          location_nz_region: string | null
+          matched_occupation: string | null
+          risk_band: string | null
+          risk_score: number | null
+        }
+        Insert: {
+          ai_usage?: string | null
+          computer_usage?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          industry?: string | null
+          job_title?: string | null
+          location_country?: string | null
+          location_nz_region?: string | null
+          matched_occupation?: string | null
+          risk_band?: string | null
+          risk_score?: number | null
+        }
+        Update: {
+          ai_usage?: string | null
+          computer_usage?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          industry?: string | null
+          job_title?: string | null
+          location_country?: string | null
+          location_nz_region?: string | null
+          matched_occupation?: string | null
+          risk_band?: string | null
+          risk_score?: number | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -25,6 +25,9 @@ import {
   protectiveSkills,
   riskSummary,
   tasksAtRisk,
+  COMPUTER_TIMES,
+  AI_RELATIONSHIPS,
+  deriveLegacyAiUsage,
   type AgentTier,
   type QuizAnswers,
   type RiskBandLabel,
@@ -161,6 +164,59 @@ export const Results = ({ answers, onRestart }: Props) => {
   }
 
   const summary = riskSummary(score);
+
+  // ── Persist quiz response (one row per results-page mount) ────────────
+  const quizResponseIdRef = useRef<string | null>(null);
+  const insertAttemptedRef = useRef(false);
+  const scoreReady = !!occupations; // wait until O*NET data is loaded so score is final
+
+  useEffect(() => {
+    if (!scoreReady || insertAttemptedRef.current) return;
+    insertAttemptedRef.current = true;
+    const computerUsage =
+      COMPUTER_TIMES.find((o) => o.value === answers.computer_time)?.label ?? null;
+    const aiUsage =
+      AI_RELATIONSHIPS.find((o) => o.value === answers.ai_relationship)?.label
+        ?? deriveLegacyAiUsage(answers.ai_tools);
+    (async () => {
+      try {
+        const { data, error } = await supabase
+          .from("quiz_responses")
+          .insert({
+            job_title: answers.jobTitle?.trim() || null,
+            matched_occupation: match?.title ?? null,
+            industry: answers.industry ?? null,
+            computer_usage: computerUsage,
+            ai_usage: aiUsage,
+            location_country: answers.country ?? null,
+            location_nz_region:
+              answers.country === "New Zealand" ? (answers.region ?? null) : null,
+            risk_score: score,
+            risk_band: band,
+          })
+          .select("id")
+          .single();
+        if (error) throw error;
+        quizResponseIdRef.current = data?.id ?? null;
+      } catch (err) {
+        console.warn("quiz_responses insert failed", err);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scoreReady]);
+
+  const attachEmailToQuizResponse = async (email: string) => {
+    const id = quizResponseIdRef.current;
+    if (!id) return;
+    try {
+      await supabase
+        .from("quiz_responses")
+        .update({ email: email.trim() })
+        .eq("id", id);
+    } catch (err) {
+      console.warn("quiz_responses email update failed", err);
+    }
+  };
 
   const handleShare = async () => {
     const text = `My AI automation risk score is ${score}% — find yours at Humanise.`;
@@ -304,6 +360,9 @@ export const Results = ({ answers, onRestart }: Props) => {
     } catch (err) {
       console.error("email_captures insert failed", err);
     }
+
+    // Attach email to this session's quiz_responses row.
+    void attachEmailToQuizResponse(trimmed);
 
     const ok = await sendResultsEmail(trimmed);
     setPlanSubmitting(false);
@@ -452,7 +511,7 @@ export const Results = ({ answers, onRestart }: Props) => {
           nzData={nzData}
           tasksAtRisk={activeTasks}
           region={answers.region ?? ""}
-          onEmailCaptured={(email) => { void sendResultsEmail(email); setEmailSubmitted(true); }}
+          onEmailCaptured={(email) => { void attachEmailToQuizResponse(email); void sendResultsEmail(email); setEmailSubmitted(true); }}
         />
 
         <section className="mt-12">

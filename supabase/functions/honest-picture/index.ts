@@ -46,9 +46,9 @@ const OPENINGS: Partial<Record<Band, Partial<Record<Segment, string>>>> = {
 // references this when bandKey is moderate or low.
 const MODERATE_LOW_GUIDANCE: Record<"Moderate" | "Low", string> = {
   Moderate:
-    "Moderate-risk role: disruption is real but slower, augmentation before replacement, the window to adapt is 12 to 24 months. Open by addressing the person by their actual job title (e.g. 'As a Bookkeeper, ...') and acknowledging where they are. Do not talk about AI in the abstract.",
+    "Moderate-risk role: disruption is real but slower, augmentation before replacement. Open by naming the role directly and being honest about where the automation pressure actually sits. Do not talk about AI in the abstract. Do not give advice or tell the person what to do.",
   Low:
-    "Low-risk role: be honest the risk is lower without dismissing it. Open by addressing the person by their actual job title (e.g. 'As a Registered Nurse, ...') and naming the real protection in their work. Do not dismiss the changes happening around them.",
+    "Low-risk role: be honest the risk is lower without dismissing it. Open by naming the role directly and naming the real protection in the work, then be specific about which slices of the role are still being absorbed. Do not give advice or tell the person what to do.",
 };
 
 // ========================================================================

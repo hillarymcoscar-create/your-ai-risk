@@ -83,6 +83,21 @@ const PackDisplay = ({ pack, industry }: { pack: UpskillPack; industry: string }
       </div>
     )}
 
+    {pack.skillshare && (
+      <div>
+        <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-muted-foreground mb-2">
+          Skillshare
+        </p>
+        <div className="flex flex-col gap-0.5">
+          <ResourceLink title={pack.skillshare.title} url={pack.skillshare.url} />
+          <span className="text-[10px] text-muted-foreground pl-4">(free trial available)</span>
+          {pack.skillshare.why && (
+            <span className="text-xs text-muted-foreground pl-4">{pack.skillshare.why}</span>
+          )}
+        </div>
+      </div>
+    )}
+
     {pack.nz_specific?.length > 0 && (
       <div>
         <p className="text-[11px] font-semibold uppercase tracking-[0.05em] text-muted-foreground mb-2">

@@ -82,14 +82,15 @@ export const HonestPicture = ({
 
       <div className="mt-3 min-h-[4.5rem]">
         {loading ? (
-          <div className="flex items-center gap-3 text-muted-foreground">
-            <span className="h-4 w-4 rounded-full border-2 border-secondary border-t-accent animate-spin" />
-            <span className="text-[15px]">Analysing your role…</span>
+          <div className="space-y-2 animate-pulse" aria-label="Generating your honest picture">
+            <div className="h-4 rounded bg-muted/70 w-[95%]" />
+            <div className="h-4 rounded bg-muted/70 w-[88%]" />
+            <div className="h-4 rounded bg-muted/70 w-[72%]" />
           </div>
         ) : error ? (
           <p className="text-[15px] text-muted-foreground">{error}</p>
         ) : (
-          <p className="text-[15px] leading-relaxed text-primary whitespace-pre-line">{text}</p>
+          <p className="text-[15px] leading-relaxed text-primary whitespace-pre-line animate-fade-in">{text}</p>
         )}
       </div>
 

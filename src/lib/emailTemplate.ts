@@ -216,7 +216,7 @@ export function buildEmailHtml(opts: BuildEmailOpts): string {
     </div>`;
 
   const topCourses = pack?.courses?.slice(0, 2) ?? [];
-  if (topCourses.length) {
+  if (topCourses.length || pack?.skillshare) {
     upskillRows += `<div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
       color:#9ca3af;margin-bottom:8px;">Courses</div>`;
     topCourses.forEach((c) => {
@@ -226,6 +226,15 @@ export function buildEmailHtml(opts: BuildEmailOpts): string {
           <span style="color:#6b7280;font-size:12px;"> ${esc(c.platform)}${c.cost ? ` · ${esc(c.cost)}` : ""}${c.time ? ` · ${esc(c.time)}` : ""}</span>
         </div>`;
     });
+    if (pack?.skillshare) {
+      const ss = pack.skillshare;
+      upskillRows += `
+        <div style="margin-bottom:10px;font-size:14px;line-height:1.6;">
+          ${elink(ss.url, ss.title)}
+          <span style="color:#6b7280;font-size:12px;"> Skillshare · Free trial available</span>
+          ${ss.why ? `<div style="color:#6b7280;font-size:12px;margin-top:2px;">${esc(ss.why)}</div>` : ""}
+        </div>`;
+    }
   } else if (protectiveSkills.length) {
     upskillRows += `<div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
       color:#9ca3af;margin-bottom:8px;">LinkedIn Learning</div>`;

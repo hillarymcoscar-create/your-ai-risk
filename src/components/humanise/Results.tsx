@@ -511,7 +511,7 @@ export const Results = ({ answers, onRestart }: Props) => {
           nzData={nzData}
           tasksAtRisk={activeTasks}
           region={answers.region ?? ""}
-          onEmailCaptured={(email) => { void sendResultsEmail(email); setEmailSubmitted(true); }}
+          onEmailCaptured={(email) => { void attachEmailToQuizResponse(email); void sendResultsEmail(email); setEmailSubmitted(true); }}
         />
 
         <section className="mt-12">

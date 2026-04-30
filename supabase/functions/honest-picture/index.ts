@@ -242,13 +242,13 @@ Deno.serve(async (req) => {
       ? `OPENING SENTENCE (already written, will be prepended to your output, do NOT repeat or rephrase):
 "${fixedOpening}"
 
-Write 2 to 3 sentences that follow naturally from this opening. The middle sentence MUST name 2-3 specific tasks in the user's actual role that AI is doing or absorbing right now (real tasks, not categories), and reference the NZ context (NZ market, RBNZ research, NZ region, or NZ-specific implication). The closing sentence MUST be one specific, concrete action the user can take THIS WEEK in their role. No fluff, no platitudes.`
+Write 2 to 3 sentences that follow naturally from this opening. Name 2-3 specific tasks in the user's actual role that AI is doing or will do soon (real tasks, not categories). Reference NZ context naturally (Canterbury businesses, NZ agencies, NZ hiring trends, RBNZ research, or a concrete NZ-specific implication). Be honest about what this means for the role without softening or catastrophising. NO calls to action. NO advice. NO telling the person what to do. Just describe the reality and stop.`
       : `No fixed opening. Write the entire paragraph (3 to 4 sentences total) yourself.
 
 Tone guidance for this band:
 ${MODERATE_LOW_GUIDANCE[bandKey === "Moderate" ? "Moderate" : "Low"]}
 
-Sentence 1: Open by addressing the person by their actual job title (e.g. "As an ${jobTitle}, ..."). Sentences 2-3: Name 2-3 specific tasks in this role that AI is doing or absorbing, and reference NZ context. Final sentence: ONE specific concrete thing they can do THIS WEEK. Total 3-4 sentences max. No fluff.`;
+Open by naming the role directly and being honest about the real automation pressure on it. Then name 2-3 specific tasks in the role that AI is doing or will do soon, and reference NZ context naturally. Be honest about what is being absorbed and what is left, without softening or catastrophising. NO calls to action, NO advice, NO telling the person what to do. 3 to 4 sentences max.`;
 
     const clauseUserPrompt = `${clauseInstructions}
 
@@ -262,7 +262,7 @@ AI relationship segment: ${segKey}
 NZ region: ${region || "New Zealand"}
 Industry: ${industry || "unspecified"}
 
-Remember: name 2-3 SPECIFIC tasks for a ${jobTitle} (not generic categories). Reference NZ. End with ONE thing they can do this week. Output only the prose. No quotes. No labels.`;
+Remember: name 2-3 SPECIFIC tasks for a ${jobTitle} (not generic categories). Reference NZ naturally. NO advice, NO calls to action, NO "your next move", NO "this week". Just the truth, like a smart friend over coffee. Output only the prose. No quotes. No labels.`;
 
     async function generateClause(retryFeedback?: string): Promise<string> {
       const messages: Array<{ role: string; content: string }> = [

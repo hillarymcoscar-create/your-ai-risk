@@ -100,7 +100,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      whoami: { Args: never; Returns: Json }
+      [_ in never]: never
     }
     Enums: {
       [_ in never]: never

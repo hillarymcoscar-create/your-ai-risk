@@ -9,6 +9,7 @@ export type EmailPack = {
   headline?: string;
   youtube?:    EmailResource[];
   courses?:    EmailCourse[];
+  skillshare?: EmailResource;
   nz_specific?: EmailCourse[];
   quick_wins?: string[];
 };

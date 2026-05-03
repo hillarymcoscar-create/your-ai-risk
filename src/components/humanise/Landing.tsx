@@ -65,6 +65,7 @@ export const Landing = ({ onStart }: { onStart: () => void }) => {
             Score my job
             <ArrowRight className="ml-2 h-5 w-5" />
           </Button>
+          <p className="mt-3 text-xs sm:text-sm text-muted-foreground">{counterText}</p>
         </div>
 
         <div className="mt-20 grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 text-left">

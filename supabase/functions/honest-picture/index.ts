@@ -116,6 +116,10 @@ function normaliseFourSentenceParagraph(s: string): string {
   return ensureCompleteEnding(s);
 }
 
+function sentenceCount(s: string): number {
+  return extractCompleteSentences(s).length;
+}
+
 function normaliseBand(raw: unknown): Band {
   const v = String(raw ?? "").trim().toLowerCase();
   if (v.startsWith("very")) return "Very High";
@@ -276,15 +280,28 @@ Remember: exactly 4 complete sentences, detailed and specific. Name specific tas
     let clause = "";
     let clauseFinishReason: string | null = null;
     try {
-      const firstDraft = await generateClause();
-      clause = firstDraft.text;
-      clauseFinishReason = firstDraft.finishReason;
-      const banned = findBannedPhrase(clause);
-      if (banned) {
-        console.log(`[honest-picture] retrying due to banned phrase: ${banned}`);
-        const retryDraft = await generateClause(`it contained the banned phrase "${banned}"`);
-        clause = retryDraft.text;
-        clauseFinishReason = retryDraft.finishReason;
+      let retryFeedback: string | undefined;
+
+      for (let attempt = 0; attempt < 3; attempt += 1) {
+        const draft = await generateClause(retryFeedback);
+        clause = draft.text;
+        clauseFinishReason = draft.finishReason;
+
+        const banned = findBannedPhrase(clause);
+        const count = sentenceCount(clause);
+        const stoppedEarly = clauseFinishReason === "length" || clauseFinishReason === "max_tokens";
+
+        if (!banned && count === 4 && !stoppedEarly) {
+          break;
+        }
+
+        const problems: string[] = [];
+        if (banned) problems.push(`it contained the banned phrase \"${banned}\"`);
+        if (count !== 4) problems.push(`it returned ${count} complete sentences instead of exactly 4`);
+        if (stoppedEarly) problems.push(`it stopped early with finish_reason=${clauseFinishReason}`);
+
+        retryFeedback = `${problems.join("; ")}. Rewrite it as exactly 4 complete sentences with a clean ending.`;
+        console.warn(`[honest-picture] retrying paragraph draft: ${retryFeedback}`);
       }
     } catch (err) {
       const code = err instanceof Error ? err.message : "GATEWAY";

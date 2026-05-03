@@ -377,6 +377,9 @@ export const UpskillSection = ({
                     } as never);
                     if (error) throw error;
                     setWaitlistJoined(true);
+                    supabase.functions
+                      .invoke("send-waitlist-email", { body: { email: trimmed } })
+                      .catch((err) => console.warn("send-waitlist-email failed silently:", err));
                   } catch (err) {
                     console.error("waitlist insert failed", err);
                     toast.error("Couldn't join the waitlist right now. Please try again shortly.");

@@ -25,7 +25,9 @@ Sentence 3: What NZ employers or agencies are actually doing because of this —
 
 Sentence 4: What part of this role AI genuinely cannot do yet — be honest, not reassuring.
 
-Never write fewer than 4 sentences. Never cut off mid-sentence. Max tokens is 1000.`;
+Never write fewer than 4 sentences. Never cut off mid-sentence. Max tokens is 1000.
+
+Each sentence must be maximum 25 words. No run-on sentences. The whole paragraph must be readable in 20 seconds. Stop at 4 sentences — do not add more.`;
 
 // ========================================================================
 // TASKS + AGENT NOTE — separate structured call

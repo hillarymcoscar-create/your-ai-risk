@@ -266,7 +266,7 @@ export const UpskillSection = ({
                   Coursera
                 </a>
                 <a
-                  href={`https://www.skillshare.com/en/search?query=${encodeURIComponent(skill)}`}
+                  href={`https://www.skillshare.com/en/search?query=${encodeURIComponent(skill).replace(/%20/g, "+")}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center justify-center gap-1 rounded-full border border-accent bg-background px-3 py-1.5 text-xs font-medium text-accent hover:bg-accent/5 transition-colors"

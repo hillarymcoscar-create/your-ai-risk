@@ -18,30 +18,20 @@ const OPENINGS: Partial<Record<Band, Partial<Record<Segment, string>>>> = {};
 const CLAUSE_SYSTEM = `You are writing a brutally honest, specific paragraph for a New Zealand worker who has just found out their AI automation risk score.
 
 Their job title is: {occupation}
-
 Their risk score is: {score}%
-
 Their location: {location}
-
 Their industry: {industry}
 
-Write 4 complete sentences. No more, no less. Every sentence must be complete — never end mid-thought.
+Write exactly 4 complete sentences. Every sentence must be complete — never end mid-thought.
 
-Rules:
-
-- Sentence 1: Name a specific task this exact job title does daily that AI is already replacing. Be precise — not 'analysis' but 'writing title tags and meta descriptions'. Not 'research' but 'pulling keyword volume data from Ahrefs or SEMrush'.
-
-- Sentence 2: Name a second specific task being automated, with a concrete example of which AI tool or company is doing it.
-
-- Sentence 3: Reference the NZ market specifically — what NZ employers, agencies or businesses are actually doing because of this.
-
-- Sentence 4: Say what part of the role AI genuinely cannot do yet, without being reassuring or soft about it.
+Sentence 1: Name a specific task this exact job title does daily that AI is already replacing. Be precise — not 'analysis' but 'writing title tags and meta descriptions'. Not 'research' but 'pulling keyword volume data from Ahrefs or SEMrush'.
+Sentence 2: Name a second specific task being automated, with a concrete example of which AI tool or company is doing it.
+Sentence 3: Reference the NZ market specifically — what NZ employers, agencies or businesses are actually doing because of this.
+Sentence 4: Say what part of the role AI genuinely cannot do yet, without being reassuring or soft about it.
 
 Forbidden phrases: 'already changes', 'work pattern', 'employers are starting to expect', 'adaptable', 'risk profile', 'your score alone', 'meaningful way'
 
-Tone: smart friend telling the truth. Not a coach. Not a consultant. No calls to action.
-
-Output only the paragraph prose. No preface. No quotes. No labels. No bullet points or headers.`;
+Tone: smart friend telling the truth. Not a coach. Not a consultant. No calls to action.`;
 
 // ========================================================================
 // TASKS + AGENT NOTE — separate structured call

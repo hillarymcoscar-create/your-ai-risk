@@ -225,23 +225,7 @@ Deno.serve(async (req) => {
     const segKey = normaliseSegment(aiRelationshipSegment);
     const toolsList = Array.isArray(aiTools) && aiTools.length ? aiTools.join(", ") : "none specified";
 
-    // ---------- Resolve fixed opening (or generate one for Mod/Low) ----------
-    const fixedOpening = OPENINGS[bandKey]?.[segKey] ?? null;
-
-    // ---------- Build clause prompt ----------
-    const clauseInstructions = fixedOpening
-      ? `OPENING SENTENCE (already written, will be prepended to your output, do NOT repeat or rephrase):
-"${fixedOpening}"
-
-Write 4 to 5 sentences that follow naturally from this opening. Name 2-3 specific tasks in the user's actual role that AI is doing or will do soon (real tasks, not categories). Reference NZ context naturally (Canterbury businesses, NZ agencies, NZ hiring trends, RBNZ research, or a concrete NZ-specific implication). Be honest about what this means for the role without softening or catastrophising. Be detailed and specific. NO calls to action. NO advice. NO telling the person what to do. Just describe the reality and stop.`
-      : `No fixed opening. Write the ENTIRE paragraph yourself, 4 to 5 sentences total.
-
-Tone guidance for this band:
-${MODERATE_LOW_GUIDANCE[bandKey === "Moderate" ? "Moderate" : "Low"]}
-
-Open by naming the role directly and being honest about the real automation pressure on it. Then name 2-3 specific tasks in the role that AI is doing or will do soon, and reference NZ context naturally. Be honest about what is being absorbed and what is left, without softening or catastrophising. NO calls to action, NO advice, NO telling the person what to do. 4 to 5 sentences total.`;
-
-    const clauseUserPrompt = `${clauseInstructions}
+    const clauseUserPrompt = `You must follow the system instruction exactly and output exactly 4 complete sentences.
 
 USER CONTEXT
 Occupation (matched): ${jobTitle}
@@ -253,7 +237,7 @@ AI relationship segment: ${segKey}
 NZ region: ${region || "New Zealand"}
 Industry: ${industry || "unspecified"}
 
-Remember: 4 to 5 sentences, detailed and specific. Name 2-3 SPECIFIC tasks for a ${jobTitle} (not generic categories). Reference NZ naturally. NO advice, NO calls to action, NO "your next move", NO "this week". Just the truth, like a smart friend over coffee. Output only the prose. No quotes. No labels.`;
+Remember: exactly 4 complete sentences, detailed and specific. Name specific tasks for a ${jobTitle} and ground sentence 3 in NZ employer, agency, or business behaviour. Never use the forbidden phrases. Output only the prose. No quotes. No labels.`;
 
     const clauseSystemFilled = CLAUSE_SYSTEM
       .replace("{occupation}", String(jobTitle))
@@ -330,9 +314,7 @@ Remember: 4 to 5 sentences, detailed and specific. Name 2-3 SPECIFIC tasks for a
       console.warn(`[honest-picture] model stopped early with finish_reason=${clauseFinishReason}`);
     }
 
-    const honest_picture = ensureCompleteEnding(
-      fixedOpening ? `${fixedOpening} ${clause}`.trim() : clause
-    );
+    const honest_picture = normaliseFourSentenceParagraph(clause);
 
     // ---------- Tasks call (parallelisable but sequential is fine) ----------
     const tasksUserPrompt = `Generate task lists and Agent Watch fields for this person.

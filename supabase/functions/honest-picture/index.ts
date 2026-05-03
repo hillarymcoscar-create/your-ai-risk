@@ -281,9 +281,15 @@ Industry: ${industry || "unspecified"}
 
 Remember: 4 to 5 sentences, detailed and specific. Name 2-3 SPECIFIC tasks for a ${jobTitle} (not generic categories). Reference NZ naturally. NO advice, NO calls to action, NO "your next move", NO "this week". Just the truth, like a smart friend over coffee. Output only the prose. No quotes. No labels.`;
 
+    const clauseSystemFilled = CLAUSE_SYSTEM
+      .replace("{occupation}", String(jobTitle))
+      .replace("{score}", String(score ?? ""))
+      .replace("{location}", String(region || "New Zealand"))
+      .replace("{industry}", String(industry || "unspecified"));
+
     async function generateClause(retryFeedback?: string): Promise<{ text: string; finishReason: string | null }> {
       const messages: Array<{ role: string; content: string }> = [
-        { role: "system", content: CLAUSE_SYSTEM },
+        { role: "system", content: clauseSystemFilled },
         { role: "user", content: clauseUserPrompt },
       ];
       if (retryFeedback) {
@@ -291,7 +297,6 @@ Remember: 4 to 5 sentences, detailed and specific. Name 2-3 SPECIFIC tasks for a
       }
       const resp = await callGateway({
         model: "google/gemini-2.5-pro",
-        max_tokens: 1000,
         messages,
         max_tokens: 1000,
       }, LOVABLE_API_KEY);

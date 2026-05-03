@@ -234,30 +234,39 @@ Remember: exactly 4 complete sentences, detailed and specific. Name specific tas
       .replace("{industry}", String(industry || "unspecified"));
 
     async function generateClause(retryFeedback?: string): Promise<{ text: string; finishReason: string | null }> {
-      const messages: Array<{ role: string; content: string }> = [
-        { role: "system", content: clauseSystemFilled },
+      const userMessages: Array<{ role: string; content: string }> = [
         { role: "user", content: clauseUserPrompt },
       ];
       if (retryFeedback) {
-        messages.push({ role: "user", content: `Your previous draft was rejected: ${retryFeedback}. Rewrite it without the issue. Same constraints. Output only the prose.` });
+        userMessages.push({ role: "user", content: `Your previous draft was rejected: ${retryFeedback}. Rewrite it without the issue. Same constraints. Output only the prose.` });
       }
-      const resp = await callGateway({
-        model: "google/gemini-2.5-pro",
-        messages,
-        max_tokens: 1000,
-      }, LOVABLE_API_KEY);
-      if (!resp.ok) {
-        const t = await resp.text();
-        console.error("Clause gateway error", resp.status, t);
-        if (resp.status === 429) throw new Error("RATE_LIMIT");
-        if (resp.status === 402) throw new Error("CREDITS");
+      const anthropicResp = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": Deno.env.get("ANTHROPIC_API_KEY") ?? "",
+          "anthropic-version": "2023-06-01",
+        },
+        body: JSON.stringify({
+          model: "claude-haiku-4-5-20251001",
+          max_tokens: 1000,
+          system: clauseSystemFilled,
+          messages: userMessages,
+        }),
+      });
+      if (!anthropicResp.ok) {
+        const t = await anthropicResp.text();
+        console.error("Clause Anthropic error", anthropicResp.status, t);
+        if (anthropicResp.status === 429) throw new Error("RATE_LIMIT");
+        if (anthropicResp.status === 402) throw new Error("CREDITS");
         throw new Error("GATEWAY");
       }
-      const data = await resp.json();
-      const choice = data.choices?.[0] ?? {};
+      const anthropicData = await anthropicResp.json();
+      const rawText = anthropicData.content?.[0]?.text ?? "";
+      const stopReason = typeof anthropicData.stop_reason === "string" ? anthropicData.stop_reason : null;
       return {
-        text: cleanClause(stripEmDashes(choice.message?.content ?? "")),
-        finishReason: typeof choice.finish_reason === "string" ? choice.finish_reason : null,
+        text: cleanClause(stripEmDashes(rawText)),
+        finishReason: stopReason === "max_tokens" ? "max_tokens" : stopReason,
       };
     }
 

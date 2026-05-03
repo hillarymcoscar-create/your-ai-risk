@@ -321,9 +321,9 @@ export const UpskillSection = ({
         <p className="mt-2 text-sm text-muted-foreground">
           We're building a personalised 12-month NZ-specific reskilling plan for your role. Join the waitlist to be first to access it — and to help shape what's in it.
         </p>
-        {waitlistCount !== null && waitlistCount > 0 && (
+        {waitlistCount !== null && waitlistCount >= 50 && (
           <p className="mt-2 text-xs text-muted-foreground">
-            {waitlistCount.toLocaleString()} {waitlistCount === 1 ? "person" : "people"} on the waitlist
+            {waitlistCount.toLocaleString()} people on the waitlist
           </p>
         )}
         <Button

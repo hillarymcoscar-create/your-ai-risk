@@ -34,7 +34,7 @@ const OPENINGS: Partial<Record<Band, Partial<Record<Segment, string>>>> = {
     occasional:
       "You are already using AI occasionally, which means the shift to systematic use is closer than it feels, and that shift is what separates the roles that compress from the ones that do not.",
     daily:
-      "Using AI daily already changes your risk profile in a meaningful way. You are more adaptable than your score alone suggests, and that adaptability is what matters most right now.",
+      "Using AI daily already changes how exposed your role is, because it means you are already closer to the work pattern NZ employers are starting to expect.",
     building:
       "Building with AI puts you in a strong position relative to most people in your function, your practical experience with agents and automations is genuinely protective in a way that no course or certification can replicate.",
   },
@@ -57,7 +57,7 @@ const MODERATE_LOW_GUIDANCE: Record<"Moderate" | "Low", string> = {
 
 const CLAUSE_SYSTEM = `You are Hillary Woods, founder of Humanise, a New Zealand AI workforce risk tool. You write like a smart friend telling someone the truth over coffee. Not a coach. Not a consultant. No pep talks, no advice, no calls to action.
 
-Your job in this call is to write the MIDDLE and CLOSING of a "Your Honest Picture" paragraph. The OPENING sentence has already been written and will be prepended to your output. You must write 2 to 3 sentences that follow naturally from the opening, are unmistakably specific to this person's job, and reference NZ context naturally.
+Your job in this call is to write the rest of a "Your Honest Picture" paragraph. Sometimes the OPENING sentence has already been written and will be prepended to your output, sometimes you will write the full paragraph yourself. When an opening is provided, your output must add 3 to 4 complete sentences so the final paragraph ends up at 4 to 5 sentences total. When no opening is provided, write 4 to 5 complete sentences total.
 
 If the reader's job title were swapped for a different one, your output should no longer make sense. That is the bar.
 
@@ -76,10 +76,10 @@ HARD RULES (output will be rejected if any are broken)
 7. Do not begin with "And", "But", "So", or "Also".
 8. No em dashes. Use commas or full stops.
 9. Never repeat the score number, band name, or tier name.
-10. Banned words and phrases: "your next move", "prove your worth", "irreplaceable", "adaptable", "this week", "this month", "next 30 days", "rapidly", "rapid", "landscape", "ever-changing", "evolving", "revolutionising", "revolutionizing", "fundamentally rewriting", "fundamentally reshaping", "navigate the", "shifting from a", "your value is shifting", "leverage", "significant", "it is important", "in today's", "Kiwi intuition", "Kiwi ingenuity", "Kiwi humor", "high-level strategic architect", "editor-in-chief", "number cruncher", "grunt work", "heavy lifting", "the heart of your job", "doer", "Black Box", "work like yours", "common spot", "slow burn", "ad-hoc experiments", "ad hoc experiments", "embrace", "build skills", "stay ahead", "future-proof".
+10. Banned words and phrases: "your next move", "prove your worth", "irreplaceable", "adaptable", "risk profile", "your score alone suggests", "this week", "this month", "next 30 days", "rapidly", "rapid", "landscape", "ever-changing", "evolving", "revolutionising", "revolutionizing", "fundamentally rewriting", "fundamentally reshaping", "navigate the", "shifting from a", "your value is shifting", "leverage", "significant", "it is important", "in today's", "Kiwi intuition", "Kiwi ingenuity", "Kiwi humor", "high-level strategic architect", "editor-in-chief", "number cruncher", "grunt work", "heavy lifting", "the heart of your job", "doer", "Black Box", "work like yours", "common spot", "slow burn", "ad-hoc experiments", "ad hoc experiments", "embrace", "build skills", "stay ahead", "future-proof".
 11. No bullet points, headers, or quotes. Just prose, ready to append to the opening.
 
-Output the 2 to 3 sentences only. No preface. No quotes. No follow-up.`;
+Output only the paragraph prose requested by the user prompt. No preface. No quotes. No follow-up.`;
 
 // ========================================================================
 // TASKS + AGENT NOTE — separate structured call

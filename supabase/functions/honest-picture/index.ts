@@ -185,6 +185,7 @@ const BANNED_PATTERNS: RegExp[] = [
   /\bfundamentally (?:rewriting|reshaping)\b/i, /\bnavigate the\b/i,
   /\bshifting from a\b/i, /\byour value is shifting\b/i, /\bleverage\b/i,
   /\bsignificant\b/i, /\bit is important\b/i, /\bin today's\b/i,
+  /\brisk profile\b/i, /\byour score alone suggests\b/i,
   /\bKiwi (?:intuition|ingenuity|humor|humour)\b/i,
   /\bnumber cruncher\b/i, /\bgrunt work\b/i, /\bheavy lifting\b/i,
   /\bthe heart of your job\b/i, /\bblack box\b/i, /\bdoer\b/i,
@@ -275,7 +276,7 @@ Remember: 4 to 5 sentences, detailed and specific. Name 2-3 SPECIFIC tasks for a
       const resp = await callGateway({
         model: "google/gemini-2.5-pro",
         messages,
-        max_tokens: 800,
+        max_tokens: 1000,
       }, LOVABLE_API_KEY);
       if (!resp.ok) {
         const t = await resp.text();

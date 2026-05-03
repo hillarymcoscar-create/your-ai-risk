@@ -82,9 +82,10 @@ export const HonestPicture = ({
 
       <div className="mt-3 min-h-[4.5rem]">
         {loading ? (
-          <p className="text-[11px] italic text-muted-foreground/70" aria-label="Generating your honest picture">
-            Pulling your honest picture — this takes a few seconds...
-          </p>
+          <div className="flex items-center gap-2" aria-label="Generating your honest picture">
+            <span className="inline-block h-4 w-4 rounded-full border-2 border-accent border-t-transparent animate-spin" />
+            <span className="text-[13px] italic text-muted-foreground">Pulling your honest picture...</span>
+          </div>
         ) : error ? (
           <p className="text-[15px] text-muted-foreground">{error}</p>
         ) : (

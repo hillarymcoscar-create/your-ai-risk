@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ExternalLink, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -151,16 +151,33 @@ type Props = {
   tasksAtRisk?: string[];
   region?: string;
   onEmailCaptured?: (email: string) => void;
+  getQuizResponseId?: () => string | null;
 };
 
 export const UpskillSection = ({
   skills, industry, jobTitle, matchedTitle, score, riskBand,
   honestPicture, nzMarketSignalMsg, nzMarketSignalSrc, nzData,
-  tasksAtRisk, region, onEmailCaptured,
+  tasksAtRisk, region, onEmailCaptured, getQuizResponseId,
 }: Props) => {
   const [modalOpen, setModalOpen]     = useState(false);
   const [email, setEmail]             = useState("");
   const [submitting, setSubmitting]   = useState(false);
+
+  // Waitlist state
+  const [waitlistOpen, setWaitlistOpen] = useState(false);
+  const [waitlistEmail, setWaitlistEmail] = useState("");
+  const [waitlistSubmitting, setWaitlistSubmitting] = useState(false);
+  const [waitlistJoined, setWaitlistJoined] = useState(false);
+  const [waitlistCount, setWaitlistCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase.rpc("get_waitlist_count" as never);
+      if (!cancelled && typeof data === "number") setWaitlistCount(data);
+    })();
+    return () => { cancelled = true; };
+  }, [waitlistJoined]);
 
   if (!skills.length) return null;
 
@@ -298,28 +315,101 @@ export const UpskillSection = ({
 
       </div>
 
-      {/* Paid tier */}
+      {/* Waitlist tier */}
       <div className="mt-4 rounded-2xl border border-accent/30 bg-accent/5 p-6">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <h3 className="font-semibold text-primary">Want a deeper dive?</h3>
-          <span className="shrink-0 inline-flex items-center rounded-full bg-accent/15 px-3 py-1 text-xs font-semibold text-accent">
-            $29 NZD — one time
-          </span>
-        </div>
+        <h3 className="font-semibold text-primary">Want the full reskilling roadmap?</h3>
         <p className="mt-2 text-sm text-muted-foreground">
-          Get a full AI-resilience audit for your role — specific to NZ.
+          We're building a personalised 12-month NZ-specific reskilling plan for your role. Join the waitlist to be first to access it — and to help shape what's in it.
         </p>
+        {waitlistCount !== null && waitlistCount > 0 && (
+          <p className="mt-2 text-xs text-muted-foreground">
+            {waitlistCount.toLocaleString()} {waitlistCount === 1 ? "person" : "people"} on the waitlist
+          </p>
+        )}
         <Button
-          onClick={() =>
-            toast.success("Action plan — coming soon", {
-              description: "We'll wire up email capture next.",
-            })
-          }
+          onClick={() => {
+            setWaitlistEmail(email.trim());
+            setWaitlistJoined(false);
+            setWaitlistOpen(true);
+          }}
           className="mt-5 w-full rounded-full font-semibold bg-cta text-accent-foreground hover:opacity-95"
         >
-          Get my full action plan
+          Join the waitlist
         </Button>
       </div>
+
+      {/* Waitlist modal */}
+      <Dialog open={waitlistOpen} onOpenChange={(open) => {
+        setWaitlistOpen(open);
+        if (!open) setWaitlistJoined(false);
+      }}>
+        <DialogContent className="sm:max-w-md">
+          {waitlistJoined ? (
+            <>
+              <DialogHeader>
+                <DialogTitle>You're in.</DialogTitle>
+                <DialogDescription>
+                  We'll email you when the roadmap launches — and ask what you most want it to include.
+                </DialogDescription>
+              </DialogHeader>
+            </>
+          ) : (
+            <>
+              <DialogHeader>
+                <DialogTitle>Join the reskilling roadmap waitlist</DialogTitle>
+                <DialogDescription>
+                  Be first to access your personalised 12-month NZ reskilling plan.
+                </DialogDescription>
+              </DialogHeader>
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  const trimmed = waitlistEmail.trim();
+                  if (!trimmed) return;
+                  setWaitlistSubmitting(true);
+                  try {
+                    const { error } = await supabase.from("waitlist_signups" as never).insert({
+                      email: trimmed,
+                      quiz_response_id: getQuizResponseId?.() ?? null,
+                      occupation: matchedTitle ?? jobTitle ?? null,
+                      risk_score: score,
+                      source: "results_page",
+                    } as never);
+                    if (error) throw error;
+                    setWaitlistJoined(true);
+                  } catch (err) {
+                    console.error("waitlist insert failed", err);
+                    toast.error("Couldn't join the waitlist right now. Please try again shortly.");
+                  } finally {
+                    setWaitlistSubmitting(false);
+                  }
+                }}
+                className="mt-2 space-y-4"
+              >
+                <Input
+                  type="email"
+                  required
+                  placeholder="your@email.com"
+                  value={waitlistEmail}
+                  onChange={(e) => setWaitlistEmail(e.target.value)}
+                  disabled={waitlistSubmitting}
+                  className="h-12 rounded-xl"
+                />
+                <Button
+                  type="submit"
+                  disabled={waitlistSubmitting || !waitlistEmail.trim()}
+                  className="w-full rounded-full font-semibold bg-cta text-accent-foreground hover:opacity-95 disabled:opacity-50"
+                >
+                  {waitlistSubmitting ? "Joining…" : "Join the waitlist"}
+                </Button>
+                <p className="text-center text-[11px] text-muted-foreground">
+                  No spam. We'll only email you about the roadmap.
+                </p>
+              </form>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Email gate modal */}
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>

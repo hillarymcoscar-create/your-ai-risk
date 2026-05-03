@@ -574,6 +574,7 @@ export const Results = ({ answers, onRestart }: Props) => {
           tasksAtRisk={activeTasks}
           region={answers.region ?? ""}
           onEmailCaptured={(email) => { void attachEmailToQuizResponse(email); void sendResultsEmail(email); setEmailSubmitted(true); }}
+          getQuizResponseId={() => quizResponseIdRef.current}
         />
 
         <section className="mt-12">

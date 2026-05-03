@@ -126,6 +126,20 @@ function cleanClause(s: string): string {
   return out;
 }
 
+function ensureCompleteEnding(s: string): string {
+  const out = stripEmDashes(s).trim();
+  if (!out) return "";
+  if (/[.!?]["')\]]?$/.test(out)) return out;
+
+  const sentenceMatches = [...out.matchAll(/[.!?](?=\s|$)/g)];
+  const lastSentence = sentenceMatches.at(-1);
+  if (lastSentence?.index !== undefined) {
+    return out.slice(0, lastSentence.index + 1).trim();
+  }
+
+  return `${out.replace(/[,:;\-\s]+$/g, "").trim()}.`;
+}
+
 function normaliseBand(raw: unknown): Band {
   const v = String(raw ?? "").trim().toLowerCase();
   if (v.startsWith("very")) return "Very High";
@@ -265,7 +279,7 @@ Industry: ${industry || "unspecified"}
 
 Remember: 4 to 5 sentences, detailed and specific. Name 2-3 SPECIFIC tasks for a ${jobTitle} (not generic categories). Reference NZ naturally. NO advice, NO calls to action, NO "your next move", NO "this week". Just the truth, like a smart friend over coffee. Output only the prose. No quotes. No labels.`;
 
-    async function generateClause(retryFeedback?: string): Promise<string> {
+    async function generateClause(retryFeedback?: string): Promise<{ text: string; finishReason: string | null }> {
       const messages: Array<{ role: string; content: string }> = [
         { role: "system", content: CLAUSE_SYSTEM },
         { role: "user", content: clauseUserPrompt },
@@ -286,16 +300,25 @@ Remember: 4 to 5 sentences, detailed and specific. Name 2-3 SPECIFIC tasks for a
         throw new Error("GATEWAY");
       }
       const data = await resp.json();
-      return cleanClause(stripEmDashes(data.choices?.[0]?.message?.content ?? ""));
+      const choice = data.choices?.[0] ?? {};
+      return {
+        text: cleanClause(stripEmDashes(choice.message?.content ?? "")),
+        finishReason: typeof choice.finish_reason === "string" ? choice.finish_reason : null,
+      };
     }
 
     let clause = "";
+    let clauseFinishReason: string | null = null;
     try {
-      clause = await generateClause();
+      const firstDraft = await generateClause();
+      clause = firstDraft.text;
+      clauseFinishReason = firstDraft.finishReason;
       const banned = findBannedPhrase(clause);
       if (banned) {
         console.log(`[honest-picture] retrying due to banned phrase: ${banned}`);
-        clause = await generateClause(`it contained the banned phrase "${banned}"`);
+        const retryDraft = await generateClause(`it contained the banned phrase "${banned}"`);
+        clause = retryDraft.text;
+        clauseFinishReason = retryDraft.finishReason;
       }
     } catch (err) {
       const code = err instanceof Error ? err.message : "GATEWAY";
@@ -321,7 +344,11 @@ Remember: 4 to 5 sentences, detailed and specific. Name 2-3 SPECIFIC tasks for a
       console.warn(`[honest-picture] banned phrase persisted after retry: ${finalBanned}`);
     }
 
-    const honest_picture = stripEmDashes(
+    if (clauseFinishReason === "length" || clauseFinishReason === "max_tokens") {
+      console.warn(`[honest-picture] model stopped early with finish_reason=${clauseFinishReason}`);
+    }
+
+    const honest_picture = ensureCompleteEnding(
       fixedOpening ? `${fixedOpening} ${clause}`.trim() : clause
     );
 

@@ -1,11 +1,18 @@
 import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2.95.0/cors";
 
+// ── Safe URL constructors (NEVER let AI return full URLs) ──────────────
+const enc = (s: string) => encodeURIComponent(s.trim());
+const youtubeUrl = (kw: string) => `https://www.youtube.com/results?search_query=${enc(kw)}`;
+const linkedinUrl = (kw: string) => `https://www.linkedin.com/learning/search?keywords=${enc(kw)}`;
+const courseraUrl = (kw: string) => `https://www.coursera.org/search?query=${enc(kw)}`;
+const skillshareUrl = (kw: string) => `https://www.skillshare.com/en/search?query=${enc(kw).replace(/%20/g, "+")}`;
+
 const TOOLS = [
   {
     type: "function",
     function: {
       name: "return_upskill_pack",
-      description: "Return a curated upskill resource pack for the role.",
+      description: "Return a curated upskill resource pack for the role. Return KEYWORDS ONLY for platform searches — never URLs.",
       parameters: {
         type: "object",
         properties: {
@@ -15,11 +22,11 @@ const TOOLS = [
             items: {
               type: "object",
               properties: {
-                title: { type: "string" },
-                url: { type: "string" },
+                title: { type: "string", description: "Short label, e.g. 'AI tools for content creators — YouTube search'." },
+                keywords: { type: "string", description: "Search keywords only, e.g. 'ai tools for content creators 2025'." },
                 why: { type: "string" },
               },
-              required: ["title", "url", "why"],
+              required: ["title", "keywords", "why"],
             },
             minItems: 2,
             maxItems: 2,
@@ -30,13 +37,13 @@ const TOOLS = [
               type: "object",
               properties: {
                 title: { type: "string" },
-                platform: { type: "string" },
-                url: { type: "string" },
+                platform: { type: "string", enum: ["LinkedIn Learning", "Coursera"] },
+                keywords: { type: "string", description: "Search keywords only, e.g. 'prompt engineering for marketers'." },
                 cost: { type: "string" },
                 time: { type: "string" },
                 why: { type: "string" },
               },
-              required: ["title", "platform", "url", "cost", "time", "why"],
+              required: ["title", "platform", "keywords", "cost", "time", "why"],
             },
             minItems: 2,
             maxItems: 2,
@@ -48,7 +55,7 @@ const TOOLS = [
               properties: {
                 title: { type: "string" },
                 platform: { type: "string" },
-                url: { type: "string" },
+                url: { type: "string", description: "Real homepage URL of an NZ resource (Careers NZ, industry body, training provider)." },
                 cost: { type: "string" },
                 why: { type: "string" },
               },
@@ -59,13 +66,13 @@ const TOOLS = [
           },
           skillshare: {
             type: "object",
-            description: "A Skillshare browse-category URL most relevant to the occupation's industry.",
+            description: "Skillshare search keywords most relevant to the occupation.",
             properties: {
-              title: { type: "string", description: "Short label, e.g. 'Skillshare — Marketing'." },
-              url: { type: "string", description: "A real Skillshare browse URL like https://www.skillshare.com/en/browse/<category>." },
-              why: { type: "string", description: "One short sentence on why this category fits the role." },
+              title: { type: "string", description: "Short label, e.g. 'Skillshare — Digital Marketing'." },
+              keywords: { type: "string", description: "Search keywords only, e.g. 'digital marketing strategy'." },
+              why: { type: "string" },
             },
-            required: ["title", "url", "why"],
+            required: ["title", "keywords", "why"],
           },
           quick_wins: {
             type: "array",
@@ -98,35 +105,14 @@ Deno.serve(async (req) => {
 
     const userPrompt = `You are an upskill advisor for New Zealand workers facing AI automation risk. The user works as a ${jobTitle} in the ${industry || "general"} industry in New Zealand, with a risk score of ${score}%.
 
-CRITICAL URL SAFETY RULES — read carefully before generating any links.
+CRITICAL: For YouTube, LinkedIn Learning, Coursera, and Skillshare resources, you MUST return SEARCH KEYWORDS ONLY — never URLs. The system constructs the safe search URLs from your keywords. Never include http/https or domains in the keywords field.
 
-For all resource links (YouTube, LinkedIn Learning, Coursera, Skillshare), you may ONLY generate URLs that follow these exact safe patterns:
-
-SAFE URL PATTERNS ONLY:
-- YouTube: https://www.youtube.com/results?search_query=[keywords]
-  (search URLs only — NEVER /watch URLs, NEVER /@channel URLs)
-- LinkedIn Learning: https://www.linkedin.com/learning/search?keywords=[keywords]
-  (search URL only — NEVER a specific course URL)
-- Coursera: https://www.coursera.org/search?query=[keywords]
-  (search URL only — NEVER a specific course URL)
-- Skillshare: https://www.skillshare.com/en/browse/[category]
-  (browse URL only — NEVER a specific class URL)
-
-RULE: If you cannot identify a relevant browse category or search keyword for a platform that genuinely fits the occupation, OMIT that platform entirely. Do not include a link that is generic or forced.
-
-Never generate URLs to specific courses, videos, or instructor pages — these break over time. Only the safe patterns above are allowed.
-
-Generate a concise upskill resource list with:
-1. Two YouTube search URLs (using the safe pattern above) with keywords specific to the occupation and how AI affects it. For example, for a Content Creator:
-- https://www.youtube.com/results?search_query=ai+tools+for+content+creators
-- https://www.youtube.com/results?search_query=video+editing+ai+automation+2025
-The title should describe what the search returns (e.g. "AI tools for content creators — YouTube search").
-2. Two courses — each must use either the LinkedIn Learning search URL pattern or the Coursera search URL pattern above with keywords relevant to the role. Title should describe the search (e.g. "Prompt engineering — Coursera search"). Set platform to "LinkedIn Learning" or "Coursera", cost to "Free trial / paid", and time to "Self-paced".
-3. One Skillshare browse-category link using the safe pattern above. Valid categories include: marketing, technology, finance, health-wellness, education, business-analytics, design, writing, productivity. Title it like "Skillshare — <Category>". Include a one-sentence "why". If no category genuinely fits, omit Skillshare.
-4. Two NZ-specific resources (Careers NZ, industry bodies, or local training providers) — these may be real homepage URLs.
-5. Three quick wins they can do this week.
-
-Only use the safe URL patterns above for YouTube, LinkedIn Learning, Coursera, and Skillshare. Do not invent specific course, video, or class URLs.`;
+Generate:
+1. Two YouTube search items — each with a descriptive title (e.g. "AI tools for content creators — YouTube search") and concise search keywords specific to the occupation and how AI affects it.
+2. Two courses — one LinkedIn Learning, one Coursera (or two of either if more relevant). Each with title, platform ("LinkedIn Learning" or "Coursera"), keywords (the search query), cost (e.g. "Free trial / paid"), time (e.g. "Self-paced"), and why.
+3. One Skillshare search — title (e.g. "Skillshare — Digital Marketing"), keywords (the search query), and why.
+4. Two NZ-specific resources (Careers NZ, industry bodies, or local training providers) — these MAY include real homepage URLs in the url field.
+5. Three quick wins they can do this week.`;
 
     const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -172,7 +158,44 @@ Only use the safe URL patterns above for YouTube, LinkedIn Learning, Coursera, a
       try { parsed = JSON.parse(cleaned); } catch (e) { console.error("content parse failed", e); }
     }
 
-    return new Response(JSON.stringify(parsed), {
+    // ── Construct safe URLs from AI-returned keywords ──────────────────
+    type KwItem = { title?: string; keywords?: string; why?: string };
+    type KwCourse = KwItem & { platform?: string; cost?: string; time?: string };
+
+    const youtube = Array.isArray(parsed.youtube)
+      ? (parsed.youtube as KwItem[])
+          .filter((r) => r?.keywords)
+          .map((r) => ({ title: r.title ?? "YouTube search", url: youtubeUrl(r.keywords!), why: r.why ?? "" }))
+      : [];
+
+    const courses = Array.isArray(parsed.courses)
+      ? (parsed.courses as KwCourse[])
+          .filter((c) => c?.keywords && (c.platform === "LinkedIn Learning" || c.platform === "Coursera"))
+          .map((c) => ({
+            title: c.title ?? `${c.platform} search`,
+            platform: c.platform!,
+            url: c.platform === "Coursera" ? courseraUrl(c.keywords!) : linkedinUrl(c.keywords!),
+            cost: c.cost ?? "Free trial / paid",
+            time: c.time ?? "Self-paced",
+            why: c.why ?? "",
+          }))
+      : [];
+
+    const ssRaw = parsed.skillshare as KwItem | undefined;
+    const skillshare = ssRaw?.keywords
+      ? { title: ssRaw.title ?? "Skillshare search", url: skillshareUrl(ssRaw.keywords), why: ssRaw.why ?? "" }
+      : undefined;
+
+    const safePack = {
+      headline: parsed.headline ?? "",
+      youtube,
+      courses,
+      skillshare,
+      nz_specific: parsed.nz_specific ?? [],
+      quick_wins: parsed.quick_wins ?? [],
+    };
+
+    return new Response(JSON.stringify(safePack), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {

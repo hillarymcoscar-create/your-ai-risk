@@ -1,9 +1,35 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/humanise/Logo";
 import { ArrowRight, Clock, Lock, BookOpen } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+
+type LeaderboardItem = { occupation: string; avg_score: number };
+type LandingStats = {
+  monthly_count: number;
+  weekly_total: number;
+  first_to_go: LeaderboardItem[];
+  last_to_go: LeaderboardItem[];
+};
 
 export const Landing = ({ onStart }: { onStart: () => void }) => {
+  const [stats, setStats] = useState<LandingStats | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      const { data, error } = await supabase.rpc("get_landing_stats" as never);
+      if (!error && data) setStats(data as unknown as LandingStats);
+    })();
+  }, []);
+
+  const counterText =
+    stats && stats.monthly_count >= 50
+      ? `${stats.monthly_count.toLocaleString("en-NZ")} New Zealanders have checked their score this month`
+      : "Join the first New Zealanders checking their AI risk";
+
+  const showLeaderboard =
+    stats && stats.weekly_total >= 10 && stats.first_to_go.length > 0 && stats.last_to_go.length > 0;
+
   return (
     <div className="min-h-screen bg-hero">
       <header className="container max-w-6xl py-6 flex items-center justify-between">
@@ -39,6 +65,7 @@ export const Landing = ({ onStart }: { onStart: () => void }) => {
             Score my job
             <ArrowRight className="ml-2 h-5 w-5" />
           </Button>
+          <p className="mt-3 text-xs sm:text-sm text-muted-foreground">{counterText}</p>
         </div>
 
         <div className="mt-20 grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 text-left">
@@ -147,6 +174,22 @@ export const Landing = ({ onStart }: { onStart: () => void }) => {
         </p>
       </section>
 
+      {/* SECTION 6.5 — NZ AI RISK LEADERBOARD */}
+      {showLeaderboard && (
+        <section className="container max-w-4xl py-16 sm:py-20">
+          <h2 className="text-center text-2xl sm:text-3xl font-bold text-primary">
+            Where NZ stands this week
+          </h2>
+          <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+            <LeaderboardCard title="First to go" items={stats!.first_to_go} />
+            <LeaderboardCard title="Last to go" items={stats!.last_to_go} />
+          </div>
+          <p className="mt-4 text-center text-xs text-muted-foreground">
+            Based on real Humanise quiz results from NZ workers this week.
+          </p>
+        </section>
+      )}
+
       {/* SECTION 7 — FINAL CTA */}
       <section className="container max-w-2xl py-16 sm:py-24 text-center">
         <h2 className="text-2xl sm:text-3xl font-bold text-primary">
@@ -184,6 +227,20 @@ const HowCard = ({ title, body }: { title: string; body: string }) => (
   <div className="rounded-2xl border border-border bg-card p-6 shadow-soft">
     <h3 className="font-semibold text-primary text-lg">{title}</h3>
     <p className="mt-2 text-sm sm:text-base text-muted-foreground leading-relaxed">{body}</p>
+  </div>
+);
+
+const LeaderboardCard = ({ title, items }: { title: string; items: LeaderboardItem[] }) => (
+  <div className="rounded-2xl border border-border bg-card p-6 shadow-soft">
+    <h3 className="font-semibold text-accent text-lg">{title}</h3>
+    <ul className="mt-4 space-y-2">
+      {items.map((it) => (
+        <li key={it.occupation} className="text-sm sm:text-base text-primary flex justify-between gap-3">
+          <span className="truncate">{it.occupation}</span>
+          <span className="text-muted-foreground shrink-0">· {it.avg_score}%</span>
+        </li>
+      ))}
+    </ul>
   </div>
 );
 

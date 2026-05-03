@@ -275,7 +275,7 @@ Remember: 4 to 5 sentences, detailed and specific. Name 2-3 SPECIFIC tasks for a
       const resp = await callGateway({
         model: "google/gemini-2.5-pro",
         messages,
-        max_tokens: 500,
+        max_tokens: 800,
       }, LOVABLE_API_KEY);
       if (!resp.ok) {
         const t = await resp.text();

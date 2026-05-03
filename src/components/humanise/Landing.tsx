@@ -230,6 +230,20 @@ const HowCard = ({ title, body }: { title: string; body: string }) => (
   </div>
 );
 
+const LeaderboardCard = ({ title, items }: { title: string; items: LeaderboardItem[] }) => (
+  <div className="rounded-2xl border border-border bg-card p-6 shadow-soft">
+    <h3 className="font-semibold text-accent text-lg">{title}</h3>
+    <ul className="mt-4 space-y-2">
+      {items.map((it) => (
+        <li key={it.occupation} className="text-sm sm:text-base text-primary flex justify-between gap-3">
+          <span className="truncate">{it.occupation}</span>
+          <span className="text-muted-foreground shrink-0">· {it.avg_score}%</span>
+        </li>
+      ))}
+    </ul>
+  </div>
+);
+
 const TrustItem = ({ icon, title, desc }: { icon: React.ReactNode; title: string; desc: string }) => (
   <div className="rounded-2xl border border-border bg-card p-5 shadow-soft flex items-start gap-3">
     <div className="mt-0.5 text-accent shrink-0">{icon}</div>

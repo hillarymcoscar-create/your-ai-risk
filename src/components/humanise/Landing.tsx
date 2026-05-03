@@ -174,6 +174,22 @@ export const Landing = ({ onStart }: { onStart: () => void }) => {
         </p>
       </section>
 
+      {/* SECTION 6.5 — NZ AI RISK LEADERBOARD */}
+      {showLeaderboard && (
+        <section className="container max-w-4xl py-16 sm:py-20">
+          <h2 className="text-center text-2xl sm:text-3xl font-bold text-primary">
+            Where NZ stands this week
+          </h2>
+          <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+            <LeaderboardCard title="First to go" items={stats!.first_to_go} />
+            <LeaderboardCard title="Last to go" items={stats!.last_to_go} />
+          </div>
+          <p className="mt-4 text-center text-xs text-muted-foreground">
+            Based on real Humanise quiz results from NZ workers this week.
+          </p>
+        </section>
+      )}
+
       {/* SECTION 7 — FINAL CTA */}
       <section className="container max-w-2xl py-16 sm:py-24 text-center">
         <h2 className="text-2xl sm:text-3xl font-bold text-primary">

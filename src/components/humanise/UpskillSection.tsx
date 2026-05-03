@@ -241,6 +241,8 @@ export const UpskillSection = ({
         pack = data as UpskillPack;
       }
 
+      pack = sanitisePack(pack);
+
       setModalOpen(false);
 
       // Fire-and-forget: send email without blocking the UI

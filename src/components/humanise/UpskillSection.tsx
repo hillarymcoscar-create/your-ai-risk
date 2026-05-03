@@ -151,16 +151,33 @@ type Props = {
   tasksAtRisk?: string[];
   region?: string;
   onEmailCaptured?: (email: string) => void;
+  getQuizResponseId?: () => string | null;
 };
 
 export const UpskillSection = ({
   skills, industry, jobTitle, matchedTitle, score, riskBand,
   honestPicture, nzMarketSignalMsg, nzMarketSignalSrc, nzData,
-  tasksAtRisk, region, onEmailCaptured,
+  tasksAtRisk, region, onEmailCaptured, getQuizResponseId,
 }: Props) => {
   const [modalOpen, setModalOpen]     = useState(false);
   const [email, setEmail]             = useState("");
   const [submitting, setSubmitting]   = useState(false);
+
+  // Waitlist state
+  const [waitlistOpen, setWaitlistOpen] = useState(false);
+  const [waitlistEmail, setWaitlistEmail] = useState("");
+  const [waitlistSubmitting, setWaitlistSubmitting] = useState(false);
+  const [waitlistJoined, setWaitlistJoined] = useState(false);
+  const [waitlistCount, setWaitlistCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase.rpc("get_waitlist_count" as never);
+      if (!cancelled && typeof data === "number") setWaitlistCount(data);
+    })();
+    return () => { cancelled = true; };
+  }, [waitlistJoined]);
 
   if (!skills.length) return null;
 

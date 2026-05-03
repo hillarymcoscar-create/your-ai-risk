@@ -1,55 +1,15 @@
 import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2.95.0/cors";
 
 // ========================================================================
-// HONEST PICTURE — Hybrid template approach.
-// Fixed opening sentence per (band x segment) + AI-generated 1-2 sentence
-// variable clause that personalises to the role + AI-generated forward
-// momentum closing sentence.
-// This guarantees voice consistency and prevents banned-phrase drift.
+// HONEST PICTURE — fully prompt-driven paragraph generation.
+// The output must be exactly 4 complete sentences and must not rely on
+// stale hardcoded openings that can drift from the approved prompt.
 // ========================================================================
 
 type Band = "Low" | "Moderate" | "High" | "Very High";
 type Segment = "avoiding" | "curious" | "occasional" | "daily" | "building";
 
-// Fixed opening sentences. These are non-negotiable copy from the founder.
-// Em dashes intentionally avoided per house style.
-const OPENINGS: Partial<Record<Band, Partial<Record<Segment, string>>>> = {
-  "Very High": {
-    avoiding:
-      "NZ agencies and teams are restructuring around AI right now, and the people coming out ahead are not the most experienced ones, they are the ones who moved early.",
-    curious:
-      "Your function is one of the first places NZ businesses are restructuring around AI, and being curious about it already puts you ahead of most people in your position.",
-    occasional:
-      "You have already started using AI, which means you have a head start on most people in your function, the question now is whether you build on it deliberately.",
-    daily:
-      "Daily AI use already puts you in the top tier of your function in NZ. The gap now is moving from using it for tasks to understanding which parts of your role it is changing structurally.",
-    building:
-      "Building with AI puts you ahead of almost everyone in your function, the people most at risk are the ones who have not started yet, and that is not you.",
-  },
-  "High": {
-    avoiding:
-      "Your role has real exposure, and the honest version is that the window to get ahead of it is open right now, which is a better position than finding out after the restructure.",
-    curious:
-      "Being curious about this is the right response, your role sits in territory where AI is moving fast, and paying attention early is exactly how people stay ahead of it.",
-    occasional:
-      "You are already using AI occasionally, which means the shift to systematic use is closer than it feels, and that shift is what separates the roles that compress from the ones that do not.",
-    daily:
-      "Using AI daily already changes how exposed your role is, because it means you are already closer to the work pattern NZ employers are starting to expect.",
-    building:
-      "Building with AI puts you in a strong position relative to most people in your function, your practical experience with agents and automations is genuinely protective in a way that no course or certification can replicate.",
-  },
-  // Moderate and Low fall back to AI-generated openings (see MODERATE_LOW_GUIDANCE)
-};
-
-// Tone guidance for Moderate and Low bands where we still generate the
-// opening with AI (no fixed copy yet). The variable-clause prompt below
-// references this when bandKey is moderate or low.
-const MODERATE_LOW_GUIDANCE: Record<"Moderate" | "Low", string> = {
-  Moderate:
-    "Moderate-risk role: disruption is real but slower, augmentation before replacement. Open by naming the role directly and being honest about where the automation pressure actually sits. Do not talk about AI in the abstract. Do not give advice or tell the person what to do.",
-  Low:
-    "Low-risk role: be honest the risk is lower without dismissing it. Open by naming the role directly and naming the real protection in the work, then be specific about which slices of the role are still being absorbed. Do not give advice or tell the person what to do.",
-};
+const OPENINGS: Partial<Record<Band, Partial<Record<Segment, string>>>> = {};
 
 // ========================================================================
 // VARIABLE CLAUSE SYSTEM PROMPT
@@ -140,6 +100,24 @@ function ensureCompleteEnding(s: string): string {
   }
 
   return `${out.replace(/[,:;\-\s]+$/g, "").trim()}.`;
+}
+
+function extractCompleteSentences(s: string): string[] {
+  return (stripEmDashes(s).match(/[^.!?]+[.!?](?:["')\]]+)?/g) ?? [])
+    .map((part) => part.trim())
+    .filter(Boolean);
+}
+
+function normaliseFourSentenceParagraph(s: string): string {
+  const sentences = extractCompleteSentences(s);
+  if (sentences.length >= 4) {
+    return sentences.slice(0, 4).join(" ").trim();
+  }
+  return ensureCompleteEnding(s);
+}
+
+function sentenceCount(s: string): number {
+  return extractCompleteSentences(s).length;
 }
 
 function normaliseBand(raw: unknown): Band {
@@ -251,23 +229,7 @@ Deno.serve(async (req) => {
     const segKey = normaliseSegment(aiRelationshipSegment);
     const toolsList = Array.isArray(aiTools) && aiTools.length ? aiTools.join(", ") : "none specified";
 
-    // ---------- Resolve fixed opening (or generate one for Mod/Low) ----------
-    const fixedOpening = OPENINGS[bandKey]?.[segKey] ?? null;
-
-    // ---------- Build clause prompt ----------
-    const clauseInstructions = fixedOpening
-      ? `OPENING SENTENCE (already written, will be prepended to your output, do NOT repeat or rephrase):
-"${fixedOpening}"
-
-Write 4 to 5 sentences that follow naturally from this opening. Name 2-3 specific tasks in the user's actual role that AI is doing or will do soon (real tasks, not categories). Reference NZ context naturally (Canterbury businesses, NZ agencies, NZ hiring trends, RBNZ research, or a concrete NZ-specific implication). Be honest about what this means for the role without softening or catastrophising. Be detailed and specific. NO calls to action. NO advice. NO telling the person what to do. Just describe the reality and stop.`
-      : `No fixed opening. Write the ENTIRE paragraph yourself, 4 to 5 sentences total.
-
-Tone guidance for this band:
-${MODERATE_LOW_GUIDANCE[bandKey === "Moderate" ? "Moderate" : "Low"]}
-
-Open by naming the role directly and being honest about the real automation pressure on it. Then name 2-3 specific tasks in the role that AI is doing or will do soon, and reference NZ context naturally. Be honest about what is being absorbed and what is left, without softening or catastrophising. NO calls to action, NO advice, NO telling the person what to do. 4 to 5 sentences total.`;
-
-    const clauseUserPrompt = `${clauseInstructions}
+    const clauseUserPrompt = `You must follow the system instruction exactly and output exactly 4 complete sentences.
 
 USER CONTEXT
 Occupation (matched): ${jobTitle}
@@ -279,7 +241,7 @@ AI relationship segment: ${segKey}
 NZ region: ${region || "New Zealand"}
 Industry: ${industry || "unspecified"}
 
-Remember: 4 to 5 sentences, detailed and specific. Name 2-3 SPECIFIC tasks for a ${jobTitle} (not generic categories). Reference NZ naturally. NO advice, NO calls to action, NO "your next move", NO "this week". Just the truth, like a smart friend over coffee. Output only the prose. No quotes. No labels.`;
+Remember: exactly 4 complete sentences, detailed and specific. Name specific tasks for a ${jobTitle} and ground sentence 3 in NZ employer, agency, or business behaviour. Never use the forbidden phrases. Output only the prose. No quotes. No labels.`;
 
     const clauseSystemFilled = CLAUSE_SYSTEM
       .replace("{occupation}", String(jobTitle))
@@ -318,15 +280,28 @@ Remember: 4 to 5 sentences, detailed and specific. Name 2-3 SPECIFIC tasks for a
     let clause = "";
     let clauseFinishReason: string | null = null;
     try {
-      const firstDraft = await generateClause();
-      clause = firstDraft.text;
-      clauseFinishReason = firstDraft.finishReason;
-      const banned = findBannedPhrase(clause);
-      if (banned) {
-        console.log(`[honest-picture] retrying due to banned phrase: ${banned}`);
-        const retryDraft = await generateClause(`it contained the banned phrase "${banned}"`);
-        clause = retryDraft.text;
-        clauseFinishReason = retryDraft.finishReason;
+      let retryFeedback: string | undefined;
+
+      for (let attempt = 0; attempt < 3; attempt += 1) {
+        const draft = await generateClause(retryFeedback);
+        clause = draft.text;
+        clauseFinishReason = draft.finishReason;
+
+        const banned = findBannedPhrase(clause);
+        const count = sentenceCount(clause);
+        const stoppedEarly = clauseFinishReason === "length" || clauseFinishReason === "max_tokens";
+
+        if (!banned && count === 4 && !stoppedEarly) {
+          break;
+        }
+
+        const problems: string[] = [];
+        if (banned) problems.push(`it contained the banned phrase \"${banned}\"`);
+        if (count !== 4) problems.push(`it returned ${count} complete sentences instead of exactly 4`);
+        if (stoppedEarly) problems.push(`it stopped early with finish_reason=${clauseFinishReason}`);
+
+        retryFeedback = `${problems.join("; ")}. Rewrite it as exactly 4 complete sentences with a clean ending.`;
+        console.warn(`[honest-picture] retrying paragraph draft: ${retryFeedback}`);
       }
     } catch (err) {
       const code = err instanceof Error ? err.message : "GATEWAY";
@@ -356,9 +331,7 @@ Remember: 4 to 5 sentences, detailed and specific. Name 2-3 SPECIFIC tasks for a
       console.warn(`[honest-picture] model stopped early with finish_reason=${clauseFinishReason}`);
     }
 
-    const honest_picture = ensureCompleteEnding(
-      fixedOpening ? `${fixedOpening} ${clause}`.trim() : clause
-    );
+    const honest_picture = normaliseFourSentenceParagraph(clause);
 
     // ---------- Tasks call (parallelisable but sequential is fine) ----------
     const tasksUserPrompt = `Generate task lists and Agent Watch fields for this person.

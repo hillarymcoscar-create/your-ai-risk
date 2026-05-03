@@ -289,6 +289,7 @@ Remember: 4 to 5 sentences, detailed and specific. Name 2-3 SPECIFIC tasks for a
       }
       const resp = await callGateway({
         model: "google/gemini-2.5-pro",
+        max_tokens: 1000,
         messages,
         max_tokens: 1000,
       }, LOVABLE_API_KEY);
@@ -389,6 +390,7 @@ No em dashes anywhere. No phrases ending in prepositions/conjunctions/articles i
 
     const tResp = await callGateway({
       model: "google/gemini-3-flash-preview",
+      max_tokens: 1000,
       messages: [
         { role: "system", content: TASKS_SYSTEM },
         { role: "user",   content: tasksUserPrompt },

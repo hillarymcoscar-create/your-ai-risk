@@ -31,6 +31,32 @@ type UpskillPack = {
 
 type CuratedData = Record<string, UpskillPack>;
 
+// Normalise a pack so any YouTube / LinkedIn Learning / Coursera / Skillshare
+// link is either a safe search URL or removed entirely. Protects against
+// stale curated specific-course URLs and any AI drift.
+const sanitisePack = (pack: UpskillPack | null): UpskillPack | null => {
+  if (!pack) return pack;
+  const youtube = (pack.youtube ?? [])
+    .map((r) => {
+      const safe = normalisePlatformUrl(r.url, r.title, "youtube");
+      return safe ? { ...r, url: safe } : null;
+    })
+    .filter((r): r is UpskillResource => r !== null);
+  const courses = (pack.courses ?? [])
+    .map((c) => {
+      const safe = normalisePlatformUrl(c.url, c.title, c.platform);
+      return safe ? { ...c, url: safe } : null;
+    })
+    .filter((c): c is UpskillCourse => c !== null);
+  let skillshare: UpskillResource | undefined = undefined;
+  if (pack.skillshare) {
+    const safe = normalisePlatformUrl(pack.skillshare.url, pack.skillshare.title, "skillshare");
+    if (safe) skillshare = { ...pack.skillshare, url: safe };
+  }
+  return { ...pack, youtube, courses, skillshare };
+};
+
+
 // ── Sub-components ────────────────────────────────────────────────────
 
 const ResourceLink = ({ title, url }: { title: string; url: string }) => (

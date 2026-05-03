@@ -1,9 +1,35 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/humanise/Logo";
 import { ArrowRight, Clock, Lock, BookOpen } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+
+type LeaderboardItem = { occupation: string; avg_score: number };
+type LandingStats = {
+  monthly_count: number;
+  weekly_total: number;
+  first_to_go: LeaderboardItem[];
+  last_to_go: LeaderboardItem[];
+};
 
 export const Landing = ({ onStart }: { onStart: () => void }) => {
+  const [stats, setStats] = useState<LandingStats | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      const { data, error } = await supabase.rpc("get_landing_stats" as never);
+      if (!error && data) setStats(data as unknown as LandingStats);
+    })();
+  }, []);
+
+  const counterText =
+    stats && stats.monthly_count >= 50
+      ? `${stats.monthly_count.toLocaleString("en-NZ")} New Zealanders have checked their score this month`
+      : "Join the first New Zealanders checking their AI risk";
+
+  const showLeaderboard =
+    stats && stats.weekly_total >= 10 && stats.first_to_go.length > 0 && stats.last_to_go.length > 0;
+
   return (
     <div className="min-h-screen bg-hero">
       <header className="container max-w-6xl py-6 flex items-center justify-between">

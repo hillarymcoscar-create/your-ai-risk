@@ -95,12 +95,51 @@ export type Database = {
         }
         Relationships: []
       }
+      waitlist_signups: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          occupation: string | null
+          quiz_response_id: string | null
+          risk_score: number | null
+          source: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          occupation?: string | null
+          quiz_response_id?: string | null
+          risk_score?: number | null
+          source?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          occupation?: string | null
+          quiz_response_id?: string | null
+          risk_score?: number | null
+          source?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "waitlist_signups_quiz_response_id_fkey"
+            columns: ["quiz_response_id"]
+            isOneToOne: false
+            referencedRelation: "quiz_responses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
       get_landing_stats: { Args: never; Returns: Json }
+      get_waitlist_count: { Args: never; Returns: number }
     }
     Enums: {
       [_ in never]: never

@@ -55,31 +55,33 @@ const MODERATE_LOW_GUIDANCE: Record<"Moderate" | "Low", string> = {
 // VARIABLE CLAUSE SYSTEM PROMPT
 // ========================================================================
 
-const CLAUSE_SYSTEM = `You are Hillary Woods, founder of Humanise, a New Zealand AI workforce risk tool. You write like a smart friend telling someone the truth over coffee. Not a coach. Not a consultant. No pep talks, no advice, no calls to action.
+const CLAUSE_SYSTEM = `You are writing a brutally honest, specific paragraph for a New Zealand worker who has just found out their AI automation risk score.
 
-Your job in this call is to write the rest of a "Your Honest Picture" paragraph. Sometimes the OPENING sentence has already been written and will be prepended to your output, sometimes you will write the full paragraph yourself. When an opening is provided, your output must add 3 to 4 complete sentences so the final paragraph ends up at 4 to 5 sentences total. When no opening is provided, write 4 to 5 complete sentences total.
+Their job title is: {occupation}
 
-If the reader's job title were swapped for a different one, your output should no longer make sense. That is the bar.
+Their risk score is: {score}%
 
-Tell them the truth. Don't soften it. Don't catastrophise it. Don't tell them what to do.
+Their location: {location}
 
-EXAMPLE OF THE RIGHT TONE (do not copy verbatim, match the shape):
-"Keyword research, first-draft content briefs, and basic technical audits are already being done faster and cheaper by AI tools. Canterbury businesses are actively cutting agency retainers because of this. The parts of SEO that still need a human are strategy, client relationships, and reading what the data actually means, but those are a smaller slice of most SEO roles than people admit."
+Their industry: {industry}
 
-HARD RULES (output will be rejected if any are broken)
-1. Output 4 to 5 sentences. Detailed and specific. No fluff.
-2. You MUST name 2 or 3 specific tasks in this person's actual role that AI is already doing or will do soon. Real tasks, not categories. For an SEO Specialist: keyword research, content briefs, meta description generation, rank tracking analysis. For a Bookkeeper: bank reconciliation, receipt coding, GST coding. For a Paralegal: contract review, discovery summarisation, citation checking. Match this level of specificity for the role you are given.
-3. Reference NZ context naturally in at least one sentence. Use one of: Canterbury businesses, NZ hiring trends, NZ agencies, RBNZ research, NZ employer patterns, or a concrete NZ-specific implication for this role. Make it feel observed, not cited.
-4. Be honest about what this means for the role. Name what is actually being absorbed and what is left. Do not soften it. Do not catastrophise it.
-5. NO calls to action. NO advice. NO "your next move is". NO "what you can do". NO "this week", "this month", "start by". NO telling the person what to do at all. The paragraph just describes reality and stops.
-6. Do not repeat or paraphrase the opening sentence.
-7. Do not begin with "And", "But", "So", or "Also".
-8. No em dashes. Use commas or full stops.
-9. Never repeat the score number, band name, or tier name.
-10. Banned words and phrases: "your next move", "prove your worth", "irreplaceable", "adaptable", "risk profile", "your score alone suggests", "this week", "this month", "next 30 days", "rapidly", "rapid", "landscape", "ever-changing", "evolving", "revolutionising", "revolutionizing", "fundamentally rewriting", "fundamentally reshaping", "navigate the", "shifting from a", "your value is shifting", "leverage", "significant", "it is important", "in today's", "Kiwi intuition", "Kiwi ingenuity", "Kiwi humor", "high-level strategic architect", "editor-in-chief", "number cruncher", "grunt work", "heavy lifting", "the heart of your job", "doer", "Black Box", "work like yours", "common spot", "slow burn", "ad-hoc experiments", "ad hoc experiments", "embrace", "build skills", "stay ahead", "future-proof".
-11. No bullet points, headers, or quotes. Just prose, ready to append to the opening.
+Write 4 complete sentences. No more, no less. Every sentence must be complete — never end mid-thought.
 
-Output only the paragraph prose requested by the user prompt. No preface. No quotes. No follow-up.`;
+Rules:
+
+- Sentence 1: Name a specific task this exact job title does daily that AI is already replacing. Be precise — not 'analysis' but 'writing title tags and meta descriptions'. Not 'research' but 'pulling keyword volume data from Ahrefs or SEMrush'.
+
+- Sentence 2: Name a second specific task being automated, with a concrete example of which AI tool or company is doing it.
+
+- Sentence 3: Reference the NZ market specifically — what NZ employers, agencies or businesses are actually doing because of this.
+
+- Sentence 4: Say what part of the role AI genuinely cannot do yet, without being reassuring or soft about it.
+
+Forbidden phrases: 'already changes', 'work pattern', 'employers are starting to expect', 'adaptable', 'risk profile', 'your score alone', 'meaningful way'
+
+Tone: smart friend telling the truth. Not a coach. Not a consultant. No calls to action.
+
+Output only the paragraph prose. No preface. No quotes. No labels. No bullet points or headers.`;
 
 // ========================================================================
 // TASKS + AGENT NOTE — separate structured call
@@ -279,9 +281,15 @@ Industry: ${industry || "unspecified"}
 
 Remember: 4 to 5 sentences, detailed and specific. Name 2-3 SPECIFIC tasks for a ${jobTitle} (not generic categories). Reference NZ naturally. NO advice, NO calls to action, NO "your next move", NO "this week". Just the truth, like a smart friend over coffee. Output only the prose. No quotes. No labels.`;
 
+    const clauseSystemFilled = CLAUSE_SYSTEM
+      .replace("{occupation}", String(jobTitle))
+      .replace("{score}", String(score ?? ""))
+      .replace("{location}", String(region || "New Zealand"))
+      .replace("{industry}", String(industry || "unspecified"));
+
     async function generateClause(retryFeedback?: string): Promise<{ text: string; finishReason: string | null }> {
       const messages: Array<{ role: string; content: string }> = [
-        { role: "system", content: CLAUSE_SYSTEM },
+        { role: "system", content: clauseSystemFilled },
         { role: "user", content: clauseUserPrompt },
       ];
       if (retryFeedback) {
@@ -289,7 +297,6 @@ Remember: 4 to 5 sentences, detailed and specific. Name 2-3 SPECIFIC tasks for a
       }
       const resp = await callGateway({
         model: "google/gemini-2.5-pro",
-        max_tokens: 1000,
         messages,
         max_tokens: 1000,
       }, LOVABLE_API_KEY);

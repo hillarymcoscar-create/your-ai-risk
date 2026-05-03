@@ -15,23 +15,17 @@ const OPENINGS: Partial<Record<Band, Partial<Record<Segment, string>>>> = {};
 // VARIABLE CLAUSE SYSTEM PROMPT
 // ========================================================================
 
-const CLAUSE_SYSTEM = `You are writing a brutally honest, specific paragraph for a New Zealand worker who has just found out their AI automation risk score.
+const CLAUSE_SYSTEM = `Write exactly 4 complete sentences about this worker's AI automation risk. Every sentence must be complete.
 
-Their job title is: {occupation}
-Their risk score is: {score}%
-Their location: {location}
-Their industry: {industry}
+Sentence 1: Name a specific task this exact job title does daily that AI is already replacing — be precise with tool names and task names.
 
-Write exactly 4 complete sentences. Every sentence must be complete — never end mid-thought.
+Sentence 2: Name a second specific task being automated with a concrete example of which AI tool is doing it.  
 
-Sentence 1: Name a specific task this exact job title does daily that AI is already replacing. Be precise — not 'analysis' but 'writing title tags and meta descriptions'. Not 'research' but 'pulling keyword volume data from Ahrefs or SEMrush'.
-Sentence 2: Name a second specific task being automated, with a concrete example of which AI tool or company is doing it.
-Sentence 3: Reference the NZ market specifically — what NZ employers, agencies or businesses are actually doing because of this.
-Sentence 4: Say what part of the role AI genuinely cannot do yet, without being reassuring or soft about it.
+Sentence 3: What NZ employers or agencies are actually doing because of this — be specific to NZ.
 
-Forbidden phrases: 'already changes', 'work pattern', 'employers are starting to expect', 'adaptable', 'risk profile', 'your score alone', 'meaningful way'
+Sentence 4: What part of this role AI genuinely cannot do yet — be honest, not reassuring.
 
-Tone: smart friend telling the truth. Not a coach. Not a consultant. No calls to action.`;
+Never write fewer than 4 sentences. Never cut off mid-sentence. Max tokens is 1000.`;
 
 // ========================================================================
 // TASKS + AGENT NOTE — separate structured call

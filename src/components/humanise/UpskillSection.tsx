@@ -15,30 +15,6 @@ import type { AnzscoGroupData } from "@/lib/nzWorkforceUtils";
 import { buildEmailHtml, CURATED_INDUSTRIES, CURATED_URL, type EmailPack } from "@/lib/emailTemplate";
 import { normalisePlatformUrl } from "@/lib/safeLinks";
 
-// Normalise a pack so any YouTube / LinkedIn Learning / Coursera / Skillshare
-// link is either a safe search URL or removed entirely.
-const sanitisePack = (pack: UpskillPack | null): UpskillPack | null => {
-  if (!pack) return pack;
-  const ytSafe = (pack.youtube ?? [])
-    .map((r) => {
-      const safe = normalisePlatformUrl(r.url, r.title, "youtube");
-      return safe ? { ...r, url: safe } : null;
-    })
-    .filter((r): r is UpskillResource => r !== null);
-  const courseSafe = (pack.courses ?? [])
-    .map((c) => {
-      const safe = normalisePlatformUrl(c.url, c.title, c.platform);
-      return safe ? { ...c, url: safe } : null;
-    })
-    .filter((c): c is UpskillCourse => c !== null);
-  let ssSafe: UpskillResource | undefined = undefined;
-  if (pack.skillshare) {
-    const safe = normalisePlatformUrl(pack.skillshare.url, pack.skillshare.title, "skillshare");
-    if (safe) ssSafe = { ...pack.skillshare, url: safe };
-  }
-  return { ...pack, youtube: ytSafe, courses: courseSafe, skillshare: ssSafe };
-};
-
 // ── Types ─────────────────────────────────────────────────────────────
 
 type UpskillResource = { title: string; url: string; why: string };

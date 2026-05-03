@@ -265,24 +265,21 @@ export const UpskillSection = ({
                   <ExternalLink className="h-3 w-3" />
                   Coursera
                 </a>
-                <div className="flex flex-col items-center gap-0.5">
-                  <a
-                    href={`https://www.skillshare.com/en/search?query=${encodeURIComponent(skill)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex w-full items-center justify-center gap-1 rounded-full border border-accent bg-background px-3 py-1.5 text-xs font-medium text-accent hover:bg-accent/5 transition-colors"
-                  >
-                    <ExternalLink className="h-3 w-3" />
-                    Skillshare
-                  </a>
-                  <span className="text-[10px] text-muted-foreground">(free trial available)</span>
-                </div>
+                <a
+                  href={`https://www.skillshare.com/en/search?query=${encodeURIComponent(skill)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-1 rounded-full border border-accent bg-background px-3 py-1.5 text-xs font-medium text-accent hover:bg-accent/5 transition-colors"
+                >
+                  <ExternalLink className="h-3 w-3" />
+                  Skillshare
+                </a>
               </div>
             </li>
           ))}
         </ul>
 
-        <p className="mt-3 text-xs text-muted-foreground">Free and paid options available</p>
+        <p className="mt-3 text-xs text-muted-foreground">Free and paid options available · Skillshare free trial available</p>
 
         {/* Email CTA */}
         <div className="mt-5 flex flex-col sm:flex-row sm:items-center gap-3 border-t border-border pt-5">

@@ -1,55 +1,15 @@
 import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2.95.0/cors";
 
 // ========================================================================
-// HONEST PICTURE — Hybrid template approach.
-// Fixed opening sentence per (band x segment) + AI-generated 1-2 sentence
-// variable clause that personalises to the role + AI-generated forward
-// momentum closing sentence.
-// This guarantees voice consistency and prevents banned-phrase drift.
+// HONEST PICTURE — fully prompt-driven paragraph generation.
+// The output must be exactly 4 complete sentences and must not rely on
+// stale hardcoded openings that can drift from the approved prompt.
 // ========================================================================
 
 type Band = "Low" | "Moderate" | "High" | "Very High";
 type Segment = "avoiding" | "curious" | "occasional" | "daily" | "building";
 
-// Fixed opening sentences. These are non-negotiable copy from the founder.
-// Em dashes intentionally avoided per house style.
-const OPENINGS: Partial<Record<Band, Partial<Record<Segment, string>>>> = {
-  "Very High": {
-    avoiding:
-      "NZ agencies and teams are restructuring around AI right now, and the people coming out ahead are not the most experienced ones, they are the ones who moved early.",
-    curious:
-      "Your function is one of the first places NZ businesses are restructuring around AI, and being curious about it already puts you ahead of most people in your position.",
-    occasional:
-      "You have already started using AI, which means you have a head start on most people in your function, the question now is whether you build on it deliberately.",
-    daily:
-      "Daily AI use already puts you in the top tier of your function in NZ. The gap now is moving from using it for tasks to understanding which parts of your role it is changing structurally.",
-    building:
-      "Building with AI puts you ahead of almost everyone in your function, the people most at risk are the ones who have not started yet, and that is not you.",
-  },
-  "High": {
-    avoiding:
-      "Your role has real exposure, and the honest version is that the window to get ahead of it is open right now, which is a better position than finding out after the restructure.",
-    curious:
-      "Being curious about this is the right response, your role sits in territory where AI is moving fast, and paying attention early is exactly how people stay ahead of it.",
-    occasional:
-      "You are already using AI occasionally, which means the shift to systematic use is closer than it feels, and that shift is what separates the roles that compress from the ones that do not.",
-    daily:
-      "Using AI daily already changes how exposed your role is, because it means you are already closer to the work pattern NZ employers are starting to expect.",
-    building:
-      "Building with AI puts you in a strong position relative to most people in your function, your practical experience with agents and automations is genuinely protective in a way that no course or certification can replicate.",
-  },
-  // Moderate and Low fall back to AI-generated openings (see MODERATE_LOW_GUIDANCE)
-};
-
-// Tone guidance for Moderate and Low bands where we still generate the
-// opening with AI (no fixed copy yet). The variable-clause prompt below
-// references this when bandKey is moderate or low.
-const MODERATE_LOW_GUIDANCE: Record<"Moderate" | "Low", string> = {
-  Moderate:
-    "Moderate-risk role: disruption is real but slower, augmentation before replacement. Open by naming the role directly and being honest about where the automation pressure actually sits. Do not talk about AI in the abstract. Do not give advice or tell the person what to do.",
-  Low:
-    "Low-risk role: be honest the risk is lower without dismissing it. Open by naming the role directly and naming the real protection in the work, then be specific about which slices of the role are still being absorbed. Do not give advice or tell the person what to do.",
-};
+const OPENINGS: Partial<Record<Band, Partial<Record<Segment, string>>>> = {};
 
 // ========================================================================
 // VARIABLE CLAUSE SYSTEM PROMPT
@@ -140,6 +100,20 @@ function ensureCompleteEnding(s: string): string {
   }
 
   return `${out.replace(/[,:;\-\s]+$/g, "").trim()}.`;
+}
+
+function extractCompleteSentences(s: string): string[] {
+  return (stripEmDashes(s).match(/[^.!?]+[.!?](?:["')\]]+)?/g) ?? [])
+    .map((part) => part.trim())
+    .filter(Boolean);
+}
+
+function normaliseFourSentenceParagraph(s: string): string {
+  const sentences = extractCompleteSentences(s);
+  if (sentences.length >= 4) {
+    return sentences.slice(0, 4).join(" ").trim();
+  }
+  return ensureCompleteEnding(s);
 }
 
 function normaliseBand(raw: unknown): Band {

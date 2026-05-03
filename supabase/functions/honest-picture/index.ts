@@ -27,7 +27,9 @@ Sentence 4: What part of this role AI genuinely cannot do yet — be honest, not
 
 Never write fewer than 4 sentences. Never cut off mid-sentence. Max tokens is 1000.
 
-Each sentence must be maximum 25 words. No run-on sentences. The whole paragraph must be readable in 20 seconds. Stop at 4 sentences — do not add more.`;
+Each sentence must be maximum 25 words. No run-on sentences. The whole paragraph must be readable in 20 seconds. Stop at 4 sentences — do not add more.
+
+Never name specific NZ businesses, companies, or organisations. Instead reference them by type — 'NZ digital marketing agencies', 'Auckland-based SEO firms', 'NZ retail brands' etc.`;
 
 // ========================================================================
 // TASKS + AGENT NOTE — separate structured call

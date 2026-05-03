@@ -2,32 +2,19 @@ import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2.95.0/cors";
 
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/resend";
 
-const SUBJECT = "You're on the waitlist — and we want your input";
+const SUBJECT = "You're on the waitlist";
 
 const TEXT_BODY = `Hi,
 
-You're in. You'll be one of the first to get access to the full Humanise reskilling roadmap when it launches.
+You're in. We'll email you when the full Humanise reskilling roadmap is ready.
 
-Here's what we're building:
+Quick context on what we're building:
 
-A personalised 12-month plan specific to your role and the NZ job market. Not generic career advice — actual NZ training providers, NZ employers hiring for AI-resilient roles, regional opportunities, and government training subsidies you might not know about.
+A personalised 12-month plan specific to your role and the NZ job market. NZ training providers, NZ employers hiring for AI-resilient roles, regional opportunities, government training subsidies you might not know about.
 
-Right now we're shaping what goes into it. So before we build, we want to ask:
+We're still shaping it. If there's one thing you'd want included for someone in your role, hit reply and tell us. We read every response.
 
-What would make this most useful for someone in your role?
-
-Hit reply and tell us:
-- The one thing you wish someone would honestly tell you about where AI is taking your job
-- What's stopped you from upskilling before now (time, money, knowing where to start, something else)
-- What would make a 12-month plan worth $29 to you — or whether you'd pay for it at all
-
-No marketing fluff. We read every reply and the answers shape what we build.
-
-Until then, you can:
-- Forward humanise.nz to a colleague who should take the quiz
-- Read the research behind the score — RBNZ AN2026-02, MBIE Jobs Online, O*NET 30.2
-
-Thanks for trusting us with this,
+Talk soon,
 
 Hillary
 Founder, Humanise
@@ -35,7 +22,7 @@ hillary@humanise.nz
 
 ---
 
-You're getting this email because you joined the waitlist at humanise.nz. Don't want updates? Reply 'unsubscribe' and we'll remove you immediately.`;
+You're getting this because you joined the waitlist at humanise.nz. Reply 'unsubscribe' to stop hearing from us.`;
 
 const HTML_BODY = `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -49,24 +36,11 @@ const HTML_BODY = `<!DOCTYPE html>
 </td></tr>
 <tr><td style="padding:8px 32px 32px;font-size:15px;line-height:1.7;color:#333;">
   <p style="margin:0 0 16px;">Hi,</p>
-  <p style="margin:0 0 16px;">You're in. You'll be one of the first to get access to the full Humanise reskilling roadmap when it launches.</p>
-  <p style="margin:0 0 8px;font-weight:600;color:#1a1a2e;">Here's what we're building:</p>
-  <p style="margin:0 0 16px;">A personalised 12-month plan specific to your role and the NZ job market. Not generic career advice — actual NZ training providers, NZ employers hiring for AI-resilient roles, regional opportunities, and government training subsidies you might not know about.</p>
-  <p style="margin:0 0 16px;">Right now we're shaping what goes into it. So before we build, we want to ask:</p>
-  <p style="margin:0 0 16px;font-weight:600;color:#1a1a2e;">What would make this most useful for someone in your role?</p>
-  <p style="margin:0 0 8px;">Hit reply and tell us:</p>
-  <ul style="margin:0 0 16px;padding-left:20px;">
-    <li style="margin-bottom:6px;">The one thing you wish someone would honestly tell you about where AI is taking your job</li>
-    <li style="margin-bottom:6px;">What's stopped you from upskilling before now (time, money, knowing where to start, something else)</li>
-    <li style="margin-bottom:6px;">What would make a 12-month plan worth $29 to you — or whether you'd pay for it at all</li>
-  </ul>
-  <p style="margin:0 0 16px;">No marketing fluff. We read every reply and the answers shape what we build.</p>
-  <p style="margin:0 0 8px;">Until then, you can:</p>
-  <ul style="margin:0 0 16px;padding-left:20px;">
-    <li style="margin-bottom:6px;">Forward <a href="https://humanise.nz" style="color:#00B5A4;text-decoration:none;">humanise.nz</a> to a colleague who should take the quiz</li>
-    <li style="margin-bottom:6px;">Read the research behind the score — RBNZ AN2026-02, MBIE Jobs Online, O*NET 30.2</li>
-  </ul>
-  <p style="margin:0 0 4px;">Thanks for trusting us with this,</p>
+  <p style="margin:0 0 16px;">You're in. We'll email you when the full Humanise reskilling roadmap is ready.</p>
+  <p style="margin:0 0 8px;font-weight:600;color:#1a1a2e;">Quick context on what we're building:</p>
+  <p style="margin:0 0 16px;">A personalised 12-month plan specific to your role and the NZ job market. NZ training providers, NZ employers hiring for AI-resilient roles, regional opportunities, government training subsidies you might not know about.</p>
+  <p style="margin:0 0 16px;">We're still shaping it. If there's one thing you'd want included for someone in your role, hit reply and tell us. We read every response.</p>
+  <p style="margin:0 0 4px;">Talk soon,</p>
   <p style="margin:16px 0 0;">
     <strong>Hillary</strong><br>
     Founder, Humanise<br>
@@ -75,8 +49,8 @@ const HTML_BODY = `<!DOCTYPE html>
 </td></tr>
 <tr><td style="background:#f9fafb;border-top:1px solid #e5e7eb;padding:14px 32px;">
   <p style="margin:0;font-size:11px;color:#9ca3af;text-align:center;line-height:1.6;">
-    You're getting this email because you joined the waitlist at humanise.nz.<br>
-    Don't want updates? Reply 'unsubscribe' and we'll remove you immediately.
+    You're getting this because you joined the waitlist at humanise.nz.<br>
+    Reply 'unsubscribe' to stop hearing from us.
   </p>
 </td></tr>
 </table>

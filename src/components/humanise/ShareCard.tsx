@@ -23,6 +23,14 @@ export const ShareCard = ({ occupation, score, band, topTask }: Props) => {
   const [downloading, setDownloading] = useState(false);
   const bandColor = BAND_HEX[band] ?? "#F5B400";
   const bandLabel = `${band.toUpperCase()} RISK`;
+  const scoreText = `${score}%`;
+  const occupationLength = occupation.trim().length;
+  const occupationFontSize =
+    occupationLength > 52 ? 52 : occupationLength > 42 ? 60 : occupationLength > 30 ? 68 : 78;
+  const taskPreview = topTask?.trim()
+    ? `${topTask.trim()} is the biggest exposure`
+    : "Your most exposed task is the biggest exposure";
+  const scoreFontSize = score >= 100 ? 200 : 220;
 
   const handleDownload = async () => {
     if (!cardRef.current) return;
@@ -50,7 +58,6 @@ export const ShareCard = ({ occupation, score, band, topTask }: Props) => {
       </p>
 
       <div className="mt-6 flex flex-col items-center gap-5">
-        {/* Preview wrapper — scales the 1080 card down for display */}
         <div
           className="rounded-2xl overflow-hidden shadow-card border border-border"
           style={{ width: "min(420px, 100%)", aspectRatio: "1 / 1" }}
@@ -68,51 +75,31 @@ export const ShareCard = ({ occupation, score, band, topTask }: Props) => {
               style={{
                 width: "1080px",
                 height: "1080px",
-                position: "relative",
-                background: "linear-gradient(135deg, #FFFFFF 0%, #F4FBFA 60%, #E6F7F4 100%)",
+                background: "linear-gradient(180deg, #FFFFFF 0%, #F7FCFB 72%, #ECF9F7 100%)",
                 fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif",
                 padding: "80px",
                 boxSizing: "border-box",
                 display: "flex",
                 flexDirection: "column",
+                justifyContent: "center",
+                alignItems: "center",
                 overflow: "hidden",
+                borderRadius: "24px",
+                border: "1px solid rgba(0, 184, 169, 0.16)",
+                textAlign: "center",
+                gap: 0,
               }}
             >
-              {/* Decorative accent */}
-              <div
-                style={{
-                  position: "absolute",
-                  top: "-200px",
-                  right: "-200px",
-                  width: "600px",
-                  height: "600px",
-                  borderRadius: "50%",
-                  background: "radial-gradient(circle, rgba(0,184,169,0.18) 0%, rgba(0,184,169,0) 70%)",
-                }}
-              />
-              <div
-                style={{
-                  position: "absolute",
-                  bottom: "-180px",
-                  left: "-180px",
-                  width: "500px",
-                  height: "500px",
-                  borderRadius: "50%",
-                  background: "radial-gradient(circle, rgba(10,37,64,0.06) 0%, rgba(10,37,64,0) 70%)",
-                }}
-              />
-
-              {/* Wordmark */}
-              <div style={{ display: "flex", alignItems: "center", gap: "14px", position: "relative" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "14px", flexShrink: 0 }}>
                 <div
                   style={{
-                    width: "48px",
-                    height: "48px",
+                    width: "44px",
+                    height: "44px",
                     borderRadius: "12px",
                     background: "#00B8A9",
                     color: "white",
                     fontWeight: 700,
-                    fontSize: "28px",
+                    fontSize: "24px",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -120,109 +107,105 @@ export const ShareCard = ({ occupation, score, band, topTask }: Props) => {
                 >
                   H
                 </div>
-                <span style={{ fontWeight: 700, fontSize: "30px", color: "#00B8A9", letterSpacing: "-0.02em" }}>
+                <span style={{ fontWeight: 700, fontSize: "28px", color: "#00B8A9" }}>
                   Humanise
                 </span>
               </div>
 
-              {/* Centre block */}
+              <div style={{ height: "40px", flexShrink: 0 }} />
+
               <div
                 style={{
-                  flex: 1,
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "center",
+                  display: "inline-flex",
                   alignItems: "center",
-                  textAlign: "center",
-                  position: "relative",
-                  gap: "28px",
+                  justifyContent: "center",
+                  padding: "14px 32px",
+                  borderRadius: "999px",
+                  background: bandColor,
+                  color: "white",
+                  fontSize: "22px",
+                  fontWeight: 700,
+                  letterSpacing: "0.12em",
+                  flexShrink: 0,
                 }}
               >
-              {(() => {
-                const len = occupation.length;
-                const titleSize = len > 40 ? 36 : len > 25 ? 44 : 56;
-                return (
-                  <>
-                    <p
-                      style={{
-                        fontSize: "20px",
-                        fontWeight: 600,
-                        letterSpacing: "0.2em",
-                        textTransform: "uppercase",
-                        color: "#5A6B7C",
-                        margin: 0,
-                      }}
-                    >
-                      Automation risk for
-                    </p>
-                    <h1
-                      style={{
-                        fontSize: `${titleSize}px`,
-                        fontWeight: 700,
-                        color: "#0A2540",
-                        margin: 0,
-                        letterSpacing: "-0.01em",
-                        lineHeight: 1.15,
-                        maxWidth: "880px",
-                        wordWrap: "break-word",
-                        overflowWrap: "break-word",
-                        textAlign: "center",
-                      }}
-                    >
-                      {occupation}
-                    </h1>
-
-                    <div
-                      style={{
-                        fontSize: "200px",
-                        fontWeight: 800,
-                        color: "#00B8A9",
-                        lineHeight: 1,
-                        letterSpacing: "-0.05em",
-                        margin: "8px 0",
-                        textAlign: "center",
-                      }}
-                    >
-                      {score}%
-                    </div>
-                  </>
-                );
-              })()}
-
-                <div
-                  style={{
-                    display: "inline-block",
-                    padding: "14px 32px",
-                    borderRadius: "999px",
-                    background: bandColor,
-                    color: "white",
-                    fontSize: "22px",
-                    fontWeight: 700,
-                    letterSpacing: "0.12em",
-                  }}
-                >
-                  {bandLabel}
-                </div>
-
-                {topTask && (
-                  <p
-                    style={{
-                      marginTop: "32px",
-                      fontSize: "26px",
-                      fontStyle: "italic",
-                      color: "#0A2540",
-                      maxWidth: "820px",
-                      lineHeight: 1.4,
-                      textAlign: "center",
-                    }}
-                  >
-                    "{topTask}" is the biggest exposure
-                  </p>
-                )}
+                {bandLabel}
               </div>
 
-              {/* Footer */}
-              <div style={{ position: "relative", textAlign: "center" }}>
+              <div style={{ height: "24px", flexShrink: 0 }} />
+
+              <div
+                style={{
+                  fontSize: `${scoreFontSize}px`,
+                  fontWeight: 800,
+                  color: "#00B8A9",
+                  lineHeight: 0.92,
+                  letterSpacing: "-0.05em",
+                  maxWidth: "100%",
+                  flexShrink: 0,
+                }}
+              >
+                {scoreText}
+              </div>
+
+              <div style={{ height: "24px", flexShrink: 0 }} />
+
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: "100%",
+                  maxWidth: "920px",
+                  flexShrink: 1,
+                }}
+              >
+                <h1
+                  style={{
+                    fontSize: `${occupationFontSize}px`,
+                    fontWeight: 700,
+                    color: "#0A2540",
+                    margin: 0,
+                    lineHeight: 1.1,
+                    maxWidth: "100%",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    display: "-webkit-box",
+                    WebkitBoxOrient: "vertical",
+                    WebkitLineClamp: 2,
+                    wordBreak: "break-word",
+                  }}
+                >
+                  {occupation}
+                </h1>
+              </div>
+
+              <div style={{ flex: 1, minHeight: "48px" }} />
+
+              <p
+                style={{
+                  margin: 0,
+                  fontSize: "26px",
+                  fontStyle: "italic",
+                  color: "#0A2540",
+                  lineHeight: 1.35,
+                  maxWidth: "860px",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  display: "-webkit-box",
+                  WebkitBoxOrient: "vertical",
+                  WebkitLineClamp: 2,
+                  wordBreak: "break-word",
+                  flexShrink: 0,
+                }}
+              >
+                {taskPreview}
+              </p>
+
+              <div style={{ height: "24px", flexShrink: 0 }} />
+
+              <div style={{ flexShrink: 0 }}>
                 <p style={{ fontSize: "20px", color: "#7A8A99", fontWeight: 500, margin: 0 }}>
                   Get your honest picture · humanise.nz
                 </p>

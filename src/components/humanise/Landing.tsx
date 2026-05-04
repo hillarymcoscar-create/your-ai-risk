@@ -69,7 +69,7 @@ export const Landing = ({ onStart }: { onStart: () => void }) => {
         </div>
 
         <p className="mt-10 text-xs text-muted-foreground">
-          Powered by RBNZ AN2026-02 · MBIE Jobs Online · Stats NZ HLFS · O*NET 30.2 · AI Forum NZ
+          Powered by RBNZ AN2026-02 · MBIE Jobs Online · Stats NZ HLFS · O*NET 30.2 · SEEK NZ
         </p>
 
         <div className="mt-20 grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 text-left">

@@ -288,42 +288,50 @@ export const UpskillSection = ({
       <div className="mt-6 rounded-2xl border border-border bg-card p-6 shadow-soft">
         <h3 className="font-semibold text-primary">Your 3 protective skills to build</h3>
 
-        <ul className="mt-4 divide-y divide-border">
+        <ul className="mt-4 space-y-2">
           {skills.map((skill, i) => (
-            <li key={i} className="py-3 first:pt-0 last:pb-0">
-              <p className="text-sm font-medium text-primary">{skill}</p>
-              <div className="mt-2 grid grid-cols-3 gap-2">
-                <a
-                  href={`https://www.linkedin.com/learning/search?keywords=${encodeURIComponent(skill)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center gap-1 rounded-full border border-accent bg-background px-3 py-1.5 text-xs font-medium text-accent hover:bg-accent/5 transition-colors"
-                >
-                  <ExternalLink className="h-3 w-3" />
-                  LinkedIn Learning
-                </a>
-                <a
-                  href={`https://www.coursera.org/search?query=${encodeURIComponent(skill)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center gap-1 rounded-full border border-accent bg-background px-3 py-1.5 text-xs font-medium text-accent hover:bg-accent/5 transition-colors"
-                >
-                  <ExternalLink className="h-3 w-3" />
-                  Coursera
-                </a>
-                <a
-                  href={`https://www.skillshare.com/en/search?query=${encodeURIComponent(skill).replace(/%20/g, "+")}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center gap-1 rounded-full border border-accent bg-background px-3 py-1.5 text-xs font-medium text-accent hover:bg-accent/5 transition-colors"
-                >
-                  <ExternalLink className="h-3 w-3" />
-                  Skillshare
-                </a>
-              </div>
+            <li key={i} className="flex gap-2 text-sm font-medium text-primary">
+              <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-accent shrink-0" />
+              <span>{skill}</span>
             </li>
           ))}
         </ul>
+
+        <p className="mt-5 text-sm font-medium text-primary">Explore courses for these skills:</p>
+        {(() => {
+          const combined = skills.map((s) => encodeURIComponent(s.trim())).join("+");
+          return (
+            <div className="mt-2 grid grid-cols-3 gap-2">
+              <a
+                href={`https://www.linkedin.com/learning/search?keywords=${combined}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-1 rounded-full border border-accent bg-background px-3 py-1.5 text-xs font-medium text-accent hover:bg-accent/5 transition-colors"
+              >
+                <ExternalLink className="h-3 w-3" />
+                LinkedIn Learning
+              </a>
+              <a
+                href={`https://www.coursera.org/search?query=${combined}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-1 rounded-full border border-accent bg-background px-3 py-1.5 text-xs font-medium text-accent hover:bg-accent/5 transition-colors"
+              >
+                <ExternalLink className="h-3 w-3" />
+                Coursera
+              </a>
+              <a
+                href={`https://www.skillshare.com/en/search?query=${combined}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-1 rounded-full border border-accent bg-background px-3 py-1.5 text-xs font-medium text-accent hover:bg-accent/5 transition-colors"
+              >
+                <ExternalLink className="h-3 w-3" />
+                Skillshare
+              </a>
+            </div>
+          );
+        })()}
 
         <p className="mt-3 text-xs text-muted-foreground">Free and paid options available · Skillshare free trial available</p>
 

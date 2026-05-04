@@ -166,6 +166,7 @@ const PackDisplay = ({ pack, industry }: { pack: UpskillPack; industry: string }
 
 type Props = {
   skills: string[];
+  skillKeywords?: string[];
   industry: string;
   jobTitle: string;
   matchedTitle?: string | null;
@@ -182,7 +183,7 @@ type Props = {
 };
 
 export const UpskillSection = ({
-  skills, industry, jobTitle, matchedTitle, score, riskBand,
+  skills, skillKeywords, industry, jobTitle, matchedTitle, score, riskBand,
   honestPicture, nzMarketSignalMsg, nzMarketSignalSrc, nzData,
   tasksAtRisk, region, onEmailCaptured, getQuizResponseId,
 }: Props) => {
@@ -299,7 +300,8 @@ export const UpskillSection = ({
 
         <p className="mt-5 text-sm font-medium text-primary">Explore courses for these skills:</p>
         {(() => {
-          const combined = encodeURIComponent(skills[0].trim());
+          const searchTerm = (skillKeywords?.[0]?.trim() || skills[0]?.trim() || "").trim();
+          const combined = encodeURIComponent(searchTerm);
           return (
             <div className="mt-2 grid grid-cols-3 gap-2">
               <a

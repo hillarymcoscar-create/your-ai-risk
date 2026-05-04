@@ -89,7 +89,7 @@ const TASK_OVERRIDES: Record<string, { tasks_at_risk: string[]; protective_tasks
 
 export const Results = ({ answers, onRestart }: Props) => {
   const occupations = useOccupations();
-  const [aiTasks, setAiTasks] = useState<{ tasks_at_risk: string[]; protective_tasks: string[]; honest_picture?: string; agent_note?: string; agent_tasks?: string[]; agent_reality?: string; agent_reality_email?: string; nz_signal?: string; your_move?: string; locked_preview?: string; locked_content_full?: string } | null>(null);
+  const [aiTasks, setAiTasks] = useState<{ tasks_at_risk: string[]; protective_tasks: string[]; protective_skill_keywords?: string[]; honest_picture?: string; agent_note?: string; agent_tasks?: string[]; agent_reality?: string; agent_reality_email?: string; nz_signal?: string; your_move?: string; locked_preview?: string; locked_content_full?: string } | null>(null);
   const [planOpen, setPlanOpen] = useState(false);
   const [planEmail, setPlanEmail] = useState("");
   const [planSubmitting, setPlanSubmitting] = useState(false);
@@ -562,6 +562,7 @@ export const Results = ({ answers, onRestart }: Props) => {
 
         <UpskillSection
           skills={activeSkills}
+          skillKeywords={aiTasks?.protective_skill_keywords ?? []}
           industry={answers.industry}
           jobTitle={match?.title ?? answers.jobTitle}
           matchedTitle={match?.title ?? null}

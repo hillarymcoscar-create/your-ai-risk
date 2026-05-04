@@ -133,6 +133,13 @@ const HP_TOOL = [{
       properties: {
         tasks_at_risk:    { type: "array", items: { type: "string" }, minItems: 3, maxItems: 3 },
         protective_tasks: { type: "array", items: { type: "string" }, minItems: 3, maxItems: 3 },
+        protective_skill_keywords: {
+          type: "array",
+          items: { type: "string", description: "2-3 word industry-standard keyword phrase summarising the matching protective_tasks entry. Keywords only, never a full sentence." },
+          minItems: 3,
+          maxItems: 3,
+          description: "One short 2-3 word keyword phrase per protective_tasks entry, in the same order. Used for platform course searches.",
+        },
         agent_note:       { type: "string" },
         agent_tasks:      { type: "array", items: { type: "string" }, minItems: 3, maxItems: 3 },
         agent_reality:    { type: "string", description: "2-3 sentences specific to this occupation describing what autonomous AI agents are doing right now in this role. Name 2-3 specific real tools (e.g. Semrush AI, BrightEdge Copilot, custom GPT-4o pipelines, Microsoft Copilot, Make.com). Be concrete about what work is being absorbed." },
@@ -142,7 +149,7 @@ const HP_TOOL = [{
         locked_preview:   { type: "string", description: "Maximum 2 sentences. Write one locked teaser that creates a specific unresolved question about THIS person's situation. Reference their occupation by name and their agent tier reality. Make them feel like there is one piece of information about their specific role that would change how they think about their next 90 days. End with a direct question to the reader. Do NOT use the words unlock, discover, or exclusive. Do NOT promise tips, strategies, or insights. Do NOT sound like a marketing headline or pricing-page copy. No em dashes." },
         locked_content_full: { type: "string", description: "3 to 4 sentences. The expanded answer to the locked_preview teaser. This is the most valuable content in the Humanise product. It must contain specific, actionable intelligence about THIS occupation in NZ that is NOT visible anywhere else on the results page. Name specific tools, specific tasks, specific timelines, specific NZ regions or company types where known. Do NOT repeat anything from agent_reality, nz_signal, your_move, or locked_preview. This is the insight that makes the user think: I needed to know that. No em dashes. End with 2 sentences: sentence 1 references something concrete and specific to this occupation that Humanise has data on and the reader has not yet seen (a specific task, trend, or comparison, not a generic teaser); sentence 2 directs the reader back to humanise.nz using one of: 'See the full breakdown for your role at humanise.nz' / 'Your full results are waiting at humanise.nz' / 'The complete picture for your role is at humanise.nz'. The ending must NOT be a question and must NOT end with a question mark. It must always end with humanise.nz as the destination." },
       },
-      required: ["tasks_at_risk", "protective_tasks", "agent_note", "agent_tasks", "agent_reality", "agent_reality_email", "nz_signal", "your_move", "locked_preview", "locked_content_full"],
+      required: ["tasks_at_risk", "protective_tasks", "protective_skill_keywords", "agent_note", "agent_tasks", "agent_reality", "agent_reality_email", "nz_signal", "your_move", "locked_preview", "locked_content_full"],
       additionalProperties: false,
     },
   },
@@ -346,6 +353,7 @@ Return ALL of these fields:
 TASK LISTS
 - tasks_at_risk: 3 short action phrases (4 to 7 words) for the most automatable tasks in this role.
 - protective_tasks: 3 short action phrases (4 to 7 words) for what makes this role hard to fully automate.
+- protective_skill_keywords: For each protective_tasks entry, output a 'searchKeywords'-style string containing a short 2-3 word keyword phrase that summarises the skill's core topic for platform course searches. Use simple industry-standard terms (e.g. 'project management', 'content strategy', 'data analysis', 'stakeholder management', 'search intent'). Never use full sentences — keywords only. Same order as protective_tasks. Lowercase preferred.
 - agent_note: Name one of (Microsoft Copilot, ChatGPT, Google Gemini, Make.com, Manus) and give one concrete example of what it handles in this role. Under 30 words. For trades/healthcare/hands-on physical work, write "This role has strong natural protection from AI agents because [reason]" without naming a tool.
 - agent_tasks: 3 specific tasks AI agents are handling today in this occupation. Action verb start. Max 12 words each.
 
@@ -378,6 +386,7 @@ No em dashes anywhere. No phrases ending in prepositions/conjunctions/articles i
 
     let tasks_at_risk: string[] = [];
     let protective_tasks: string[] = [];
+    let protective_skill_keywords: string[] = [];
     let agent_note = "";
     let agent_tasks: string[] = [];
     let agent_reality = "";
@@ -393,6 +402,7 @@ No em dashes anywhere. No phrases ending in prepositions/conjunctions/articles i
       const toolCall = msg?.tool_calls?.[0];
       let parsed: {
         tasks_at_risk?: string[]; protective_tasks?: string[];
+        protective_skill_keywords?: string[];
         agent_note?: string; agent_tasks?: string[];
         agent_reality?: string; agent_reality_email?: string; nz_signal?: string;
         your_move?: string; locked_preview?: string;
@@ -406,6 +416,10 @@ No em dashes anywhere. No phrases ending in prepositions/conjunctions/articles i
       }
       tasks_at_risk    = (parsed.tasks_at_risk    ?? []).map(cleanTask).filter(Boolean).slice(0, 3);
       protective_tasks = (parsed.protective_tasks ?? []).map(cleanTask).filter(Boolean).slice(0, 3);
+      protective_skill_keywords = (parsed.protective_skill_keywords ?? [])
+        .map((s) => String(s ?? "").trim().replace(/[."']+$/g, "").trim())
+        .filter(Boolean)
+        .slice(0, 3);
       agent_note       = stripEmDashes((parsed.agent_note ?? "").trim());
       agent_tasks      = (parsed.agent_tasks      ?? []).map(cleanTask).filter(Boolean).slice(0, 3);
       agent_reality    = stripEmDashes((parsed.agent_reality ?? "").trim());
@@ -433,6 +447,7 @@ No em dashes anywhere. No phrases ending in prepositions/conjunctions/articles i
         honest_picture,
         tasks_at_risk,
         protective_tasks,
+        protective_skill_keywords,
         agent_note,
         agent_tasks,
         agent_reality,

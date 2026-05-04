@@ -579,34 +579,6 @@ export const Results = ({ answers, onRestart }: Props) => {
           getQuizResponseId={() => quizResponseIdRef.current}
         />
 
-        <section className="mt-12">
-          <h2 className="text-2xl font-semibold text-primary text-center">What's next?</h2>
-          <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-            <CtaCard
-              icon={<Mail className="h-5 w-5" />}
-              title="Get my full action plan"
-              desc="Personalised steps emailed to you."
-              cta="Email me the plan"
-              onClick={openPlanModal}
-              primary
-            />
-            <CtaCard
-              icon={<LineChart className="h-5 w-5" />}
-              title="Track my score over time"
-              desc="Create an account to see your trend."
-              cta="Create free account"
-              onClick={() => toast.info("Accounts coming soon")}
-            />
-            <CtaCard
-              icon={<Share2 className="h-5 w-5" />}
-              title="Share my result"
-              desc="Compare scores with your team."
-              cta="Share"
-              onClick={handleShare}
-            />
-          </div>
-        </section>
-
         <ShareCard
           occupation={match?.title ?? answers.jobTitle?.trim() ?? "Your role"}
           score={score}

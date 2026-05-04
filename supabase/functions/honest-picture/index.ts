@@ -447,6 +447,7 @@ No em dashes anywhere. No phrases ending in prepositions/conjunctions/articles i
         honest_picture,
         tasks_at_risk,
         protective_tasks,
+        protective_skill_keywords,
         agent_note,
         agent_tasks,
         agent_reality,

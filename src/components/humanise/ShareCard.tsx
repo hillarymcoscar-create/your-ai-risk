@@ -44,9 +44,9 @@ export const ShareCard = ({ occupation, score, band, topTask }: Props) => {
 
   return (
     <section className="mt-10">
-      <h2 className="text-2xl font-semibold text-primary text-center">Share your result</h2>
+      <h2 className="text-2xl font-semibold text-primary text-center">Know someone whose role might be affected?</h2>
       <p className="mt-2 text-sm text-muted-foreground text-center">
-        Save this and share with someone whose role might be affected too.
+        Save this card and send it to them. The conversation needs more honest data.
       </p>
 
       <div className="mt-6 flex flex-col items-center gap-5">

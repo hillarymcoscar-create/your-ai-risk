@@ -562,6 +562,7 @@ export const Results = ({ answers, onRestart }: Props) => {
 
         <UpskillSection
           skills={activeSkills}
+          skillKeywords={aiTasks?.protective_skill_keywords ?? []}
           industry={answers.industry}
           jobTitle={match?.title ?? answers.jobTitle}
           matchedTitle={match?.title ?? null}

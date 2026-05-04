@@ -68,6 +68,10 @@ export const Landing = ({ onStart }: { onStart: () => void }) => {
           <p className="mt-3 text-xs sm:text-sm text-muted-foreground">{counterText}</p>
         </div>
 
+        <p className="mt-10 text-xs text-muted-foreground">
+          Powered by RBNZ AN2026-02 · MBIE Jobs Online · Stats NZ HLFS · O*NET 30.2 · AI Forum NZ
+        </p>
+
         <div className="mt-20 grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 text-left">
           <TrustItem icon={<Clock className="h-5 w-5" />} title="60-second quiz" desc="60 seconds, no fluff." />
           <TrustItem icon={<Lock className="h-5 w-5" />} title="No login required" desc="Get your score before sharing anything." />

@@ -133,6 +133,13 @@ const HP_TOOL = [{
       properties: {
         tasks_at_risk:    { type: "array", items: { type: "string" }, minItems: 3, maxItems: 3 },
         protective_tasks: { type: "array", items: { type: "string" }, minItems: 3, maxItems: 3 },
+        protective_skill_keywords: {
+          type: "array",
+          items: { type: "string", description: "2-3 word industry-standard keyword phrase summarising the matching protective_tasks entry. Keywords only, never a full sentence." },
+          minItems: 3,
+          maxItems: 3,
+          description: "One short 2-3 word keyword phrase per protective_tasks entry, in the same order. Used for platform course searches.",
+        },
         agent_note:       { type: "string" },
         agent_tasks:      { type: "array", items: { type: "string" }, minItems: 3, maxItems: 3 },
         agent_reality:    { type: "string", description: "2-3 sentences specific to this occupation describing what autonomous AI agents are doing right now in this role. Name 2-3 specific real tools (e.g. Semrush AI, BrightEdge Copilot, custom GPT-4o pipelines, Microsoft Copilot, Make.com). Be concrete about what work is being absorbed." },

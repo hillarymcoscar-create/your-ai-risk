@@ -520,13 +520,6 @@ export const Results = ({ answers, onRestart }: Props) => {
           onTasks={setAiTasks}
         />
 
-        <ShareCard
-          occupation={match?.title ?? answers.jobTitle?.trim() ?? "Your role"}
-          score={score}
-          band={band}
-          topTask={(aiTasks?.tasks_at_risk?.length ? aiTasks.tasks_at_risk : tasks)[0]}
-        />
-
         <AgentWatch
           agentTier={agentTier}
           agentReality={aiTasks?.agent_reality}
@@ -613,6 +606,13 @@ export const Results = ({ answers, onRestart }: Props) => {
             />
           </div>
         </section>
+
+        <ShareCard
+          occupation={match?.title ?? answers.jobTitle?.trim() ?? "Your role"}
+          score={score}
+          band={band}
+          topTask={(aiTasks?.tasks_at_risk?.length ? aiTasks.tasks_at_risk : tasks)[0]}
+        />
 
         <p className="mt-16 text-center text-xs text-muted-foreground/80">
           Autonomous agent activity sourced from real-time AI capability analysis across 1,016 NZ occupations.

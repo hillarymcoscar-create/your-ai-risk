@@ -138,44 +138,56 @@ export const ShareCard = ({ occupation, score, band, topTask }: Props) => {
                   gap: "28px",
                 }}
               >
-                <p
-                  style={{
-                    fontSize: "20px",
-                    fontWeight: 600,
-                    letterSpacing: "0.2em",
-                    textTransform: "uppercase",
-                    color: "#5A6B7C",
-                    margin: 0,
-                  }}
-                >
-                  Automation risk for
-                </p>
-                <h1
-                  style={{
-                    fontSize: "68px",
-                    fontWeight: 700,
-                    color: "#0A2540",
-                    margin: 0,
-                    letterSpacing: "-0.02em",
-                    lineHeight: 1.05,
-                    maxWidth: "880px",
-                  }}
-                >
-                  {occupation}
-                </h1>
+              {(() => {
+                const len = occupation.length;
+                const titleSize = len > 40 ? 36 : len > 25 ? 44 : 56;
+                return (
+                  <>
+                    <p
+                      style={{
+                        fontSize: "20px",
+                        fontWeight: 600,
+                        letterSpacing: "0.2em",
+                        textTransform: "uppercase",
+                        color: "#5A6B7C",
+                        margin: 0,
+                      }}
+                    >
+                      Automation risk for
+                    </p>
+                    <h1
+                      style={{
+                        fontSize: `${titleSize}px`,
+                        fontWeight: 700,
+                        color: "#0A2540",
+                        margin: 0,
+                        letterSpacing: "-0.01em",
+                        lineHeight: 1.15,
+                        maxWidth: "880px",
+                        wordWrap: "break-word",
+                        overflowWrap: "break-word",
+                        textAlign: "center",
+                      }}
+                    >
+                      {occupation}
+                    </h1>
 
-                <div
-                  style={{
-                    fontSize: "220px",
-                    fontWeight: 800,
-                    color: "#00B8A9",
-                    lineHeight: 1,
-                    letterSpacing: "-0.05em",
-                    margin: "8px 0",
-                  }}
-                >
-                  {score}%
-                </div>
+                    <div
+                      style={{
+                        fontSize: "200px",
+                        fontWeight: 800,
+                        color: "#00B8A9",
+                        lineHeight: 1,
+                        letterSpacing: "-0.05em",
+                        margin: "8px 0",
+                        textAlign: "center",
+                      }}
+                    >
+                      {score}%
+                    </div>
+                  </>
+                );
+              })()}
 
                 <div
                   style={{
@@ -201,9 +213,10 @@ export const ShareCard = ({ occupation, score, band, topTask }: Props) => {
                       color: "#0A2540",
                       maxWidth: "820px",
                       lineHeight: 1.4,
+                      textAlign: "center",
                     }}
                   >
-                    “{topTask}” is the biggest exposure
+                    "{topTask}" is the biggest exposure
                   </p>
                 )}
               </div>

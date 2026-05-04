@@ -402,6 +402,7 @@ No em dashes anywhere. No phrases ending in prepositions/conjunctions/articles i
       const toolCall = msg?.tool_calls?.[0];
       let parsed: {
         tasks_at_risk?: string[]; protective_tasks?: string[];
+        protective_skill_keywords?: string[];
         agent_note?: string; agent_tasks?: string[];
         agent_reality?: string; agent_reality_email?: string; nz_signal?: string;
         your_move?: string; locked_preview?: string;
@@ -415,6 +416,10 @@ No em dashes anywhere. No phrases ending in prepositions/conjunctions/articles i
       }
       tasks_at_risk    = (parsed.tasks_at_risk    ?? []).map(cleanTask).filter(Boolean).slice(0, 3);
       protective_tasks = (parsed.protective_tasks ?? []).map(cleanTask).filter(Boolean).slice(0, 3);
+      protective_skill_keywords = (parsed.protective_skill_keywords ?? [])
+        .map((s) => String(s ?? "").trim().replace(/[."']+$/g, "").trim())
+        .filter(Boolean)
+        .slice(0, 3);
       agent_note       = stripEmDashes((parsed.agent_note ?? "").trim());
       agent_tasks      = (parsed.agent_tasks      ?? []).map(cleanTask).filter(Boolean).slice(0, 3);
       agent_reality    = stripEmDashes((parsed.agent_reality ?? "").trim());

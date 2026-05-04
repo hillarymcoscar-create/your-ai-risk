@@ -46,6 +46,7 @@ export const HonestPicture = ({
             onTasks({
               tasks_at_risk: data?.tasks_at_risk ?? [],
               protective_tasks: data?.protective_tasks ?? [],
+              protective_skill_keywords: data?.protective_skill_keywords ?? [],
               honest_picture: data?.honest_picture ?? data?.text ?? "",
               agent_note: data?.agent_note ?? "",
               agent_tasks: data?.agent_tasks ?? [],

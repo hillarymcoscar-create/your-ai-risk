@@ -386,6 +386,7 @@ No em dashes anywhere. No phrases ending in prepositions/conjunctions/articles i
 
     let tasks_at_risk: string[] = [];
     let protective_tasks: string[] = [];
+    let protective_skill_keywords: string[] = [];
     let agent_note = "";
     let agent_tasks: string[] = [];
     let agent_reality = "";

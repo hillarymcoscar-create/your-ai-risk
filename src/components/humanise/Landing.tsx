@@ -68,6 +68,10 @@ export const Landing = ({ onStart }: { onStart: () => void }) => {
           <p className="mt-3 text-xs sm:text-sm text-muted-foreground">{counterText}</p>
         </div>
 
+        <p className="mt-10 text-xs text-muted-foreground">
+          Powered by RBNZ AN2026-02 · MBIE Jobs Online · Stats NZ HLFS · O*NET 30.2 · AI Forum NZ
+        </p>
+
         <div className="mt-20 grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 text-left">
           <TrustItem icon={<Clock className="h-5 w-5" />} title="60-second quiz" desc="60 seconds, no fluff." />
           <TrustItem icon={<Lock className="h-5 w-5" />} title="No login required" desc="Get your score before sharing anything." />
@@ -190,6 +194,16 @@ export const Landing = ({ onStart }: { onStart: () => void }) => {
         </section>
       )}
 
+      {/* SECTION 6.75 — STATS CARD ROW */}
+      <section className="container max-w-4xl pt-4 pb-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+          <MiniStat number="1,016" label="NZ occupations scored" />
+          <MiniStat number="60 sec" label="Quiz length" />
+          <MiniStat number="100% free" label="No login required" />
+          <MiniStat number="NZ-first" label="Built on NZ data" />
+        </div>
+      </section>
+
       {/* SECTION 7 — FINAL CTA */}
       <section className="container max-w-2xl py-16 sm:py-24 text-center">
         <h2 className="text-2xl sm:text-3xl font-bold text-primary">
@@ -220,6 +234,13 @@ const Stat = ({ number, label }: { number: string; label: string }) => (
   <div className="rounded-2xl border border-border bg-card p-6 shadow-soft flex flex-col h-full">
     <div className="text-4xl sm:text-5xl font-bold text-accent tracking-tight">{number}</div>
     <p className="mt-3 text-sm text-muted-foreground leading-relaxed">{label}</p>
+  </div>
+);
+
+const MiniStat = ({ number, label }: { number: string; label: string }) => (
+  <div className="rounded-2xl border border-border bg-card p-4 text-center">
+    <div className="text-xl sm:text-2xl font-bold text-primary tracking-tight">{number}</div>
+    <p className="mt-1 text-xs text-muted-foreground leading-snug">{label}</p>
   </div>
 );
 

@@ -14,6 +14,7 @@ import { HonestPicture } from "@/components/humanise/HonestPicture";
 import { NzMarketSignal } from "@/components/humanise/NzMarketSignal";
 import { NzWorkforceData } from "@/components/humanise/NzWorkforceData";
 import { UpskillSection } from "@/components/humanise/UpskillSection";
+import { ShareCard } from "@/components/humanise/ShareCard";
 import { AlertTriangle, Shield, BarChart3, Mail, LineChart, Share2, RotateCcw, Lock } from "lucide-react";
 import {
   applyAgentExposure,
@@ -517,6 +518,13 @@ export const Results = ({ answers, onRestart }: Props) => {
           aiRelationshipSegment={answers.segment_tag}
           region={answers.country === "New Zealand" ? answers.region : answers.country}
           onTasks={setAiTasks}
+        />
+
+        <ShareCard
+          occupation={match?.title ?? answers.jobTitle?.trim() ?? "Your role"}
+          score={score}
+          band={band}
+          topTask={(aiTasks?.tasks_at_risk?.length ? aiTasks.tasks_at_risk : tasks)[0]}
         />
 
         <AgentWatch

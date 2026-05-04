@@ -299,7 +299,7 @@ export const UpskillSection = ({
 
         <p className="mt-5 text-sm font-medium text-primary">Explore courses for these skills:</p>
         {(() => {
-          const combined = skills.map((s) => encodeURIComponent(s.trim())).join("+");
+          const combined = encodeURIComponent(skills[0].trim());
           return (
             <div className="mt-2 grid grid-cols-3 gap-2">
               <a

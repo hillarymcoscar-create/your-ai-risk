@@ -51,12 +51,15 @@ export const ShareCard = ({ occupation, score, band, topTask }: Props) => {
 
       <div className="mt-6 flex flex-col items-center gap-5">
         {/* Preview wrapper — scales the 1080 card down for display */}
-        <div className="w-full max-w-[420px] rounded-2xl overflow-hidden shadow-card border border-border">
+        <div
+          className="rounded-2xl overflow-hidden shadow-card border border-border"
+          style={{ width: "min(420px, 100%)", aspectRatio: "1 / 1" }}
+        >
           <div
             style={{
               width: "1080px",
               height: "1080px",
-              transform: "scale(0.389)",
+              transform: "scale(calc(min(420px, 100vw - 32px) / 1080))",
               transformOrigin: "top left",
             }}
           >

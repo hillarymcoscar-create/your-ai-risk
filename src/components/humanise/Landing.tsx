@@ -194,16 +194,6 @@ export const Landing = ({ onStart }: { onStart: () => void }) => {
         </section>
       )}
 
-      {/* SECTION 6.75 — STATS CARD ROW */}
-      <section className="container max-w-4xl pt-4 pb-4">
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-          <MiniStat number="1,016" label="NZ occupations scored" />
-          <MiniStat number="60 sec" label="Quiz length" />
-          <MiniStat number="100% free" label="No login required" />
-          <MiniStat number="NZ-first" label="Built on NZ data" />
-        </div>
-      </section>
-
       {/* SECTION 7 — FINAL CTA */}
       <section className="container max-w-2xl py-16 sm:py-24 text-center">
         <h2 className="text-2xl sm:text-3xl font-bold text-primary">

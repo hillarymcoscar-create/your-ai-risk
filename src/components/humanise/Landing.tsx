@@ -227,13 +227,6 @@ const Stat = ({ number, label }: { number: string; label: string }) => (
   </div>
 );
 
-const MiniStat = ({ number, label }: { number: string; label: string }) => (
-  <div className="rounded-2xl border border-border bg-card p-4 text-center">
-    <div className="text-xl sm:text-2xl font-bold text-primary tracking-tight">{number}</div>
-    <p className="mt-1 text-xs text-muted-foreground leading-snug">{label}</p>
-  </div>
-);
-
 const HowCard = ({ title, body }: { title: string; body: string }) => (
   <div className="rounded-2xl border border-border bg-card p-6 shadow-soft">
     <h3 className="font-semibold text-primary text-lg">{title}</h3>

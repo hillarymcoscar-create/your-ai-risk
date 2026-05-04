@@ -353,6 +353,7 @@ Return ALL of these fields:
 TASK LISTS
 - tasks_at_risk: 3 short action phrases (4 to 7 words) for the most automatable tasks in this role.
 - protective_tasks: 3 short action phrases (4 to 7 words) for what makes this role hard to fully automate.
+- protective_skill_keywords: For each protective_tasks entry, output a 'searchKeywords'-style string containing a short 2-3 word keyword phrase that summarises the skill's core topic for platform course searches. Use simple industry-standard terms (e.g. 'project management', 'content strategy', 'data analysis', 'stakeholder management', 'search intent'). Never use full sentences — keywords only. Same order as protective_tasks. Lowercase preferred.
 - agent_note: Name one of (Microsoft Copilot, ChatGPT, Google Gemini, Make.com, Manus) and give one concrete example of what it handles in this role. Under 30 words. For trades/healthcare/hands-on physical work, write "This role has strong natural protection from AI agents because [reason]" without naming a tool.
 - agent_tasks: 3 specific tasks AI agents are handling today in this occupation. Action verb start. Max 12 words each.
 

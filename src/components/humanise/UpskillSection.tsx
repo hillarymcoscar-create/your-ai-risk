@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import type { AnzscoGroupData } from "@/lib/nzWorkforceUtils";
 import { buildEmailHtml, CURATED_INDUSTRIES, CURATED_URL, type EmailPack } from "@/lib/emailTemplate";
 import { normalisePlatformUrl } from "@/lib/safeLinks";
+import { track } from "@/lib/analytics";
 
 // ── Types ─────────────────────────────────────────────────────────────
 

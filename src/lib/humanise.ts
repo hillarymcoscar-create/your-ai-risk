@@ -211,6 +211,7 @@ export const NZ_REGIONS = [
   "Canterbury",
   "Otago",
   "Southland",
+  "Other",
 ] as const;
 
 // ---------- Modifier / segment computation ----------

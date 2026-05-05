@@ -34,6 +34,7 @@ import {
   type WorkTypeOverride,
 } from "@/lib/humanise";
 import { useOccupations, useAliases, findByAlias, findBestMatch } from "@/lib/onet";
+import { track } from "@/lib/analytics";
 
 type Props = {
   onComplete: (answers: QuizAnswers) => void;
@@ -62,6 +63,13 @@ export const Quiz = ({ onComplete, onExit }: Props) => {
   // Match confirmation state — local to Q1 screen
   const [matchResolved, setMatchResolved] = useState(false);
   const [disambigOpen, setDisambigOpen] = useState(false);
+
+  const advance = () => {
+    setStep((s) => {
+      track("question_answered", { question_number: s });
+      return s + 1;
+    });
+  };
 
   const total = SEQUENCE.length;
   const currentId = SEQUENCE[Math.min(step, total) - 1];
@@ -130,14 +138,14 @@ export const Quiz = ({ onComplete, onExit }: Props) => {
 
   const acceptMatch = () => {
     setMatchResolved(true);
-    setStep((s) => s + 1);
+    advance();
   };
 
   const pickOverride = (value: WorkTypeOverride) => {
     update({ work_type_override: value });
     setDisambigOpen(false);
     setMatchResolved(true);
-    setStep((s) => s + 1);
+    advance();
   };
 
   const next = () => {
@@ -147,8 +155,12 @@ export const Quiz = ({ onComplete, onExit }: Props) => {
         return;
       }
     }
-    if (step < total) setStep(step + 1);
-    else onComplete(a);
+    if (step < total) {
+      advance();
+    } else {
+      track("question_answered", { question_number: total });
+      onComplete(a);
+    }
   };
 
   const back = () => {
@@ -291,7 +303,7 @@ export const Quiz = ({ onComplete, onExit }: Props) => {
                   const opt = COMPUTER_TIMES.find((o) => o.label === label);
                   if (opt) {
                     update({ computer_time: opt.value });
-                    setTimeout(() => setStep((s) => s + 1), 180);
+                    setTimeout(() => advance(), 180);
                   }
                 }}
               />
@@ -333,7 +345,7 @@ export const Quiz = ({ onComplete, onExit }: Props) => {
                   const opt = AI_RELATIONSHIPS.find((o) => o.label === label);
                   if (opt) {
                     update({ ai_relationship: opt.value });
-                    setTimeout(() => setStep((s) => s + 1), 180);
+                    setTimeout(() => advance(), 180);
                   }
                 }}
               />

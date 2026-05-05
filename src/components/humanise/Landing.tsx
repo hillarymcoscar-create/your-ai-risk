@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/humanise/Logo";
 import { ArrowRight, Clock, Lock, BookOpen } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { track } from "@/lib/analytics";
 
 type LeaderboardItem = { occupation: string; avg_score: number };
 type LandingStats = {
@@ -14,6 +15,12 @@ type LandingStats = {
 
 export const Landing = ({ onStart }: { onStart: () => void }) => {
   const [stats, setStats] = useState<LandingStats | null>(null);
+  const leaderboardRef = useRef<HTMLElement | null>(null);
+
+  const handleStart = () => {
+    track("quiz_started");
+    onStart();
+  };
 
   useEffect(() => {
     (async () => {
@@ -21,6 +28,26 @@ export const Landing = ({ onStart }: { onStart: () => void }) => {
       if (!error && data) setStats(data as unknown as LandingStats);
     })();
   }, []);
+
+  useEffect(() => {
+    const el = leaderboardRef.current;
+    if (!el) return;
+    let fired = false;
+    const obs = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting && !fired) {
+            fired = true;
+            track("leaderboard_viewed");
+            obs.disconnect();
+          }
+        }
+      },
+      { threshold: 0.3 },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [stats]);
 
   const counterText =
     stats && stats.monthly_count >= 50
@@ -59,7 +86,7 @@ export const Landing = ({ onStart }: { onStart: () => void }) => {
         <div className="mt-6 sm:mt-8 animate-scale-in">
           <Button
             size="lg"
-            onClick={onStart}
+            onClick={handleStart}
             className="bg-cta hover:opacity-95 text-accent-foreground shadow-glow h-14 px-8 text-base font-semibold rounded-full"
           >
             Score my job
@@ -172,7 +199,7 @@ export const Landing = ({ onStart }: { onStart: () => void }) => {
 
       {/* SECTION 6.5 — NZ AI RISK LEADERBOARD */}
       {showLeaderboard && (
-        <section className="container max-w-4xl py-16 sm:py-20">
+        <section ref={leaderboardRef} className="container max-w-4xl py-16 sm:py-20">
           <h2 className="text-center text-2xl sm:text-3xl font-bold text-primary">
             Where NZ stands this week
           </h2>
@@ -197,7 +224,7 @@ export const Landing = ({ onStart }: { onStart: () => void }) => {
         <div className="mt-8">
           <Button
             size="lg"
-            onClick={onStart}
+            onClick={handleStart}
             className="bg-cta hover:opacity-95 text-accent-foreground shadow-glow h-14 px-8 text-base font-semibold rounded-full"
           >
             Score my job

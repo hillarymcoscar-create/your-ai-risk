@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import type { AnzscoGroupData } from "@/lib/nzWorkforceUtils";
 import { buildEmailHtml, CURATED_INDUSTRIES, CURATED_URL, type EmailPack } from "@/lib/emailTemplate";
 import { normalisePlatformUrl } from "@/lib/safeLinks";
+import { track } from "@/lib/analytics";
 
 // ── Types ─────────────────────────────────────────────────────────────
 
@@ -59,11 +60,22 @@ const sanitisePack = (pack: UpskillPack | null): UpskillPack | null => {
 
 // ── Sub-components ────────────────────────────────────────────────────
 
+const platformFromUrl = (url: string): string | null => {
+  if (/linkedin\.com/i.test(url)) return "LinkedIn Learning";
+  if (/coursera\.org/i.test(url)) return "Coursera";
+  if (/skillshare\.com/i.test(url)) return "Skillshare";
+  return null;
+};
+
 const ResourceLink = ({ title, url }: { title: string; url: string }) => (
   <a
     href={url}
     target="_blank"
     rel="noopener noreferrer"
+    onClick={() => {
+      const p = platformFromUrl(url);
+      if (p) track("external_link_clicked", { platform: p });
+    }}
     className="inline-flex items-center gap-1 text-xs font-medium text-accent hover:underline"
   >
     <ExternalLink className="h-3 w-3 shrink-0" />
@@ -217,6 +229,8 @@ export const UpskillSection = ({
     if (!email.trim()) return;
     setSubmitting(true);
 
+    track("email_captured", { source: "upskill_pack" });
+
     // Fire-and-forget: send the score + Career Insight email too
     onEmailCaptured?.(email.trim());
 
@@ -308,6 +322,7 @@ export const UpskillSection = ({
                 href={`https://www.linkedin.com/learning/search?keywords=${combined}`}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => track("external_link_clicked", { platform: "LinkedIn Learning" })}
                 className="inline-flex items-center justify-center gap-1 rounded-full border border-accent bg-background px-3 py-1.5 text-xs font-medium text-accent hover:bg-accent/5 transition-colors"
               >
                 <ExternalLink className="h-3 w-3" />
@@ -317,6 +332,7 @@ export const UpskillSection = ({
                 href={`https://www.coursera.org/search?query=${combined}`}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => track("external_link_clicked", { platform: "Coursera" })}
                 className="inline-flex items-center justify-center gap-1 rounded-full border border-accent bg-background px-3 py-1.5 text-xs font-medium text-accent hover:bg-accent/5 transition-colors"
               >
                 <ExternalLink className="h-3 w-3" />
@@ -326,6 +342,7 @@ export const UpskillSection = ({
                 href={`https://www.skillshare.com/en/search?query=${combined}`}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => track("external_link_clicked", { platform: "Skillshare" })}
                 className="inline-flex items-center justify-center gap-1 rounded-full border border-accent bg-background px-3 py-1.5 text-xs font-medium text-accent hover:bg-accent/5 transition-colors"
               >
                 <ExternalLink className="h-3 w-3" />
@@ -415,6 +432,7 @@ export const UpskillSection = ({
                       source: "results_page",
                     } as never);
                     if (error) throw error;
+                    track("waitlist_joined");
                     setWaitlistJoined(true);
                     supabase.functions
                       .invoke("send-waitlist-email", { body: { email: trimmed } })

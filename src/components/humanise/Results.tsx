@@ -38,6 +38,7 @@ import { getAnzscoGroupData } from "@/lib/nzWorkforceUtils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { buildEmailHtml, CURATED_INDUSTRIES, CURATED_URL, type EmailPack } from "@/lib/emailTemplate";
+import { track, trackOnce } from "@/lib/analytics";
 
 type Props = {
   answers: QuizAnswers;
@@ -234,6 +235,10 @@ export const Results = ({ answers, onRestart }: Props) => {
   };
 
   useEffect(() => {
+    trackOnce("quiz_completed", "quiz_completed");
+  }, []);
+
+  useEffect(() => {
     if (!scoreReady) {
       console.log("[quiz_responses] waiting for scoreReady");
       return;
@@ -408,6 +413,10 @@ export const Results = ({ answers, onRestart }: Props) => {
     const trimmed = planEmail.trim();
     if (!trimmed) return;
     setPlanSubmitting(true);
+
+    if (planSource === "agent_watch_gate") {
+      track("email_captured", { source: "agent_watch" });
+    }
 
     // Persist the lead first so we never lose it, even if email send fails.
     try {

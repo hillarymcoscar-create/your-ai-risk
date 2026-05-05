@@ -60,11 +60,22 @@ const sanitisePack = (pack: UpskillPack | null): UpskillPack | null => {
 
 // ── Sub-components ────────────────────────────────────────────────────
 
+const platformFromUrl = (url: string): string | null => {
+  if (/linkedin\.com/i.test(url)) return "LinkedIn Learning";
+  if (/coursera\.org/i.test(url)) return "Coursera";
+  if (/skillshare\.com/i.test(url)) return "Skillshare";
+  return null;
+};
+
 const ResourceLink = ({ title, url }: { title: string; url: string }) => (
   <a
     href={url}
     target="_blank"
     rel="noopener noreferrer"
+    onClick={() => {
+      const p = platformFromUrl(url);
+      if (p) track("external_link_clicked", { platform: p });
+    }}
     className="inline-flex items-center gap-1 text-xs font-medium text-accent hover:underline"
   >
     <ExternalLink className="h-3 w-3 shrink-0" />

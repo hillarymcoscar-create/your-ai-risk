@@ -46,7 +46,7 @@
     --gradient-hero: radial-gradient(1200px 600px at 80% -10%, hsl(175 100% 36% / 0.18), transparent 60%),
                      radial-gradient(900px 500px at -10% 10%, hsl(211 72% 15% / 0.06), transparent 60%);
     --gradient-cta: linear-gradient(135deg, hsl(175 100% 36%), hsl(175 90% 30%));
-    --shadow-soft: 0 1px 2px hsl(211 72% 15% / 0.04), 0 8px 24px -12px hsl(211 72% 15% / 0.12);
+    --shadow-soft: 0 2px 8px hsl(211 72% 15% / 0.06);
     --shadow-card: 0 1px 2px hsl(211 72% 15% / 0.04), 0 12px 40px -16px hsl(211 72% 15% / 0.18);
     --shadow-glow: 0 20px 60px -20px hsl(175 100% 36% / 0.45);
 

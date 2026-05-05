@@ -303,7 +303,7 @@ export const Quiz = ({ onComplete, onExit }: Props) => {
                   const opt = COMPUTER_TIMES.find((o) => o.label === label);
                   if (opt) {
                     update({ computer_time: opt.value });
-                    setTimeout(() => setStep((s) => s + 1), 180);
+                    setTimeout(() => advance(), 180);
                   }
                 }}
               />
@@ -345,7 +345,7 @@ export const Quiz = ({ onComplete, onExit }: Props) => {
                   const opt = AI_RELATIONSHIPS.find((o) => o.label === label);
                   if (opt) {
                     update({ ai_relationship: opt.value });
-                    setTimeout(() => setStep((s) => s + 1), 180);
+                    setTimeout(() => advance(), 180);
                   }
                 }}
               />

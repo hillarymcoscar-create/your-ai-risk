@@ -235,6 +235,10 @@ export const Results = ({ answers, onRestart }: Props) => {
   };
 
   useEffect(() => {
+    trackOnce("quiz_completed", "quiz_completed");
+  }, []);
+
+  useEffect(() => {
     if (!scoreReady) {
       console.log("[quiz_responses] waiting for scoreReady");
       return;

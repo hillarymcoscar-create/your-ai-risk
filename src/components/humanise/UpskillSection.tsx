@@ -432,6 +432,7 @@ export const UpskillSection = ({
                       source: "results_page",
                     } as never);
                     if (error) throw error;
+                    track("waitlist_joined");
                     setWaitlistJoined(true);
                     supabase.functions
                       .invoke("send-waitlist-email", { body: { email: trimmed } })

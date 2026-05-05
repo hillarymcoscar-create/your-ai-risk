@@ -14,7 +14,7 @@ import { HonestPicture } from "@/components/humanise/HonestPicture";
 import { NzMarketSignal } from "@/components/humanise/NzMarketSignal";
 import { NzWorkforceData } from "@/components/humanise/NzWorkforceData";
 import { UpskillSection } from "@/components/humanise/UpskillSection";
-import { ShareCard } from "@/components/humanise/ShareCard";
+
 import { AlertTriangle, Shield, BarChart3, Mail, LineChart, Share2, RotateCcw, Lock } from "lucide-react";
 import {
   applyAgentExposure,
@@ -577,13 +577,6 @@ export const Results = ({ answers, onRestart }: Props) => {
           region={answers.region ?? ""}
           onEmailCaptured={(email) => { void attachEmailToQuizResponse(email); void sendResultsEmail(email); setEmailSubmitted(true); }}
           getQuizResponseId={() => quizResponseIdRef.current}
-        />
-
-        <ShareCard
-          occupation={match?.title ?? answers.jobTitle?.trim() ?? "Your role"}
-          score={score}
-          band={band}
-          topTask={(aiTasks?.tasks_at_risk?.length ? aiTasks.tasks_at_risk : tasks)[0]}
         />
 
         <p className="mt-16 text-center text-xs text-muted-foreground/80">

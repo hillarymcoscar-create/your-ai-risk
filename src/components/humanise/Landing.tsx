@@ -75,7 +75,7 @@ export const Landing = ({ onStart }: { onStart: () => void }) => {
         <div className="mt-20 grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 text-left">
           <TrustItem icon={<Clock className="h-5 w-5" />} title="60-second quiz" desc="60 seconds, no fluff." />
           <TrustItem icon={<Lock className="h-5 w-5" />} title="No login required" desc="Get your score before sharing anything." />
-          <TrustItem icon={<BookOpen className="h-5 w-5" />} title="Research-backed" desc="Built on WEF & McKinsey research." />
+          <TrustItem icon={<BookOpen className="h-5 w-5" />} title="Research-backed" desc="Built on RBNZ and O*NET research." />
         </div>
       </main>
 

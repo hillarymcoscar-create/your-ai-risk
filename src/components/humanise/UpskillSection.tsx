@@ -218,6 +218,8 @@ export const UpskillSection = ({
     if (!email.trim()) return;
     setSubmitting(true);
 
+    track("email_captured", { source: "upskill_pack" });
+
     // Fire-and-forget: send the score + Career Insight email too
     onEmailCaptured?.(email.trim());
 

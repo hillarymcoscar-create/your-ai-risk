@@ -138,14 +138,14 @@ export const Quiz = ({ onComplete, onExit }: Props) => {
 
   const acceptMatch = () => {
     setMatchResolved(true);
-    setStep((s) => s + 1);
+    advance();
   };
 
   const pickOverride = (value: WorkTypeOverride) => {
     update({ work_type_override: value });
     setDisambigOpen(false);
     setMatchResolved(true);
-    setStep((s) => s + 1);
+    advance();
   };
 
   const next = () => {
@@ -155,8 +155,12 @@ export const Quiz = ({ onComplete, onExit }: Props) => {
         return;
       }
     }
-    if (step < total) setStep(step + 1);
-    else onComplete(a);
+    if (step < total) {
+      advance();
+    } else {
+      track("question_answered", { question_number: total });
+      onComplete(a);
+    }
   };
 
   const back = () => {

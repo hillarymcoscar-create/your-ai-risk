@@ -38,6 +38,7 @@ import { getAnzscoGroupData } from "@/lib/nzWorkforceUtils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { buildEmailHtml, CURATED_INDUSTRIES, CURATED_URL, type EmailPack } from "@/lib/emailTemplate";
+import { track, trackOnce } from "@/lib/analytics";
 
 type Props = {
   answers: QuizAnswers;

@@ -64,6 +64,13 @@ export const Quiz = ({ onComplete, onExit }: Props) => {
   const [matchResolved, setMatchResolved] = useState(false);
   const [disambigOpen, setDisambigOpen] = useState(false);
 
+  const advance = () => {
+    setStep((s) => {
+      track("question_answered", { question_number: s });
+      return s + 1;
+    });
+  };
+
   const total = SEQUENCE.length;
   const currentId = SEQUENCE[Math.min(step, total) - 1];
 

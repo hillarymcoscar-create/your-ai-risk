@@ -311,6 +311,7 @@ export const UpskillSection = ({
                 href={`https://www.linkedin.com/learning/search?keywords=${combined}`}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => track("external_link_clicked", { platform: "LinkedIn Learning" })}
                 className="inline-flex items-center justify-center gap-1 rounded-full border border-accent bg-background px-3 py-1.5 text-xs font-medium text-accent hover:bg-accent/5 transition-colors"
               >
                 <ExternalLink className="h-3 w-3" />
@@ -320,6 +321,7 @@ export const UpskillSection = ({
                 href={`https://www.coursera.org/search?query=${combined}`}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => track("external_link_clicked", { platform: "Coursera" })}
                 className="inline-flex items-center justify-center gap-1 rounded-full border border-accent bg-background px-3 py-1.5 text-xs font-medium text-accent hover:bg-accent/5 transition-colors"
               >
                 <ExternalLink className="h-3 w-3" />
@@ -329,6 +331,7 @@ export const UpskillSection = ({
                 href={`https://www.skillshare.com/en/search?query=${combined}`}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => track("external_link_clicked", { platform: "Skillshare" })}
                 className="inline-flex items-center justify-center gap-1 rounded-full border border-accent bg-background px-3 py-1.5 text-xs font-medium text-accent hover:bg-accent/5 transition-colors"
               >
                 <ExternalLink className="h-3 w-3" />

@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/humanise/Logo";
 import { ArrowRight, Clock, Lock, BookOpen } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { track } from "@/lib/analytics";
 
 type LeaderboardItem = { occupation: string; avg_score: number };
 type LandingStats = {

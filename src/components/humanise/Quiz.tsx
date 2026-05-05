@@ -34,6 +34,7 @@ import {
   type WorkTypeOverride,
 } from "@/lib/humanise";
 import { useOccupations, useAliases, findByAlias, findBestMatch } from "@/lib/onet";
+import { track } from "@/lib/analytics";
 
 type Props = {
   onComplete: (answers: QuizAnswers) => void;

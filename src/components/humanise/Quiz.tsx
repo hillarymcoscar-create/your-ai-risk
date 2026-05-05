@@ -178,7 +178,7 @@ export const Quiz = ({ onComplete, onExit }: Props) => {
       case "aiRelationship":
         return !!a.ai_relationship;
       case "location":
-        return !!a.country && (a.country !== "New Zealand" || !!a.region);
+        return !!a.region;
       default:
         return false;
     }
@@ -341,37 +341,22 @@ export const Quiz = ({ onComplete, onExit }: Props) => {
           )}
 
           {currentId === "location" && (
-            <Question label="Where are you based?">
-              <div className="space-y-4">
-                <Select value={a.country} onValueChange={(v) => update({ country: v, region: "" })}>
-                  <SelectTrigger className="h-14 text-base rounded-xl">
-                    <SelectValue placeholder="Select your country" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {COUNTRIES.map((c) => (
-                      <SelectItem key={c} value={c}>
-                        {c}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {a.country === "New Zealand" && (
-                  <div className="animate-fade-in">
-                    <Select value={a.region ?? ""} onValueChange={(v) => update({ region: v })}>
-                      <SelectTrigger className="h-14 text-base rounded-xl">
-                        <SelectValue placeholder="Select your region" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {NZ_REGIONS.map((r) => (
-                          <SelectItem key={r} value={r}>
-                            {r}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-              </div>
+            <Question label="Which NZ region are you based in?">
+              <Select
+                value={a.region ?? ""}
+                onValueChange={(v) => update({ country: "New Zealand", region: v })}
+              >
+                <SelectTrigger className="h-14 text-base rounded-xl">
+                  <SelectValue placeholder="Select your region" />
+                </SelectTrigger>
+                <SelectContent>
+                  {NZ_REGIONS.map((r) => (
+                    <SelectItem key={r} value={r}>
+                      {r}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </Question>
           )}
         </div>

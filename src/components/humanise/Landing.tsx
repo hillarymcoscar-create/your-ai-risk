@@ -199,7 +199,7 @@ export const Landing = ({ onStart }: { onStart: () => void }) => {
 
       {/* SECTION 6.5 — NZ AI RISK LEADERBOARD */}
       {showLeaderboard && (
-        <section className="container max-w-4xl py-16 sm:py-20">
+        <section ref={leaderboardRef} className="container max-w-4xl py-16 sm:py-20">
           <h2 className="text-center text-2xl sm:text-3xl font-bold text-primary">
             Where NZ stands this week
           </h2>

@@ -178,7 +178,7 @@ export const Quiz = ({ onComplete, onExit }: Props) => {
       case "aiRelationship":
         return !!a.ai_relationship;
       case "location":
-        return !!a.country && (a.country !== "New Zealand" || !!a.region);
+        return !!a.region;
       default:
         return false;
     }

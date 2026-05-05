@@ -15,6 +15,12 @@ type LandingStats = {
 
 export const Landing = ({ onStart }: { onStart: () => void }) => {
   const [stats, setStats] = useState<LandingStats | null>(null);
+  const leaderboardRef = useRef<HTMLElement | null>(null);
+
+  const handleStart = () => {
+    track("quiz_started");
+    onStart();
+  };
 
   useEffect(() => {
     (async () => {
@@ -22,6 +28,26 @@ export const Landing = ({ onStart }: { onStart: () => void }) => {
       if (!error && data) setStats(data as unknown as LandingStats);
     })();
   }, []);
+
+  useEffect(() => {
+    const el = leaderboardRef.current;
+    if (!el) return;
+    let fired = false;
+    const obs = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting && !fired) {
+            fired = true;
+            track("leaderboard_viewed");
+            obs.disconnect();
+          }
+        }
+      },
+      { threshold: 0.3 },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [stats]);
 
   const counterText =
     stats && stats.monthly_count >= 50

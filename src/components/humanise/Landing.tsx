@@ -86,7 +86,7 @@ export const Landing = ({ onStart }: { onStart: () => void }) => {
         <div className="mt-6 sm:mt-8 animate-scale-in">
           <Button
             size="lg"
-            onClick={onStart}
+            onClick={handleStart}
             className="bg-cta hover:opacity-95 text-accent-foreground shadow-glow h-14 px-8 text-base font-semibold rounded-full"
           >
             Score my job
@@ -224,7 +224,7 @@ export const Landing = ({ onStart }: { onStart: () => void }) => {
         <div className="mt-8">
           <Button
             size="lg"
-            onClick={onStart}
+            onClick={handleStart}
             className="bg-cta hover:opacity-95 text-accent-foreground shadow-glow h-14 px-8 text-base font-semibold rounded-full"
           >
             Score my job

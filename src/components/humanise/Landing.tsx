@@ -96,7 +96,7 @@ export const Landing = ({ onStart }: { onStart: () => void }) => {
           />
         </div>
         <p className="mt-6 text-center text-xs text-muted-foreground">
-          Sources: AI Forum NZ, SEEK NZ, Reserve Bank of NZ AN2026-02
+          Sources: SEEK NZ, Reserve Bank of NZ AN2026-02
         </p>
       </section>
 
@@ -139,7 +139,7 @@ export const Landing = ({ onStart }: { onStart: () => void }) => {
           />
           <HowCard
             title="Real next steps"
-            body="Live NZ market signal from SEEK and Trade Me. Concrete reskilling actions. A free fortnightly Substack. Optional Premium Plan when you're ready."
+            body="Live NZ market signal from SEEK and Trade Me. Concrete reskilling actions. A free fortnightly Substack. Optional paid roadmap when we launch."
           />
         </div>
       </section>
@@ -168,14 +168,6 @@ export const Landing = ({ onStart }: { onStart: () => void }) => {
             for screen-based work.
           </p>
         </div>
-      </section>
-
-      {/* SECTION 6 — RESEARCH CREDIBILITY STRIP */}
-      <section className="container max-w-4xl py-8">
-        <p className="text-center text-xs text-muted-foreground leading-relaxed">
-          Powered by O*NET 30.2, Reserve Bank of NZ AN2026-02, MBIE Jobs Online, published NZ
-          hiring data, AI Forum NZ, and Microsoft/Accenture workforce research.
-        </p>
       </section>
 
       {/* SECTION 6.5 — NZ AI RISK LEADERBOARD */}
@@ -213,7 +205,7 @@ export const Landing = ({ onStart }: { onStart: () => void }) => {
           </Button>
         </div>
         <p className="mt-4 text-xs sm:text-sm text-muted-foreground">
-          Free forever. No account needed.
+          The quiz is free. Always.
         </p>
       </section>
     </div>

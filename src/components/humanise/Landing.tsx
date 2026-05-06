@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/humanise/Logo";
+import { Footer } from "@/components/humanise/Footer";
 import { ArrowRight, Clock, Lock, BookOpen } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { track } from "@/lib/analytics";
@@ -235,6 +236,7 @@ export const Landing = ({ onStart }: { onStart: () => void }) => {
           The quiz is free. Always.
         </p>
       </section>
+      <Footer />
     </div>
   );
 };

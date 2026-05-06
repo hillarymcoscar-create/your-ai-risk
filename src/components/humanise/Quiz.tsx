@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { ProgressBar } from "@/components/humanise/ProgressBar";
 import { Logo } from "@/components/humanise/Logo";
+import { Footer } from "@/components/humanise/Footer";
 import { ArrowLeft, ArrowRight, CheckCircle2 } from "lucide-react";
 import {
   AI_RELATIONSHIPS,

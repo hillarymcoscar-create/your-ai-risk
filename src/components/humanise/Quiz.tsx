@@ -421,6 +421,7 @@ export const Quiz = ({ onComplete, onExit }: Props) => {
           </div>
         </DialogContent>
       </Dialog>
+      <Footer />
     </div>
   );
 };

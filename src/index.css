@@ -117,4 +117,23 @@
 
 @layer components {
   .gauge-track { stroke: hsl(var(--secondary)); }
+
+  .legal-prose h2 {
+    @apply text-2xl sm:text-3xl font-bold text-primary mt-10 mb-3;
+  }
+  .legal-prose h3 {
+    @apply text-lg sm:text-xl font-semibold text-primary mt-6 mb-2;
+  }
+  .legal-prose p {
+    @apply leading-relaxed;
+  }
+  .legal-prose ul {
+    @apply list-disc pl-6 space-y-2;
+  }
+  .legal-prose a {
+    @apply text-accent hover:underline;
+  }
+  .legal-prose strong {
+    @apply text-primary font-semibold;
+  }
 }

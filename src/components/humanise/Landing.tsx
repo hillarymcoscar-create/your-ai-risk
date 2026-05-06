@@ -236,6 +236,7 @@ export const Landing = ({ onStart }: { onStart: () => void }) => {
           The quiz is free. Always.
         </p>
       </section>
+      <Footer />
     </div>
   );
 };

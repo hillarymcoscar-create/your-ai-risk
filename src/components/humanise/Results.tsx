@@ -9,6 +9,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Logo } from "@/components/humanise/Logo";
+import { Footer } from "@/components/humanise/Footer";
 import { RiskGauge } from "@/components/humanise/RiskGauge";
 import { HonestPicture } from "@/components/humanise/HonestPicture";
 import { NzMarketSignal } from "@/components/humanise/NzMarketSignal";

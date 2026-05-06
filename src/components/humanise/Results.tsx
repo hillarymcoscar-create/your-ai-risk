@@ -703,6 +703,7 @@ export const Results = ({ answers, onRestart }: Props) => {
           </DialogContent>
         </Dialog>
       </main>
+      <Footer />
     </div>
   );
 };

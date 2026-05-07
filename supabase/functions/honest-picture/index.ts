@@ -590,7 +590,18 @@ No em dashes anywhere. No phrases ending in prepositions/conjunctions/articles i
       locked_preview      = stripEmDashes((parsed.locked_preview ?? "").trim());
       locked_content_full = stripEmDashes((parsed.locked_content_full ?? "").trim());
     } else {
-      console.error("AI gateway tasks error", tResp.status, await tResp.text());
+      let tBodyText = "<unread>";
+      try { tBodyText = await tResp.text(); } catch (readErr) {
+        console.error("[honest-picture] tasks: failed to read response body", readErr);
+      }
+      console.error("[honest-picture] tasks gateway non-2xx", {
+        status: tResp.status,
+        statusText: tResp.statusText,
+        contentType: tResp.headers.get("content-type"),
+        body: tBodyText.slice(0, 2000),
+        jobTitle,
+        onetCode,
+      });
     }
 
     return new Response(

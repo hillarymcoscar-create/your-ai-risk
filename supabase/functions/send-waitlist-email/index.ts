@@ -6,11 +6,11 @@ const SUBJECT = "You're on the waitlist";
 
 const TEXT_BODY = `Hi,
 
-You're in. We'll email you when the full Humanise reskilling roadmap is ready.
+You're in. We'll email you when the Humanise 90-day reskilling plan is ready.
 
 Quick context on what we're building:
 
-A personalised 12-month plan specific to your role and the NZ job market. NZ training providers, NZ employers hiring for AI-resilient roles, regional opportunities, government training subsidies you might not know about.
+A focused 90-day plan specific to your role and the NZ job market. Refreshed every quarter so it stays calibrated to where AI actually is — not where someone guessed it would be a year ago. NZ training providers, regional opportunities, and government training subsidies you might not know about.
 
 We're still shaping it. If there's one thing you'd want included for someone in your role, hit reply and tell us. We read every response.
 

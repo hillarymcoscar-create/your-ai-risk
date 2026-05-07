@@ -14,7 +14,7 @@ import { RiskGauge } from "@/components/humanise/RiskGauge";
 import { HonestPicture } from "@/components/humanise/HonestPicture";
 import { NzMarketSignal } from "@/components/humanise/NzMarketSignal";
 import { NzWorkforceData } from "@/components/humanise/NzWorkforceData";
-import { UpskillSection } from "@/components/humanise/UpskillSection";
+
 
 import { AlertTriangle, Shield, BarChart3, Mail, LineChart, Share2, RotateCcw, Lock } from "lucide-react";
 import {
@@ -562,6 +562,44 @@ export const Results = ({ answers, onRestart }: Props) => {
             tone="success"
             title="Top 3 protective skills"
             items={aiTasks?.protective_tasks?.length ? aiTasks.protective_tasks : skills}
+            footer={(() => {
+              const kw = (aiTasks?.protective_skill_keywords?.[0]?.trim() || activeSkills[0]?.trim() || "").trim();
+              const q = encodeURIComponent(kw);
+              return (
+                <p className="mt-3 text-xs text-muted-foreground">
+                  Free courses:{" "}
+                  <a
+                    href={`https://www.linkedin.com/learning/search?keywords=${q}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => track("external_link_clicked", { platform: "LinkedIn Learning" })}
+                    className="text-accent hover:underline"
+                  >
+                    LinkedIn Learning
+                  </a>
+                  {" | "}
+                  <a
+                    href={`https://www.coursera.org/search?query=${q}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => track("external_link_clicked", { platform: "Coursera" })}
+                    className="text-accent hover:underline"
+                  >
+                    Coursera
+                  </a>
+                  {" | "}
+                  <a
+                    href={`https://www.skillshare.com/en/search?query=${q}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => track("external_link_clicked", { platform: "Skillshare" })}
+                    className="text-accent hover:underline"
+                  >
+                    Skillshare
+                  </a>
+                </p>
+              );
+            })()}
           />
           <InsightCard
             icon={<BarChart3 className="h-5 w-5" />}
@@ -570,24 +608,6 @@ export const Results = ({ answers, onRestart }: Props) => {
             items={[comparison]}
           />
         </section>
-
-        <UpskillSection
-          skills={activeSkills}
-          skillKeywords={aiTasks?.protective_skill_keywords ?? []}
-          industry={answers.industry}
-          jobTitle={match?.title ?? answers.jobTitle}
-          matchedTitle={match?.title ?? null}
-          score={score}
-          riskBand={band}
-          honestPicture={aiTasks?.honest_picture ?? ""}
-          nzMarketSignalMsg={match?.job_market_signals?.display_message ?? ""}
-          nzMarketSignalSrc={match?.job_market_signals?.source ?? ""}
-          nzData={nzData}
-          tasksAtRisk={activeTasks}
-          region={answers.region ?? ""}
-          onEmailCaptured={(email) => { void attachEmailToQuizResponse(email); void sendResultsEmail(email); setEmailSubmitted(true); }}
-          getQuizResponseId={() => quizResponseIdRef.current}
-        />
 
         <p className="mt-16 text-center text-xs text-muted-foreground/80">
           Autonomous agent activity sourced from real-time AI capability analysis across 1,016 NZ occupations.
@@ -831,11 +851,13 @@ const InsightCard = ({
   title,
   items,
   tone,
+  footer,
 }: {
   icon: React.ReactNode;
   title: string;
   items: string[];
   tone: keyof typeof toneStyles;
+  footer?: React.ReactNode;
 }) => (
   <div className="rounded-2xl border border-border bg-card p-6 shadow-soft transition-smooth hover:shadow-card">
     <div className={`inline-flex h-10 w-10 items-center justify-center rounded-xl ${toneStyles[tone]}`}>
@@ -850,6 +872,7 @@ const InsightCard = ({
         </li>
       ))}
     </ul>
+    {footer}
   </div>
 );
 

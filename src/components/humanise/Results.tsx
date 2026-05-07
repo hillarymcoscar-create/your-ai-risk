@@ -452,6 +452,12 @@ export const Results = ({ answers, onRestart }: Props) => {
       if (!ok) {
         toast.error("Saved your email, but the report email is delayed. Check back shortly.");
       }
+    } else if (planSource === "skills_unlock") {
+      setSkillsUnlocked(true);
+      setPlanSubmittedInModal(true);
+      if (!ok) {
+        toast.error("Unlocked your skills, but the email is delayed. Check back shortly.");
+      }
     } else {
       if (ok) {
         setPlanOpen(false);

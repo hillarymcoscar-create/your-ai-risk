@@ -373,9 +373,9 @@ export const UpskillSection = ({
 
       {/* Waitlist tier */}
       <div className="mt-4 rounded-2xl border border-accent/30 bg-accent/5 p-6">
-        <h3 className="font-semibold text-primary">Want the full reskilling roadmap?</h3>
+        <h3 className="font-semibold text-primary">Want a 90-day reskilling plan?</h3>
         <p className="mt-2 text-sm text-muted-foreground">
-          We're building a personalised 12-month NZ-specific reskilling plan for your role. Join the waitlist to be first to access it — and to help shape what's in it.
+          AI moves too fast for a 12-month plan to mean anything. We're building a focused 90-day plan specific to your role and the NZ job market — refreshed quarterly so it stays current. Join the waitlist to be first to access it.
         </p>
         {waitlistCount !== null && waitlistCount >= 50 && (
           <p className="mt-2 text-xs text-muted-foreground">

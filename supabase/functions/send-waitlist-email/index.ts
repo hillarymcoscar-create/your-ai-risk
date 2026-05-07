@@ -6,11 +6,11 @@ const SUBJECT = "You're on the waitlist";
 
 const TEXT_BODY = `Hi,
 
-You're in. We'll email you when the full Humanise reskilling roadmap is ready.
+You're in. We'll email you when the Humanise 90-day reskilling plan is ready.
 
 Quick context on what we're building:
 
-A personalised 12-month plan specific to your role and the NZ job market. NZ training providers, NZ employers hiring for AI-resilient roles, regional opportunities, government training subsidies you might not know about.
+A focused 90-day plan specific to your role and the NZ job market. Refreshed every quarter so it stays calibrated to where AI actually is — not where someone guessed it would be a year ago. NZ training providers, regional opportunities, and government training subsidies you might not know about.
 
 We're still shaping it. If there's one thing you'd want included for someone in your role, hit reply and tell us. We read every response.
 
@@ -36,9 +36,9 @@ const HTML_BODY = `<!DOCTYPE html>
 </td></tr>
 <tr><td style="padding:8px 32px 32px;font-size:15px;line-height:1.7;color:#333;">
   <p style="margin:0 0 16px;">Hi,</p>
-  <p style="margin:0 0 16px;">You're in. We'll email you when the full Humanise reskilling roadmap is ready.</p>
+  <p style="margin:0 0 16px;">You're in. We'll email you when the Humanise 90-day reskilling plan is ready.</p>
   <p style="margin:0 0 8px;font-weight:600;color:#1a1a2e;">Quick context on what we're building:</p>
-  <p style="margin:0 0 16px;">A personalised 12-month plan specific to your role and the NZ job market. NZ training providers, NZ employers hiring for AI-resilient roles, regional opportunities, government training subsidies you might not know about.</p>
+  <p style="margin:0 0 16px;">A focused 90-day plan specific to your role and the NZ job market. Refreshed every quarter so it stays calibrated to where AI actually is — not where someone guessed it would be a year ago. NZ training providers, regional opportunities, and government training subsidies you might not know about.</p>
   <p style="margin:0 0 16px;">We're still shaping it. If there's one thing you'd want included for someone in your role, hit reply and tell us. We read every response.</p>
   <p style="margin:0 0 4px;">Talk soon,</p>
   <p style="margin:16px 0 0;">

@@ -905,6 +905,85 @@ const InsightCard = ({
   </div>
 );
 
+const SkillsUnlockCard = ({
+  items,
+  unlocked,
+  keyword,
+  onUnlockClick,
+}: {
+  items: string[];
+  unlocked: boolean;
+  keyword: string;
+  onUnlockClick: () => void;
+}) => {
+  const q = encodeURIComponent(keyword);
+  return (
+    <div className="rounded-2xl border border-border bg-card p-6 shadow-soft transition-smooth hover:shadow-card">
+      <div className={`inline-flex h-10 w-10 items-center justify-center rounded-xl ${toneStyles.success}`}>
+        <Shield className="h-5 w-5" />
+      </div>
+      <h3 className="mt-4 font-semibold text-primary">Top 3 protective skills</h3>
+      <ul className="mt-3 space-y-2">
+        {items.map((it, i) => {
+          const locked = !unlocked && i > 0;
+          return (
+            <li
+              key={i}
+              className={`flex gap-2 text-sm text-muted-foreground transition-all ${locked ? "blur-sm opacity-50 select-none pointer-events-none" : ""}`}
+              aria-hidden={locked}
+            >
+              <span className="mt-2 h-1 w-1 rounded-full bg-accent shrink-0" />
+              <span>{it}</span>
+            </li>
+          );
+        })}
+      </ul>
+      {unlocked ? (
+        <p className="mt-3 text-xs text-muted-foreground">
+          Free courses:{" "}
+          <a
+            href={`https://www.linkedin.com/learning/search?keywords=${q}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => track("external_link_clicked", { platform: "LinkedIn Learning" })}
+            className="text-accent hover:underline"
+          >
+            LinkedIn Learning
+          </a>
+          {" | "}
+          <a
+            href={`https://www.coursera.org/search?query=${q}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => track("external_link_clicked", { platform: "Coursera" })}
+            className="text-accent hover:underline"
+          >
+            Coursera
+          </a>
+          {" | "}
+          <a
+            href={`https://www.skillshare.com/en/search?query=${q}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => track("external_link_clicked", { platform: "Skillshare" })}
+            className="text-accent hover:underline"
+          >
+            Skillshare
+          </a>
+        </p>
+      ) : (
+        <Button
+          type="button"
+          onClick={onUnlockClick}
+          className="mt-4 w-full rounded-full font-semibold bg-success text-white hover:opacity-95 text-sm h-10"
+        >
+          Unlock your full skills report + course matches — free
+        </Button>
+      )}
+    </div>
+  );
+};
+
 const CtaCard = ({
   icon, title, desc, cta, onClick, primary,
 }: {

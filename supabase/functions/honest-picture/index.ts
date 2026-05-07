@@ -450,6 +450,15 @@ Deno.serve(async (req) => {
       }
     } catch (err) {
       const code = err instanceof Error ? err.message : "GATEWAY";
+      console.error("[honest-picture] clause generation failed", {
+        code,
+        errorName: err instanceof Error ? err.name : typeof err,
+        errorMessage: err instanceof Error ? err.message : String(err),
+        stack: err instanceof Error ? err.stack : undefined,
+        jobTitle,
+        onetCode,
+        bandKey,
+      });
       if (code === "RATE_LIMIT") {
         return new Response(JSON.stringify({ error: "Rate limit reached. Please try again shortly." }), {
           status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },

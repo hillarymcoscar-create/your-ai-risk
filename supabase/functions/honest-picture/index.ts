@@ -400,8 +400,16 @@ Deno.serve(async (req) => {
         messages,
       }, LOVABLE_API_KEY);
       if (!resp.ok) {
-        const t = await resp.text();
-        console.error("Clause gateway error", resp.status, t);
+        let bodyText = "<unread>";
+        try { bodyText = await resp.text(); } catch (readErr) {
+          console.error("[honest-picture] clause: failed to read response body", readErr);
+        }
+        console.error("[honest-picture] clause gateway non-2xx", {
+          status: resp.status,
+          statusText: resp.statusText,
+          contentType: resp.headers.get("content-type"),
+          body: bodyText.slice(0, 2000),
+        });
         if (resp.status === 429) throw new Error("RATE_LIMIT");
         if (resp.status === 402) throw new Error("CREDITS");
         throw new Error("GATEWAY");
@@ -442,6 +450,15 @@ Deno.serve(async (req) => {
       }
     } catch (err) {
       const code = err instanceof Error ? err.message : "GATEWAY";
+      console.error("[honest-picture] clause generation failed", {
+        code,
+        errorName: err instanceof Error ? err.name : typeof err,
+        errorMessage: err instanceof Error ? err.message : String(err),
+        stack: err instanceof Error ? err.stack : undefined,
+        jobTitle,
+        onetCode,
+        bandKey,
+      });
       if (code === "RATE_LIMIT") {
         return new Response(JSON.stringify({ error: "Rate limit reached. Please try again shortly." }), {
           status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -573,7 +590,18 @@ No em dashes anywhere. No phrases ending in prepositions/conjunctions/articles i
       locked_preview      = stripEmDashes((parsed.locked_preview ?? "").trim());
       locked_content_full = stripEmDashes((parsed.locked_content_full ?? "").trim());
     } else {
-      console.error("AI gateway tasks error", tResp.status, await tResp.text());
+      let tBodyText = "<unread>";
+      try { tBodyText = await tResp.text(); } catch (readErr) {
+        console.error("[honest-picture] tasks: failed to read response body", readErr);
+      }
+      console.error("[honest-picture] tasks gateway non-2xx", {
+        status: tResp.status,
+        statusText: tResp.statusText,
+        contentType: tResp.headers.get("content-type"),
+        body: tBodyText.slice(0, 2000),
+        jobTitle,
+        onetCode,
+      });
     }
 
     return new Response(
@@ -595,7 +623,11 @@ No em dashes anywhere. No phrases ending in prepositions/conjunctions/articles i
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (e) {
-    console.error("honest-picture error:", e);
+    console.error("[honest-picture] top-level error", {
+      errorName: e instanceof Error ? e.name : typeof e,
+      errorMessage: e instanceof Error ? e.message : String(e),
+      stack: e instanceof Error ? e.stack : undefined,
+    });
     return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

@@ -560,49 +560,15 @@ export const Results = ({ answers, onRestart }: Props) => {
             title="Top 3 tasks at risk"
             items={aiTasks?.tasks_at_risk?.length ? aiTasks.tasks_at_risk : tasks}
           />
-          <InsightCard
-            icon={<Shield className="h-5 w-5" />}
-            tone="success"
-            title="Top 3 protective skills"
+          <SkillsUnlockCard
             items={aiTasks?.protective_tasks?.length ? aiTasks.protective_tasks : skills}
-            footer={(() => {
-              const kw = (aiTasks?.protective_skill_keywords?.[0]?.trim() || activeSkills[0]?.trim() || "").trim();
-              const q = encodeURIComponent(kw);
-              return (
-                <p className="mt-3 text-xs text-muted-foreground">
-                  Free courses:{" "}
-                  <a
-                    href={`https://www.linkedin.com/learning/search?keywords=${q}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={() => track("external_link_clicked", { platform: "LinkedIn Learning" })}
-                    className="text-accent hover:underline"
-                  >
-                    LinkedIn Learning
-                  </a>
-                  {" | "}
-                  <a
-                    href={`https://www.coursera.org/search?query=${q}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={() => track("external_link_clicked", { platform: "Coursera" })}
-                    className="text-accent hover:underline"
-                  >
-                    Coursera
-                  </a>
-                  {" | "}
-                  <a
-                    href={`https://www.skillshare.com/en/search?query=${q}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={() => track("external_link_clicked", { platform: "Skillshare" })}
-                    className="text-accent hover:underline"
-                  >
-                    Skillshare
-                  </a>
-                </p>
-              );
-            })()}
+            unlocked={skillsUnlocked}
+            keyword={(aiTasks?.protective_skill_keywords?.[0]?.trim() || activeSkills[0]?.trim() || "").trim()}
+            onUnlockClick={() => {
+              setPlanSource("skills_unlock");
+              setPlanSubmittedInModal(false);
+              setPlanOpen(true);
+            }}
           />
           <InsightCard
             icon={<BarChart3 className="h-5 w-5" />}

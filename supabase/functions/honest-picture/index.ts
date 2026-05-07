@@ -384,7 +384,7 @@ Deno.serve(async (req) => {
 
     // ---- Generate AI clause (up to 3 attempts) ----
     async function generateClause(retryFeedback?: string): Promise<{ text: string; finishReason: string | null }> {
-      const userMessages: Array<{ role: string; content: string }> = [
+      const messages: Array<{ role: string; content: string }> = [
         { role: "user", content: clauseUserPrompt },
       ];
       if (retryFeedback) {

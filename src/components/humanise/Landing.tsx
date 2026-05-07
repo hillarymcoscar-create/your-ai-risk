@@ -135,8 +135,8 @@ export const Landing = ({ onStart }: { onStart: () => void }) => {
             Where NZ stands this week
           </h2>
           <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-            <LeaderboardCard title="First to go" items={stats!.first_to_go} />
-            <LeaderboardCard title="Last to go" items={stats!.last_to_go} />
+            <LeaderboardCard title="Most exposed" items={stats!.first_to_go} />
+            <LeaderboardCard title="Most resilient" items={stats!.last_to_go} />
           </div>
           <p className="mt-4 text-center text-xs text-muted-foreground">
             Based on real Humanise quiz results from NZ workers this week.

@@ -420,6 +420,8 @@ export const Results = ({ answers, onRestart }: Props) => {
 
     if (planSource === "agent_watch_gate") {
       track("email_captured", { source: "agent_watch" });
+    } else if (planSource === "skills_unlock") {
+      track("email_captured", { source: "upskill_pack" });
     }
 
     // Persist the lead first so we never lose it, even if email send fails.

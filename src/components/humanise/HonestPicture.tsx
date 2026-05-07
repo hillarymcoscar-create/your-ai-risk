@@ -12,12 +12,19 @@ type Props = {
   aiTools?: string[];
   aiRelationshipSegment?: string;
   region?: string;
+  // O*NET data from the already-loaded humanise-scores.json match record.
+  // Passed to the edge function so it doesn't need to re-fetch the 696KB file.
+  onetCode?: string;
+  tasksAtRisk?: string[];
+  protectiveTasks?: string[];
+  nzMarketSignal?: string | null;
   onTasks?: (tasks: { tasks_at_risk: string[]; protective_tasks: string[]; protective_skill_keywords?: string[]; honest_picture?: string; agent_note?: string; agent_tasks?: string[]; agent_reality?: string; agent_reality_email?: string; nz_signal?: string; your_move?: string; locked_preview?: string }) => void;
 };
 
 export const HonestPicture = ({
   jobTitle, industry, score, usesAi,
   rawJobTitle, band, agentTier, aiTools, aiRelationshipSegment, region,
+  onetCode, tasksAtRisk, protectiveTasks, nzMarketSignal,
   onTasks,
 }: Props) => {
   const [text, setText] = useState<string>("");
@@ -32,7 +39,7 @@ export const HonestPicture = ({
 
     supabase.functions
       .invoke("honest-picture", {
-        body: { jobTitle, industry, score, usesAi, rawJobTitle, band, agentTier, aiTools, aiRelationshipSegment, region },
+        body: { jobTitle, industry, score, usesAi, rawJobTitle, band, agentTier, aiTools, aiRelationshipSegment, region, onetCode, tasksAtRisk, protectiveTasks, nzMarketSignal },
       })
       .then(({ data, error }) => {
         if (cancelled) return;
@@ -69,7 +76,7 @@ export const HonestPicture = ({
     return () => {
       cancelled = true;
     };
-  }, [jobTitle, industry, score, usesAi, rawJobTitle, band, agentTier, aiTools?.join(","), aiRelationshipSegment, region]);
+  }, [jobTitle, industry, score, usesAi, rawJobTitle, band, agentTier, aiTools?.join(","), aiRelationshipSegment, region, onetCode]);
 
   return (
     <section

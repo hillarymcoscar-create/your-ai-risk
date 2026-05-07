@@ -527,6 +527,10 @@ export const Results = ({ answers, onRestart }: Props) => {
           aiTools={answers.ai_tools}
           aiRelationshipSegment={answers.segment_tag}
           region={answers.country === "New Zealand" ? answers.region : answers.country}
+          onetCode={match?.onet_code}
+          tasksAtRisk={match?.tasks_at_risk}
+          protectiveTasks={match?.protective_tasks}
+          nzMarketSignal={match?.job_market_signals?.display_message ?? null}
           onTasks={setAiTasks}
         />
 

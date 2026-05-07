@@ -1,38 +1,102 @@
 import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2.95.0/cors";
 
 // ========================================================================
-// HONEST PICTURE — fully prompt-driven paragraph generation.
-// The output must be exactly 4 complete sentences and must not rely on
-// stale hardcoded openings that can drift from the approved prompt.
+// HONEST PICTURE — Hybrid paragraph.
+// Sentence 2 is hardcoded NZ market data (display_message from
+// humanise-scores.json, or ANZSCO group template from nz-job-trends.json).
+// Sentences 1, 3, 4 are AI-generated, grounded in O*NET task anchors passed
+// by the frontend from the already-loaded humanise-scores.json record.
+// Final order: [AI S1] [hardcoded S2] [AI S2 → pos 3] [AI S3 → pos 4]
 // ========================================================================
 
 type Band = "Low" | "Moderate" | "High" | "Very High";
 type Segment = "avoiding" | "curious" | "occasional" | "daily" | "building";
 
-const OPENINGS: Partial<Record<Band, Partial<Record<Segment, string>>>> = {};
+// ========================================================================
+// ANZSCO GROUP LOOKUP
+// Derived from nz-job-trends.json onet_match arrays.
+// Priority rules handle shared O*NET major groups (17-3, 29-2, 51, 53).
+// ========================================================================
+
+function getAnzscoGroup(onetCode: string): string | null {
+  if (!onetCode) return null;
+  const prefix4 = onetCode.slice(0, 4); // e.g. "17-3"
+  const prefix2 = onetCode.slice(0, 2); // e.g. "17"
+
+  // More-specific overrides first (17 and 29 are split between Professionals and Technicians)
+  if (prefix4 === "17-3") return "Technicians and Trades Workers";
+  if (prefix4 === "29-2") return "Technicians and Trades Workers";
+
+  switch (prefix2) {
+    case "11": return "Managers";
+    case "13": case "15": case "17": case "19":
+    case "21": case "23": case "25": case "27": case "29":
+      return "Professionals";
+    case "31": case "33": case "35": case "39":
+      // 33 = Protective Services → Community and Personal Service per brief
+      return "Community and Personal Service Workers";
+    case "37": case "45": return "Labourers";
+    case "41": return "Sales Workers";
+    case "43": return "Clerical and Administrative Workers";
+    case "47": case "49": return "Technicians and Trades Workers";
+    case "51": case "53": return "Machinery Operators and Drivers"; // 51 tie-break → Machinery per brief
+    case "55": return "Technicians and Trades Workers"; // Military → Technicians per brief
+    default: return null; // Unknown → skip sentence 2
+  }
+}
+
+const GROUP_LABELS: Record<string, string> = {
+  "Managers": "management",
+  "Professionals": "professional",
+  "Technicians and Trades Workers": "technician and trades",
+  "Community and Personal Service Workers": "community and personal service",
+  "Clerical and Administrative Workers": "clerical and administrative",
+  "Sales Workers": "sales",
+  "Machinery Operators and Drivers": "machinery operator and driver",
+  "Labourers": "labouring",
+};
 
 // ========================================================================
-// VARIABLE CLAUSE SYSTEM PROMPT
+// AI PROMPT — 3 sentences only (sentence 2 is hardcoded separately)
 // ========================================================================
 
-const CLAUSE_SYSTEM = `Write exactly 4 complete sentences about this worker's AI automation risk. Every sentence must be complete.
+const CLAUSE_SYSTEM = `You are writing a clear-eyed, specific paragraph for a New Zealand worker who has just found out their AI automation risk score. You will produce exactly 3 sentences. A separate hardcoded sentence about the NZ job market will be inserted between your sentence 1 and sentence 2.
 
-Sentence 1: Name a specific task this exact job title does daily that AI is already replacing — be precise with tool names and task names.
+Their job title: {occupation}
+Their risk score: {score}%
+Their location: {location}
+Their industry: {industry}
 
-Sentence 2: Name a second specific task being automated with a concrete example of which AI tool is doing it.  
+Tasks they do that are exposed to automation (use as anchor for sentence 1):
+- {task_at_risk_0}
+- {task_at_risk_1}
+- {task_at_risk_2}
 
-Sentence 3: What NZ employers or agencies are actually doing because of this — be specific to NZ.
+Tasks where human judgement still matters (use as anchor for sentence 2 of your output):
+- {protective_task_0}
+- {protective_task_1}
+- {protective_task_2}
 
-Sentence 4: What part of this role AI genuinely cannot do yet — be honest, not reassuring.
+The provided task descriptions may be truncated mid-phrase. Treat them as topic anchors for what the role involves, not as verbatim quotes.
 
-Never write fewer than 4 sentences. Never cut off mid-sentence. Max tokens is 1000.
+Output format — exactly 3 complete sentences, in this order:
 
-Each sentence must be maximum 25 words. No run-on sentences. The whole paragraph must be readable in 20 seconds. Stop at 4 sentences — do not add more.
+Sentence 1: Describe what AI is currently doing to one or two of the exposed tasks listed above. Speak generally about the capability — describe what AI does, not which specific product does it. Do NOT name AI tools, products, or company brands (no ChatGPT, Claude, Gemini, Copilot, Salesforce, Xero, etc.). Use "AI systems" or "current AI tools" instead.
 
-Never name specific NZ businesses, companies, or organisations. Instead reference them by type — 'NZ digital marketing agencies', 'Auckland-based SEO firms', 'NZ retail brands' etc.`;
+Sentence 2: Identify what part of the role still requires human judgement, drawing on the protective tasks listed above. Be specific about why the human element matters — not generic ("relationships matter") but concrete (what the human is actually doing that AI can't replicate).
+
+Sentence 3: A directional sentence about action. The workers staying valuable in this role are the ones who learn to direct AI rather than avoid it. Make it specific to the occupation, anti-passive, not chirpy. No calls to action, no "you should", no exclamation marks.
+
+Constraints:
+- Respond in English only.
+- Do not name specific AI products, companies, or tool brands.
+- Do not invent NZ-specific statistics or claims about NZ employer behaviour. The hardcoded sentence handles NZ market context.
+- Do not use these phrases: leverage, navigate, evolving, landscape, rapidly, future-proof, stay ahead, adaptable, irreplaceable, in today's, significant, meaningful way.
+- Tone: clear-eyed, specific, anti-corporate. Like a smart friend telling the truth, not a coach or consultant.
+- Each sentence must be a complete sentence. Never end mid-thought.`;
 
 // ========================================================================
-// TASKS + AGENT NOTE — separate structured call
+// TASKS + AGENT NOTE — separate structured call (unchanged)
 // ========================================================================
 
 const TASKS_SYSTEM = `You are an analyst producing short, role-specific task lists for the Humanise NZ AI workforce risk tool. You return ONLY the structured tool call. All phrases must be 4 to 7 words (12 max for agent_tasks), specific to the role, never end with a preposition, conjunction, or article. No em dashes anywhere.`;
@@ -60,14 +124,22 @@ function cleanTask(raw: string): string {
 function stripEmDashes(s: string): string {
   if (!s) return "";
   return s
-    .replace(/[\u2014\u2013]/g, ", ")
+    .replace(/[—–]/g, ", ")
     .replace(/\s*,\s*,\s*/g, ", ")
     .replace(/\s{2,}/g, " ")
     .trim();
 }
 
-// Strip leading conjunctions like "And ", "But ", "So ", "Also ", and any
-// surrounding quotes the model sometimes wraps the output in.
+// Remove CJK characters (Chinese, Japanese, Korean) that occasionally bleed
+// through from Gemini. Preserves Latin Extended (ā ē ī ō ū etc.) for te reo Māori.
+function stripCJK(s: string): string {
+  if (!s) return "";
+  return s
+    .replace(/[一-鿿぀-ゟ゠-ヿ가-힯]/g, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
 function cleanClause(s: string): string {
   if (!s) return "";
   let out = s.trim().replace(/^["'`]+|["'`]+$/g, "").trim();
@@ -96,10 +168,10 @@ function extractCompleteSentences(s: string): string[] {
     .filter(Boolean);
 }
 
-function normaliseFourSentenceParagraph(s: string): string {
+function normaliseThreeSentenceParagraph(s: string): string {
   const sentences = extractCompleteSentences(s);
-  if (sentences.length >= 4) {
-    return sentences.slice(0, 4).join(" ").trim();
+  if (sentences.length >= 3) {
+    return sentences.slice(0, 3).join(" ").trim();
   }
   return ensureCompleteEnding(s);
 }
@@ -121,6 +193,11 @@ function normaliseSegment(raw: unknown): Segment {
   const v = String(raw ?? "").trim().toLowerCase();
   if (v === "avoiding" || v === "curious" || v === "occasional" || v === "daily" || v === "building") return v;
   return "curious";
+}
+
+// Safe template fill: avoids $ replacement-pattern issues from String.replace
+function fillTemplate(template: string, vars: Record<string, string>): string {
+  return Object.entries(vars).reduce((t, [k, v]) => t.split(k).join(v), template);
 }
 
 const HP_TOOL = [{
@@ -166,24 +243,20 @@ async function callGateway(body: Record<string, unknown>, apiKey: string) {
   });
 }
 
-// Quick post-generation gate: if banned phrases slip through, retry once
-// with explicit feedback to the model.
+// Trimmed to only the phrases explicitly listed in CLAUSE_SYSTEM constraints.
 const BANNED_PATTERNS: RegExp[] = [
-  /\brapidly\b/i, /\brapid\b/i, /\blandscape\b/i, /\bever-changing\b/i,
-  /\bevolving\b/i, /\brevolutionis(?:e|ing|ed)\b/i, /\brevolutioniz(?:e|ing|ed)\b/i,
-  /\bfundamentally (?:rewriting|reshaping)\b/i, /\bnavigate the\b/i,
-  /\bshifting from a\b/i, /\byour value is shifting\b/i, /\bleverage\b/i,
-  /\bsignificant\b/i, /\bit is important\b/i, /\bin today's\b/i,
-  /\brisk profile\b/i, /\byour score alone suggests\b/i,
-  /\bKiwi (?:intuition|ingenuity|humor|humour)\b/i,
-  /\bnumber cruncher\b/i, /\bgrunt work\b/i, /\bheavy lifting\b/i,
-  /\bthe heart of your job\b/i, /\bblack box\b/i, /\bdoer\b/i,
-  /\beditor-in-chief\b/i, /\bhigh-level strategic architect\b/i,
-  /\bwork like yours\b/i, /\bcommon spot\b/i, /\bslow burn\b/i,
-  /\bad[- ]hoc experiments\b/i,
-  /\byour next move\b/i, /\bprove your worth\b/i, /\birreplaceable\b/i,
-  /\badaptable\b/i, /\bthis week\b/i, /\bthis month\b/i,
-  /\bnext 30 days\b/i, /\bfuture[- ]proof\b/i, /\bstay ahead\b/i,
+  /\bleverage\b/i,
+  /\bnavigate\b/i,
+  /\bevolving\b/i,
+  /\blandscape\b/i,
+  /\brapidly\b/i,
+  /\bfuture[- ]proof\b/i,
+  /\bstay ahead\b/i,
+  /\badaptable\b/i,
+  /\birreplaceable\b/i,
+  /\bin today's\b/i,
+  /\bsignificant\b/i,
+  /\bmeaningful way\b/i,
 ];
 
 function findBannedPhrase(s: string): string | null {
@@ -209,7 +282,13 @@ Deno.serve(async (req) => {
       aiTools,
       aiRelationshipSegment,
       region,
+      // New fields passed from frontend (from already-loaded humanise-scores.json record)
+      onetCode,
+      tasksAtRisk,
+      protectiveTasks,
+      nzMarketSignal,
     } = await req.json();
+
     if (!jobTitle) {
       return new Response(JSON.stringify({ error: "jobTitle required" }), {
         status: 400,
@@ -224,60 +303,116 @@ Deno.serve(async (req) => {
     const segKey = normaliseSegment(aiRelationshipSegment);
     const toolsList = Array.isArray(aiTools) && aiTools.length ? aiTools.join(", ") : "none specified";
 
-    const clauseUserPrompt = `You must follow the system instruction exactly and output exactly 4 complete sentences.
+    // ---- Defensive validation of task arrays ----
+    const hasValidTasks = Array.isArray(tasksAtRisk) && tasksAtRisk.length > 0;
+    const hasValidProtective = Array.isArray(protectiveTasks) && protectiveTasks.length > 0;
 
-USER CONTEXT
-Occupation (matched): ${jobTitle}
-Raw job title entered: ${rawJobTitle || jobTitle}
-Risk band: ${bandKey}
-Agent tier: ${agentTier || "unspecified"}
-AI tools the user actually uses: ${toolsList}
-AI relationship segment: ${segKey}
-NZ region: ${region || "New Zealand"}
-Industry: ${industry || "unspecified"}
+    if (!hasValidTasks || !hasValidProtective) {
+      console.warn(
+        `[honest-picture] missing task data for "${jobTitle}" (onetCode: ${onetCode ?? "none"}) — using generic fallback anchors`
+      );
+    }
 
-Remember: exactly 4 complete sentences, detailed and specific. Name specific tasks for a ${jobTitle} and ground sentence 3 in NZ employer, agency, or business behaviour. Never use the forbidden phrases. Output only the prose. No quotes. No labels.`;
+    const taskList: string[] = hasValidTasks
+      ? (tasksAtRisk as string[])
+      : [`tasks performed as ${jobTitle}`, "data processing and reporting", "documentation and record keeping"];
 
-    const clauseSystemFilled = CLAUSE_SYSTEM
-      .replace("{occupation}", String(jobTitle))
-      .replace("{score}", String(score ?? ""))
-      .replace("{location}", String(region || "New Zealand"))
-      .replace("{industry}", String(industry || "unspecified"));
+    const protectiveList: string[] = hasValidProtective
+      ? (protectiveTasks as string[])
+      : ["client and stakeholder communication", "complex judgement and decision making", "relationship and contextual understanding"];
 
+    // ---- Build sentence 2 (hardcoded NZ market data) ----
+    let hardcodedS2: string | null = null;
+
+    if (typeof nzMarketSignal === "string" && nzMarketSignal.trim()) {
+      // Use the display_message from humanise-scores.json directly
+      hardcodedS2 = nzMarketSignal.trim();
+    } else {
+      // Fallback: derive ANZSCO group from onetCode, fetch nz-job-trends.json, build template
+      const anzscoGroup = onetCode ? getAnzscoGroup(String(onetCode)) : null;
+
+      if (anzscoGroup) {
+        try {
+          const trendsResp = await fetch(
+            "https://cdn.jsdelivr.net/gh/hillarymcoscar-create/humanise-data@main/nz-job-trends.json"
+          );
+          if (trendsResp.ok) {
+            const trends = await trendsResp.json();
+            const occ = (trends.occupations ?? []).find(
+              (o: { mbie_category: string }) => o.mbie_category === anzscoGroup
+            );
+            if (occ) {
+              const label = GROUP_LABELS[anzscoGroup] ?? anzscoGroup.toLowerCase();
+              const yoy: number = occ.yoy_change_percent ?? 0;
+              let descriptor: string;
+              if (yoy >= 10) descriptor = "growing strongly";
+              else if (yoy >= 3) descriptor = "growing";
+              else if (yoy >= -3) descriptor = "stable";
+              else descriptor = "declining";
+              const direction = yoy >= 0 ? "up" : "down";
+              const absYoy = Math.abs(yoy).toFixed(1);
+              hardcodedS2 = `In New Zealand, ${label} roles are ${descriptor} — job ad volume ${direction} ${absYoy}% over the past year (MBIE Jobs Online, Dec 2025).`;
+            }
+          }
+        } catch (e) {
+          console.warn("[honest-picture] failed to fetch nz-job-trends:", e);
+          // hardcodedS2 stays null → paragraph will be 3 sentences only
+        }
+      } else {
+        console.warn(
+          `[honest-picture] no ANZSCO mapping for onetCode "${onetCode ?? "none"}" — skipping hardcoded sentence 2`
+        );
+        // hardcodedS2 stays null → do not fabricate; return 3-sentence paragraph
+      }
+    }
+
+    // ---- Build and fill AI prompt ----
+    const clauseSystemFilled = fillTemplate(CLAUSE_SYSTEM, {
+      "{occupation}":      String(jobTitle),
+      "{score}":           String(score ?? ""),
+      "{location}":        String(region || "New Zealand"),
+      "{industry}":        String(industry || "unspecified"),
+      "{task_at_risk_0}":  taskList[0] ?? "",
+      "{task_at_risk_1}":  taskList[1] ?? "",
+      "{task_at_risk_2}":  taskList[2] ?? "",
+      "{protective_task_0}": protectiveList[0] ?? "",
+      "{protective_task_1}": protectiveList[1] ?? "",
+      "{protective_task_2}": protectiveList[2] ?? "",
+    });
+
+    const clauseUserPrompt = `Generate the 3 sentences for ${jobTitle} (${rawJobTitle || jobTitle}) in ${region || "New Zealand"}, industry ${industry || "unspecified"}, risk band ${bandKey}. Output only the prose. No quotes, no labels, no numbering.`;
+
+    // ---- Generate AI clause (up to 3 attempts) ----
     async function generateClause(retryFeedback?: string): Promise<{ text: string; finishReason: string | null }> {
       const userMessages: Array<{ role: string; content: string }> = [
         { role: "user", content: clauseUserPrompt },
       ];
       if (retryFeedback) {
-        userMessages.push({ role: "user", content: `Your previous draft was rejected: ${retryFeedback}. Rewrite it without the issue. Same constraints. Output only the prose.` });
+        messages.push({
+          role: "user",
+          content: `Your previous draft was rejected: ${retryFeedback}. Rewrite it without the issue. Same constraints. Output only the prose.`,
+        });
       }
-      const anthropicResp = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": Deno.env.get("ANTHROPIC_API_KEY") ?? "",
-          "anthropic-version": "2023-06-01",
-        },
-        body: JSON.stringify({
-          model: "claude-haiku-4-5-20251001",
-          max_tokens: 1000,
-          system: clauseSystemFilled,
-          messages: userMessages,
-        }),
-      });
-      if (!anthropicResp.ok) {
-        const t = await anthropicResp.text();
-        console.error("Clause Anthropic error", anthropicResp.status, t);
-        if (anthropicResp.status === 429) throw new Error("RATE_LIMIT");
-        if (anthropicResp.status === 402) throw new Error("CREDITS");
+      const resp = await callGateway({
+        model: "google/gemini-2.5-pro",
+        temperature: 0,
+        max_tokens: 600,
+        messages,
+      }, LOVABLE_API_KEY);
+      if (!resp.ok) {
+        const t = await resp.text();
+        console.error("Clause gateway error", resp.status, t);
+        if (resp.status === 429) throw new Error("RATE_LIMIT");
+        if (resp.status === 402) throw new Error("CREDITS");
         throw new Error("GATEWAY");
       }
-      const anthropicData = await anthropicResp.json();
-      const rawText = anthropicData.content?.[0]?.text ?? "";
-      const stopReason = typeof anthropicData.stop_reason === "string" ? anthropicData.stop_reason : null;
+      const data = await resp.json();
+      const choice = data.choices?.[0] ?? {};
+      // Apply CJK strip before all other cleaning
+      const raw = stripCJK(cleanClause(stripEmDashes(choice.message?.content ?? "")));
       return {
-        text: cleanClause(stripEmDashes(rawText)),
-        finishReason: stopReason === "max_tokens" ? "max_tokens" : stopReason,
+        text: raw,
+        finishReason: typeof choice.finish_reason === "string" ? choice.finish_reason : null,
       };
     }
 
@@ -295,17 +430,15 @@ Remember: exactly 4 complete sentences, detailed and specific. Name specific tas
         const count = sentenceCount(clause);
         const stoppedEarly = clauseFinishReason === "length" || clauseFinishReason === "max_tokens";
 
-        if (!banned && count === 4 && !stoppedEarly) {
-          break;
-        }
+        if (!banned && count === 3 && !stoppedEarly) break;
 
         const problems: string[] = [];
-        if (banned) problems.push(`it contained the banned phrase \"${banned}\"`);
-        if (count !== 4) problems.push(`it returned ${count} complete sentences instead of exactly 4`);
+        if (banned) problems.push(`it contained the banned phrase "${banned}"`);
+        if (count !== 3) problems.push(`it returned ${count} complete sentences instead of exactly 3`);
         if (stoppedEarly) problems.push(`it stopped early with finish_reason=${clauseFinishReason}`);
 
-        retryFeedback = `${problems.join("; ")}. Rewrite it as exactly 4 complete sentences with a clean ending.`;
-        console.warn(`[honest-picture] retrying paragraph draft: ${retryFeedback}`);
+        retryFeedback = `${problems.join("; ")}. Rewrite as exactly 3 complete sentences.`;
+        console.warn(`[honest-picture] retrying clause (attempt ${attempt + 1}): ${retryFeedback}`);
       }
     } catch (err) {
       const code = err instanceof Error ? err.message : "GATEWAY";
@@ -324,20 +457,24 @@ Remember: exactly 4 complete sentences, detailed and specific. Name specific tas
       });
     }
 
-    // Final scrub: even after retry, strip any remaining banned phrase by
-    // truncating the offending sentence rather than shipping it.
-    const finalBanned = findBannedPhrase(clause);
-    if (finalBanned) {
-      console.warn(`[honest-picture] banned phrase persisted after retry: ${finalBanned}`);
-    }
-
     if (clauseFinishReason === "length" || clauseFinishReason === "max_tokens") {
-      console.warn(`[honest-picture] model stopped early with finish_reason=${clauseFinishReason}`);
+      console.warn(`[honest-picture] model stopped early: finish_reason=${clauseFinishReason}`);
     }
 
-    const honest_picture = normaliseFourSentenceParagraph(clause);
+    // ---- Stitch final paragraph ----
+    // AI returns 3 sentences (positions 1, 3, 4 in final output).
+    // Hardcoded S2 is inserted between AI sentence 1 and AI sentence 2.
+    const aiSentences = extractCompleteSentences(normaliseThreeSentenceParagraph(clause));
+    const aiS1 = aiSentences[0] ?? "";
+    const aiS2 = aiSentences[1] ?? "";
+    const aiS3 = aiSentences[2] ?? "";
 
-    // ---------- Tasks call (parallelisable but sequential is fine) ----------
+    const honest_picture = [aiS1, hardcodedS2, aiS2, aiS3]
+      .filter(Boolean)
+      .join(" ")
+      .trim();
+
+    // ---- Tasks call ----
     const tasksUserPrompt = `Generate task lists and Agent Watch fields for this person.
 
 Occupation: ${jobTitle}
@@ -426,16 +563,14 @@ No em dashes anywhere. No phrases ending in prepositions/conjunctions/articles i
       agent_reality_email = stripEmDashes((parsed.agent_reality_email ?? "").trim());
       nz_signal        = stripEmDashes((parsed.nz_signal ?? "").trim());
       your_move        = stripEmDashes((parsed.your_move ?? "").trim());
-      // Safety: keep only the first sentence and strip any humanise.nz / link follow-on
       {
         const sentences = your_move.match(/[^.!?]+[.!?]+/g) ?? [your_move];
         let first = (sentences[0] ?? your_move).trim();
-        // Drop trailing humanise.nz mentions just in case
         first = first.replace(/\s*(?:see|view|find|get).{0,80}humanise\.nz.*/i, "").trim();
         first = first.replace(/\s*humanise\.nz.*/i, "").trim();
         your_move = first;
       }
-      locked_preview   = stripEmDashes((parsed.locked_preview ?? "").trim());
+      locked_preview      = stripEmDashes((parsed.locked_preview ?? "").trim());
       locked_content_full = stripEmDashes((parsed.locked_content_full ?? "").trim());
     } else {
       console.error("AI gateway tasks error", tResp.status, await tResp.text());

@@ -112,19 +112,19 @@ export const Landing = ({ onStart }: { onStart: () => void }) => {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 text-left">
           <Stat
             number="14%"
-            label="of NZ businesses now attribute job losses to AI, double last year's figure."
+            label="of NZ work tasks AI can already do without a human. Another 24% it can do alongside you."
           />
           <Stat
-            number="143.5%"
-            label="rise in AI mentions in NZ job ads since March 2025."
+            number="Doubled"
+            label="NZ businesses reporting AI-related job losses doubled in one year — from 7% to 14%."
           />
           <Stat
             number="30%"
-            label="of NZ workers face high joint AI and robotics exposure (Reserve Bank of NZ)."
+            label="of NZ workers face high exposure to AI and automation."
           />
         </div>
         <p className="mt-6 text-center text-xs text-muted-foreground">
-          Sources: SEEK NZ, Reserve Bank of NZ AN2026-02
+          Sources: Accenture/Microsoft (2024), AI Forum NZ (2025), Reserve Bank of NZ AN2026-02
         </p>
       </section>
 

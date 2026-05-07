@@ -661,6 +661,58 @@ export const Results = ({ answers, onRestart }: Props) => {
                   </p>
                 </form>
               </>
+            ) : planSource === "skills_unlock" ? (
+              <>
+                <DialogHeader>
+                  <DialogTitle>Unlock your full skills report</DialogTitle>
+                  <DialogDescription>
+                    Get all 3 protective skills plus matched free courses, sent to your inbox.
+                  </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={handlePlanSubmit} className="mt-2 space-y-4">
+                  <Input
+                    type="email"
+                    required
+                    placeholder="your@email.com"
+                    value={planEmail}
+                    onChange={(e) => setPlanEmail(e.target.value)}
+                    disabled={planSubmitting}
+                    className="h-12 rounded-xl"
+                  />
+                  <Input
+                    type="text"
+                    placeholder="First name (optional)"
+                    value={planFirstName}
+                    onChange={(e) => setPlanFirstName(e.target.value)}
+                    disabled={planSubmitting}
+                    className="h-12 rounded-xl"
+                  />
+                  <label className="flex items-start gap-2 text-xs text-muted-foreground cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={planConsent}
+                      onChange={(e) => setPlanConsent(e.target.checked)}
+                      disabled={planSubmitting}
+                      className="mt-0.5 h-4 w-4 accent-success"
+                    />
+                    <span>✓ Yes, Humanise can use my anonymous quiz answers for NZ workforce research (no personal data ever shared)</span>
+                  </label>
+                  <Button
+                    type="submit"
+                    disabled={planSubmitting || !planEmail.trim()}
+                    className="w-full rounded-full font-semibold bg-success text-white hover:opacity-95 disabled:opacity-50"
+                  >
+                    {planSubmitting ? (
+                      <span className="flex items-center gap-2">
+                        <span className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                        Sending…
+                      </span>
+                    ) : (
+                      "Send my report"
+                    )}
+                  </Button>
+                </form>
+              </>
             ) : (
               <>
                 <DialogHeader>

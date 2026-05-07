@@ -97,8 +97,11 @@ export const Results = ({ answers, onRestart }: Props) => {
   const [planEmail, setPlanEmail] = useState("");
   const [planSubmitting, setPlanSubmitting] = useState(false);
   const [planSubmittedInModal, setPlanSubmittedInModal] = useState(false);
-  const [planSource, setPlanSource] = useState<"agent_watch_gate" | "results_email_plan">("results_email_plan");
+  const [planSource, setPlanSource] = useState<"agent_watch_gate" | "results_email_plan" | "skills_unlock">("results_email_plan");
   const [emailSubmitted, setEmailSubmitted] = useState(false);
+  const [skillsUnlocked, setSkillsUnlocked] = useState(false);
+  const [planFirstName, setPlanFirstName] = useState("");
+  const [planConsent, setPlanConsent] = useState(true);
   useAliases(); // ensure aliases are loaded/cached
   const SCORE_OVERRIDES: Record<string, { risk_score: number; risk_band: string }> = {
     "19-1013.00": { risk_score: 38, risk_band: "Moderate" },
@@ -417,6 +420,8 @@ export const Results = ({ answers, onRestart }: Props) => {
 
     if (planSource === "agent_watch_gate") {
       track("email_captured", { source: "agent_watch" });
+    } else if (planSource === "skills_unlock") {
+      track("email_captured", { source: "upskill_pack" });
     }
 
     // Persist the lead first so we never lose it, even if email send fails.
@@ -446,6 +451,12 @@ export const Results = ({ answers, onRestart }: Props) => {
       setPlanSubmittedInModal(true);
       if (!ok) {
         toast.error("Saved your email, but the report email is delayed. Check back shortly.");
+      }
+    } else if (planSource === "skills_unlock") {
+      setSkillsUnlocked(true);
+      setPlanSubmittedInModal(true);
+      if (!ok) {
+        toast.error("Unlocked your skills, but the email is delayed. Check back shortly.");
       }
     } else {
       if (ok) {
@@ -557,49 +568,15 @@ export const Results = ({ answers, onRestart }: Props) => {
             title="Top 3 tasks at risk"
             items={aiTasks?.tasks_at_risk?.length ? aiTasks.tasks_at_risk : tasks}
           />
-          <InsightCard
-            icon={<Shield className="h-5 w-5" />}
-            tone="success"
-            title="Top 3 protective skills"
+          <SkillsUnlockCard
             items={aiTasks?.protective_tasks?.length ? aiTasks.protective_tasks : skills}
-            footer={(() => {
-              const kw = (aiTasks?.protective_skill_keywords?.[0]?.trim() || activeSkills[0]?.trim() || "").trim();
-              const q = encodeURIComponent(kw);
-              return (
-                <p className="mt-3 text-xs text-muted-foreground">
-                  Free courses:{" "}
-                  <a
-                    href={`https://www.linkedin.com/learning/search?keywords=${q}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={() => track("external_link_clicked", { platform: "LinkedIn Learning" })}
-                    className="text-accent hover:underline"
-                  >
-                    LinkedIn Learning
-                  </a>
-                  {" | "}
-                  <a
-                    href={`https://www.coursera.org/search?query=${q}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={() => track("external_link_clicked", { platform: "Coursera" })}
-                    className="text-accent hover:underline"
-                  >
-                    Coursera
-                  </a>
-                  {" | "}
-                  <a
-                    href={`https://www.skillshare.com/en/search?query=${q}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={() => track("external_link_clicked", { platform: "Skillshare" })}
-                    className="text-accent hover:underline"
-                  >
-                    Skillshare
-                  </a>
-                </p>
-              );
-            })()}
+            unlocked={skillsUnlocked}
+            keyword={(aiTasks?.protective_skill_keywords?.[0]?.trim() || activeSkills[0]?.trim() || "").trim()}
+            onUnlockClick={() => {
+              setPlanSource("skills_unlock");
+              setPlanSubmittedInModal(false);
+              setPlanOpen(true);
+            }}
           />
           <InsightCard
             icon={<BarChart3 className="h-5 w-5" />}
@@ -682,6 +659,58 @@ export const Results = ({ answers, onRestart }: Props) => {
                   <p className="text-center text-[11px] text-muted-foreground">
                     Free. No spam. One email with your full Agent Watch breakdown.
                   </p>
+                </form>
+              </>
+            ) : planSource === "skills_unlock" ? (
+              <>
+                <DialogHeader>
+                  <DialogTitle>Unlock your full skills report</DialogTitle>
+                  <DialogDescription>
+                    Get all 3 protective skills plus matched free courses, sent to your inbox.
+                  </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={handlePlanSubmit} className="mt-2 space-y-4">
+                  <Input
+                    type="email"
+                    required
+                    placeholder="your@email.com"
+                    value={planEmail}
+                    onChange={(e) => setPlanEmail(e.target.value)}
+                    disabled={planSubmitting}
+                    className="h-12 rounded-xl"
+                  />
+                  <Input
+                    type="text"
+                    placeholder="First name (optional)"
+                    value={planFirstName}
+                    onChange={(e) => setPlanFirstName(e.target.value)}
+                    disabled={planSubmitting}
+                    className="h-12 rounded-xl"
+                  />
+                  <label className="flex items-start gap-2 text-xs text-muted-foreground cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={planConsent}
+                      onChange={(e) => setPlanConsent(e.target.checked)}
+                      disabled={planSubmitting}
+                      className="mt-0.5 h-4 w-4 accent-success"
+                    />
+                    <span>✓ Yes, Humanise can use my anonymous quiz answers for NZ workforce research (no personal data ever shared)</span>
+                  </label>
+                  <Button
+                    type="submit"
+                    disabled={planSubmitting || !planEmail.trim()}
+                    className="w-full rounded-full font-semibold bg-success text-white hover:opacity-95 disabled:opacity-50"
+                  >
+                    {planSubmitting ? (
+                      <span className="flex items-center gap-2">
+                        <span className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+                        Sending…
+                      </span>
+                    ) : (
+                      "Send my report"
+                    )}
+                  </Button>
                 </form>
               </>
             ) : (
@@ -875,6 +904,85 @@ const InsightCard = ({
     {footer}
   </div>
 );
+
+const SkillsUnlockCard = ({
+  items,
+  unlocked,
+  keyword,
+  onUnlockClick,
+}: {
+  items: string[];
+  unlocked: boolean;
+  keyword: string;
+  onUnlockClick: () => void;
+}) => {
+  const q = encodeURIComponent(keyword);
+  return (
+    <div className="rounded-2xl border border-border bg-card p-6 shadow-soft transition-smooth hover:shadow-card">
+      <div className={`inline-flex h-10 w-10 items-center justify-center rounded-xl ${toneStyles.success}`}>
+        <Shield className="h-5 w-5" />
+      </div>
+      <h3 className="mt-4 font-semibold text-primary">Top 3 protective skills</h3>
+      <ul className="mt-3 space-y-2">
+        {items.map((it, i) => {
+          const locked = !unlocked && i > 0;
+          return (
+            <li
+              key={i}
+              className={`flex gap-2 text-sm text-muted-foreground transition-all ${locked ? "blur-sm opacity-50 select-none pointer-events-none" : ""}`}
+              aria-hidden={locked}
+            >
+              <span className="mt-2 h-1 w-1 rounded-full bg-accent shrink-0" />
+              <span>{it}</span>
+            </li>
+          );
+        })}
+      </ul>
+      {unlocked ? (
+        <p className="mt-3 text-xs text-muted-foreground">
+          Free courses:{" "}
+          <a
+            href={`https://www.linkedin.com/learning/search?keywords=${q}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => track("external_link_clicked", { platform: "LinkedIn Learning" })}
+            className="text-accent hover:underline"
+          >
+            LinkedIn Learning
+          </a>
+          {" | "}
+          <a
+            href={`https://www.coursera.org/search?query=${q}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => track("external_link_clicked", { platform: "Coursera" })}
+            className="text-accent hover:underline"
+          >
+            Coursera
+          </a>
+          {" | "}
+          <a
+            href={`https://www.skillshare.com/en/search?query=${q}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => track("external_link_clicked", { platform: "Skillshare" })}
+            className="text-accent hover:underline"
+          >
+            Skillshare
+          </a>
+        </p>
+      ) : (
+        <Button
+          type="button"
+          onClick={onUnlockClick}
+          className="mt-4 w-full rounded-full font-semibold bg-success text-white hover:opacity-95 text-sm h-10"
+        >
+          Unlock your full skills report + course matches — free
+        </Button>
+      )}
+    </div>
+  );
+};
 
 const CtaCard = ({
   icon, title, desc, cta, onClick, primary,

@@ -14,7 +14,7 @@ import { RiskGauge } from "@/components/humanise/RiskGauge";
 import { HonestPicture } from "@/components/humanise/HonestPicture";
 import { NzMarketSignal } from "@/components/humanise/NzMarketSignal";
 import { NzWorkforceData } from "@/components/humanise/NzWorkforceData";
-import { UpskillSection } from "@/components/humanise/UpskillSection";
+
 
 import { AlertTriangle, Shield, BarChart3, Mail, LineChart, Share2, RotateCcw, Lock } from "lucide-react";
 import {

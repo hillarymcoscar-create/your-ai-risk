@@ -400,8 +400,16 @@ Deno.serve(async (req) => {
         messages,
       }, LOVABLE_API_KEY);
       if (!resp.ok) {
-        const t = await resp.text();
-        console.error("Clause gateway error", resp.status, t);
+        let bodyText = "<unread>";
+        try { bodyText = await resp.text(); } catch (readErr) {
+          console.error("[honest-picture] clause: failed to read response body", readErr);
+        }
+        console.error("[honest-picture] clause gateway non-2xx", {
+          status: resp.status,
+          statusText: resp.statusText,
+          contentType: resp.headers.get("content-type"),
+          body: bodyText.slice(0, 2000),
+        });
         if (resp.status === 429) throw new Error("RATE_LIMIT");
         if (resp.status === 402) throw new Error("CREDITS");
         throw new Error("GATEWAY");

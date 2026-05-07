@@ -623,7 +623,11 @@ No em dashes anywhere. No phrases ending in prepositions/conjunctions/articles i
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (e) {
-    console.error("honest-picture error:", e);
+    console.error("[honest-picture] top-level error", {
+      errorName: e instanceof Error ? e.name : typeof e,
+      errorMessage: e instanceof Error ? e.message : String(e),
+      stack: e instanceof Error ? e.stack : undefined,
+    });
     return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

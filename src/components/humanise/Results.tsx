@@ -97,8 +97,11 @@ export const Results = ({ answers, onRestart }: Props) => {
   const [planEmail, setPlanEmail] = useState("");
   const [planSubmitting, setPlanSubmitting] = useState(false);
   const [planSubmittedInModal, setPlanSubmittedInModal] = useState(false);
-  const [planSource, setPlanSource] = useState<"agent_watch_gate" | "results_email_plan">("results_email_plan");
+  const [planSource, setPlanSource] = useState<"agent_watch_gate" | "results_email_plan" | "skills_unlock">("results_email_plan");
   const [emailSubmitted, setEmailSubmitted] = useState(false);
+  const [skillsUnlocked, setSkillsUnlocked] = useState(false);
+  const [planFirstName, setPlanFirstName] = useState("");
+  const [planConsent, setPlanConsent] = useState(true);
   useAliases(); // ensure aliases are loaded/cached
   const SCORE_OVERRIDES: Record<string, { risk_score: number; risk_band: string }> = {
     "19-1013.00": { risk_score: 38, risk_band: "Moderate" },

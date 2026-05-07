@@ -851,11 +851,13 @@ const InsightCard = ({
   title,
   items,
   tone,
+  footer,
 }: {
   icon: React.ReactNode;
   title: string;
   items: string[];
   tone: keyof typeof toneStyles;
+  footer?: React.ReactNode;
 }) => (
   <div className="rounded-2xl border border-border bg-card p-6 shadow-soft transition-smooth hover:shadow-card">
     <div className={`inline-flex h-10 w-10 items-center justify-center rounded-xl ${toneStyles[tone]}`}>
@@ -870,6 +872,7 @@ const InsightCard = ({
         </li>
       ))}
     </ul>
+    {footer}
   </div>
 );
 

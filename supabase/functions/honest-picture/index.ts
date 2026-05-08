@@ -430,6 +430,7 @@ Deno.serve(async (req) => {
 
     let clause = "";
     let clauseFinishReason: string | null = null;
+    let clauseAccepted = false;
     try {
       let retryFeedback: string | undefined;
 
@@ -442,7 +443,10 @@ Deno.serve(async (req) => {
         const count = sentenceCount(clause);
         const stoppedEarly = clauseFinishReason === "length" || clauseFinishReason === "max_tokens";
 
-        if (!banned && count === 3 && !stoppedEarly) break;
+        if (!banned && count === 3 && !stoppedEarly) {
+          clauseAccepted = true;
+          break;
+        }
 
         const problems: string[] = [];
         if (banned) problems.push(`it contained the banned phrase "${banned}"`);
@@ -478,8 +482,20 @@ Deno.serve(async (req) => {
       });
     }
 
-    if (clauseFinishReason === "length" || clauseFinishReason === "max_tokens") {
-      console.warn(`[honest-picture] model stopped early: finish_reason=${clauseFinishReason}`);
+    if (!clauseAccepted) {
+      console.error("[honest-picture] clause failed all 3 attempts", {
+        finishReason: clauseFinishReason,
+        sentenceCount: sentenceCount(clause),
+        bannedPhrase: findBannedPhrase(clause),
+        jobTitle,
+        onetCode,
+      });
+      return new Response(JSON.stringify({
+        error: "Could not generate a clean honest picture after 3 attempts. Showing fallback.",
+        code: "CLAUSE_RETRY_EXHAUSTED",
+      }), {
+        status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     // ---- Stitch final paragraph ----

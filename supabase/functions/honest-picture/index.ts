@@ -636,22 +636,28 @@ No em dashes anywhere. No phrases ending in prepositions/conjunctions/articles i
       });
     }
 
+    // Universal CJK strip across every string field in the response.
+    const scrubStr = (s: string) => stripCJK(s ?? "");
+    const scrubArr = (arr: string[]) => arr.map((x) => scrubStr(x)).filter(Boolean);
+
+    const responsePayload = {
+      text: scrubStr(honest_picture),
+      honest_picture: scrubStr(honest_picture),
+      tasks_at_risk: scrubArr(tasks_at_risk),
+      protective_tasks: scrubArr(protective_tasks),
+      protective_skill_keywords: scrubArr(protective_skill_keywords),
+      agent_note: scrubStr(agent_note),
+      agent_tasks: scrubArr(agent_tasks),
+      agent_reality: scrubStr(agent_reality),
+      agent_reality_email: scrubStr(agent_reality_email),
+      nz_signal: scrubStr(nz_signal),
+      your_move: scrubStr(your_move),
+      locked_preview: scrubStr(locked_preview),
+      locked_content_full: scrubStr(locked_content_full),
+    };
+
     return new Response(
-      JSON.stringify({
-        text: honest_picture,
-        honest_picture,
-        tasks_at_risk,
-        protective_tasks,
-        protective_skill_keywords,
-        agent_note,
-        agent_tasks,
-        agent_reality,
-        agent_reality_email,
-        nz_signal,
-        your_move,
-        locked_preview,
-        locked_content_full,
-      }),
+      JSON.stringify(responsePayload),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (e) {

@@ -88,12 +88,13 @@ Sentence 2: Identify what part of the role still requires human judgement, drawi
 Sentence 3: A directional sentence about action. The workers staying valuable in this role are the ones who learn to direct AI rather than avoid it. Make it specific to the occupation, anti-passive, not chirpy. No calls to action, no "you should", no exclamation marks.
 
 Constraints:
-- Respond in English only.
+- Respond in English only. Use only Latin characters — never any Chinese, Japanese, or Korean characters.
+- The user is in New Zealand. When referring to money, use NZ dollars (NZD or $). NEVER use pounds (£), euros (€), or any other currency. NEVER use UK or US geographic references (no "high street", no "Main Street", no "across the pond").
 - Do not name specific AI products, companies, or tool brands.
 - Do not invent NZ-specific statistics or claims about NZ employer behaviour. The hardcoded sentence handles NZ market context.
-- Do not use these phrases: leverage, navigate, evolving, landscape, rapidly, future-proof, stay ahead, adaptable, irreplaceable, in today's, significant, meaningful way.
+- Do not use any of these phrases anywhere in your output: leverage, navigate, navigating, evolving, landscape, rapidly, future-proof, stay ahead, adaptable, irreplaceable, in today's, significant, meaningful way.
 - Tone: clear-eyed, specific, anti-corporate. Like a smart friend telling the truth, not a coach or consultant.
-- Each sentence must be a complete sentence. Never end mid-thought.`;
+- Each sentence MUST be a grammatically complete sentence ending in a period. NEVER end mid-thought or mid-clause. If you are running out of room, write shorter sentences — do not truncate.`;
 
 // ========================================================================
 // TASKS + AGENT NOTE — separate structured call (unchanged)
@@ -396,8 +397,11 @@ Deno.serve(async (req) => {
       const resp = await callGateway({
         model: "google/gemini-2.5-pro",
         temperature: 0,
-        max_tokens: 600,
-        messages,
+        max_tokens: 1500,
+        messages: [
+          { role: "system", content: clauseSystemFilled },
+          ...messages,
+        ],
       }, LOVABLE_API_KEY);
       if (!resp.ok) {
         let bodyText = "<unread>";
@@ -426,6 +430,7 @@ Deno.serve(async (req) => {
 
     let clause = "";
     let clauseFinishReason: string | null = null;
+    let clauseAccepted = false;
     try {
       let retryFeedback: string | undefined;
 
@@ -438,7 +443,10 @@ Deno.serve(async (req) => {
         const count = sentenceCount(clause);
         const stoppedEarly = clauseFinishReason === "length" || clauseFinishReason === "max_tokens";
 
-        if (!banned && count === 3 && !stoppedEarly) break;
+        if (!banned && count === 3 && !stoppedEarly) {
+          clauseAccepted = true;
+          break;
+        }
 
         const problems: string[] = [];
         if (banned) problems.push(`it contained the banned phrase "${banned}"`);
@@ -474,8 +482,20 @@ Deno.serve(async (req) => {
       });
     }
 
-    if (clauseFinishReason === "length" || clauseFinishReason === "max_tokens") {
-      console.warn(`[honest-picture] model stopped early: finish_reason=${clauseFinishReason}`);
+    if (!clauseAccepted) {
+      console.error("[honest-picture] clause failed all 3 attempts", {
+        finishReason: clauseFinishReason,
+        sentenceCount: sentenceCount(clause),
+        bannedPhrase: findBannedPhrase(clause),
+        jobTitle,
+        onetCode,
+      });
+      return new Response(JSON.stringify({
+        error: "Could not generate a clean honest picture after 3 attempts. Showing fallback.",
+        code: "CLAUSE_RETRY_EXHAUSTED",
+      }), {
+        status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     // ---- Stitch final paragraph ----
@@ -616,22 +636,28 @@ No em dashes anywhere. No phrases ending in prepositions/conjunctions/articles i
       });
     }
 
+    // Universal CJK strip across every string field in the response.
+    const scrubStr = (s: string) => stripCJK(s ?? "");
+    const scrubArr = (arr: string[]) => arr.map((x) => scrubStr(x)).filter(Boolean);
+
+    const responsePayload = {
+      text: scrubStr(honest_picture),
+      honest_picture: scrubStr(honest_picture),
+      tasks_at_risk: scrubArr(tasks_at_risk),
+      protective_tasks: scrubArr(protective_tasks),
+      protective_skill_keywords: scrubArr(protective_skill_keywords),
+      agent_note: scrubStr(agent_note),
+      agent_tasks: scrubArr(agent_tasks),
+      agent_reality: scrubStr(agent_reality),
+      agent_reality_email: scrubStr(agent_reality_email),
+      nz_signal: scrubStr(nz_signal),
+      your_move: scrubStr(your_move),
+      locked_preview: scrubStr(locked_preview),
+      locked_content_full: scrubStr(locked_content_full),
+    };
+
     return new Response(
-      JSON.stringify({
-        text: honest_picture,
-        honest_picture,
-        tasks_at_risk,
-        protective_tasks,
-        protective_skill_keywords,
-        agent_note,
-        agent_tasks,
-        agent_reality,
-        agent_reality_email,
-        nz_signal,
-        your_move,
-        locked_preview,
-        locked_content_full,
-      }),
+      JSON.stringify(responsePayload),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (e) {

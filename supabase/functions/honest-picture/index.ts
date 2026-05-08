@@ -88,12 +88,13 @@ Sentence 2: Identify what part of the role still requires human judgement, drawi
 Sentence 3: A directional sentence about action. The workers staying valuable in this role are the ones who learn to direct AI rather than avoid it. Make it specific to the occupation, anti-passive, not chirpy. No calls to action, no "you should", no exclamation marks.
 
 Constraints:
-- Respond in English only.
+- Respond in English only. Use only Latin characters — never any Chinese, Japanese, or Korean characters.
+- The user is in New Zealand. When referring to money, use NZ dollars (NZD or $). NEVER use pounds (£), euros (€), or any other currency. NEVER use UK or US geographic references (no "high street", no "Main Street", no "across the pond").
 - Do not name specific AI products, companies, or tool brands.
 - Do not invent NZ-specific statistics or claims about NZ employer behaviour. The hardcoded sentence handles NZ market context.
-- Do not use these phrases: leverage, navigate, evolving, landscape, rapidly, future-proof, stay ahead, adaptable, irreplaceable, in today's, significant, meaningful way.
+- Do not use any of these phrases anywhere in your output: leverage, navigate, navigating, evolving, landscape, rapidly, future-proof, stay ahead, adaptable, irreplaceable, in today's, significant, meaningful way.
 - Tone: clear-eyed, specific, anti-corporate. Like a smart friend telling the truth, not a coach or consultant.
-- Each sentence must be a complete sentence. Never end mid-thought.`;
+- Each sentence MUST be a grammatically complete sentence ending in a period. NEVER end mid-thought or mid-clause. If you are running out of room, write shorter sentences — do not truncate.`;
 
 // ========================================================================
 // TASKS + AGENT NOTE — separate structured call (unchanged)
@@ -396,8 +397,11 @@ Deno.serve(async (req) => {
       const resp = await callGateway({
         model: "google/gemini-2.5-pro",
         temperature: 0,
-        max_tokens: 600,
-        messages,
+        max_tokens: 1500,
+        messages: [
+          { role: "system", content: clauseSystemFilled },
+          ...messages,
+        ],
       }, LOVABLE_API_KEY);
       if (!resp.ok) {
         let bodyText = "<unread>";

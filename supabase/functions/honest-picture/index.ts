@@ -486,7 +486,19 @@ Deno.serve(async (req) => {
     const aiS2 = aiSentences[1] ?? "";
     const aiS3 = aiSentences[2] ?? "";
 
+    // Defensive: ensure each sentence is trimmed of leading whitespace/stray
+    // punctuation and ends with terminal punctuation before joining. This makes
+    // the stitched paragraph robust to whatever lands in display_message or the
+    // ANZSCO fallback template.
+    const ensureSentence = (s: string | null | undefined): string => {
+      if (!s) return "";
+      const cleaned = s.replace(/^[\s\u00A0,;:\-–—]+/, "").trim();
+      if (!cleaned) return "";
+      return /[.!?]$/.test(cleaned) ? cleaned : `${cleaned}.`;
+    };
+
     const honest_picture = [aiS1, hardcodedS2, aiS2, aiS3]
+      .map(ensureSentence)
       .filter(Boolean)
       .join(" ")
       .trim();

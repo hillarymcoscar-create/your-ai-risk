@@ -115,7 +115,17 @@ NZ CONTEXT RULE (applies to every text field):
 
 UNIVERSAL TEXT RULES:
 - Respond in English only. Use only Latin characters — never any Chinese, Japanese, or Korean characters.
-- The user is in New Zealand. When referring to money, use NZ dollars (NZD or $). NEVER use pounds, euros, or any other currency. NEVER use UK or US geographic references.`;
+- The user is in New Zealand. When referring to money, use NZ dollars (NZD or $). NEVER use pounds, euros, or any other currency. NEVER use UK or US geographic references.
+
+BANNED PHRASES (must not appear in ANY field — agent_note, agent_tasks, agent_reality, agent_reality_email, nz_signal, your_move, locked_preview, locked_content_full):
+- leverage, navigate, navigating, evolving, landscape, rapidly, future-proof, stay ahead, adaptable, irreplaceable, in today's, significant, meaningful way.
+- Use plain alternatives: "use" instead of "leverage", "handle" instead of "navigate", "changing" instead of "evolving", "field" or "category" instead of "landscape".
+
+NZ_SIGNAL FIELD — SPECIAL RULE:
+- A block labelled "NZ DATA AVAILABLE" may appear in the user prompt. It contains the ONLY NZ-specific facts you may state.
+- If NZ DATA AVAILABLE is non-empty: ground nz_signal in that data. You may quote percentages, occupation trends, or job-ad changes from it. Reference it accurately — do not embellish numbers.
+- If NZ DATA AVAILABLE is empty or missing: nz_signal must speak only directionally about how AI is shifting roles in this category at a country level. Do NOT invent NZ percentages, NZ job-ad statistics, NZ regional claims, or claims about NZ employer behaviour ("entry-level positions are decreasing", "NZ agencies are deploying X", "Auckland firms report Y"). All of these are fabrication if no data backs them.
+- This rule applies ONLY to nz_signal. Other fields (agent_reality, your_move, locked_*) must still avoid NZ-specific employer/regional/numeric claims.`;
 
 const TRAILING_STOPWORDS = new Set([
   "and","or","the","a","an","of","to","for","in","on","at","by","with","from",

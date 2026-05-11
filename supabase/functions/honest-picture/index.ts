@@ -425,6 +425,7 @@ Deno.serve(async (req) => {
       return {
         text: raw,
         finishReason: typeof choice.finish_reason === "string" ? choice.finish_reason : null,
+      };
     }
 
     // ---- Kick off tasks call in PARALLEL with clause generation ----

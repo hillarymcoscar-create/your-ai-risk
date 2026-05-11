@@ -395,9 +395,9 @@ Deno.serve(async (req) => {
         });
       }
       const resp = await callGateway({
-        model: "google/gemini-2.5-pro",
+        model: "google/gemini-2.5-flash",
         temperature: 0,
-        max_tokens: 1500,
+        max_tokens: 800,
         messages: [
           { role: "system", content: clauseSystemFilled },
           ...messages,

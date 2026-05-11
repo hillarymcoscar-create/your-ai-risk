@@ -100,7 +100,22 @@ Constraints:
 // TASKS + AGENT NOTE — separate structured call (unchanged)
 // ========================================================================
 
-const TASKS_SYSTEM = `You are an analyst producing short, role-specific task lists for the Humanise NZ AI workforce risk tool. You return ONLY the structured tool call. All phrases must be 4 to 7 words (12 max for agent_tasks), specific to the role, never end with a preposition, conjunction, or article. No em dashes anywhere.`;
+const TASKS_SYSTEM = `You are an analyst producing short, role-specific task lists and Agent Watch fields for the Humanise NZ AI workforce risk tool. You return ONLY the structured tool call. All phrases must be 4 to 7 words (12 max for agent_tasks), specific to the role, never end with a preposition, conjunction, or article. No em dashes anywhere.
+
+TOOL NAMING RULE (applies to every text field):
+- ALLOWED: generic category mentions like "AI-powered SEO platforms", "large language model pipelines", "automated competitor analysis tools", "AI agents", "machine learning systems", "autonomous content generation tools", "AI-assisted audit platforms".
+- FORBIDDEN: specific product or company names. NEVER write any of: ChatGPT, Claude, Gemini, GPT, GPT-4, GPT-4o, GPT-5, Copilot, Microsoft Copilot, BrightEdge, BrightEdge Copilot, Semrush, Semrush AI, Ahrefs, Moz, Salesforce, HubSpot, Make.com, Zapier, Xero, MYOB, Manus, Notion, Jasper, Surfer, Clearscope, OpenAI, Anthropic, Google, Microsoft, or any other named software product, vendor, or AI brand.
+- If you would naturally name a product, replace it with a category description instead.
+
+NZ CONTEXT RULE (applies to every text field):
+- Speak generally about what AI is doing to roles in this category.
+- Do NOT invent claims about what New Zealand agencies, employers, regions, or businesses are doing. No NZ-specific data is passed into this prompt, so any NZ-specific claim would be fabrication.
+- Do NOT write sentences like "NZ agencies are deploying X", "Auckland firms are using Y", "Canterbury employers report Z", or invent NZ percentages, job-ad statistics, or hiring trends.
+- You may reference the user's role and country at a general level. Avoid specific country claims about employer behaviour, hiring numbers, or regional adoption.
+
+UNIVERSAL TEXT RULES:
+- Respond in English only. Use only Latin characters — never any Chinese, Japanese, or Korean characters.
+- The user is in New Zealand. When referring to money, use NZ dollars (NZD or $). NEVER use pounds, euros, or any other currency. NEVER use UK or US geographic references.`;
 
 const TRAILING_STOPWORDS = new Set([
   "and","or","the","a","an","of","to","for","in","on","at","by","with","from",
@@ -220,8 +235,8 @@ const HP_TOOL = [{
         },
         agent_note:       { type: "string" },
         agent_tasks:      { type: "array", items: { type: "string" }, minItems: 3, maxItems: 3 },
-        agent_reality:    { type: "string", description: "2-3 sentences specific to this occupation describing what autonomous AI agents are doing right now in this role. Name 2-3 specific real tools (e.g. Semrush AI, BrightEdge Copilot, custom GPT-4o pipelines, Microsoft Copilot, Make.com). Be concrete about what work is being absorbed." },
-        agent_reality_email: { type: "string", description: "4 to 5 sentences. A SIGNIFICANTLY EXPANDED version of agent_reality, written for the email the user just gave their address to receive. It must go deeper than agent_reality and contain information NOT visible on the results page. Name specific tools, specific NZ businesses or industry patterns where known, specific timelines, and specific tasks being automated right now. Do NOT repeat agent_reality verbatim, expand and deepen it. No em dashes." },
+        agent_reality:    { type: "string", description: "2-3 sentences specific to this occupation describing, in generic category terms, what kinds of autonomous AI systems are absorbing work in this role right now (e.g. AI-powered SEO platforms, large language model content pipelines). Do NOT name specific products, brands, or vendors. Do NOT invent NZ-specific employer claims." },
+        agent_reality_email: { type: "string", description: "4 to 5 sentences. A SIGNIFICANTLY EXPANDED version of agent_reality, written for the email the user just gave their address to receive. Describe categories of tools, types of workflows, and tasks being automated right now in this role. Do NOT name specific products, brands, or vendors. Do NOT invent NZ-specific employer behaviour or regional claims. Do not repeat agent_reality verbatim. No em dashes." },
         nz_signal:        { type: "string", description: "2 sentences with at least one specific NZ-grounded data point (job-ad changes, hiring trend, NZ industry shift since 2025) relevant to this occupation. No generic claims." },
         your_move:        { type: "string", description: "EXACTLY ONE sentence. One concrete 30-day action the user can take, specific to this role. Direct, specific, no platitudes. MUST NOT mention humanise.nz, Humanise, the email, the report, the results page, or any link or URL. MUST NOT contain any follow-on sentence after the action. Just the single action sentence and nothing else." },
         locked_preview:   { type: "string", description: "Maximum 2 sentences. Write one locked teaser that creates a specific unresolved question about THIS person's situation. Reference their occupation by name and their agent tier reality. Make them feel like there is one piece of information about their specific role that would change how they think about their next 90 days. End with a direct question to the reader. Do NOT use the words unlock, discover, or exclusive. Do NOT promise tips, strategies, or insights. Do NOT sound like a marketing headline or pricing-page copy. No em dashes." },
@@ -447,16 +462,16 @@ TASK LISTS
 - tasks_at_risk: 3 short action phrases (4 to 7 words) for the most automatable tasks in this role.
 - protective_tasks: 3 short action phrases (4 to 7 words) for what makes this role hard to fully automate.
 - protective_skill_keywords: For each protective_tasks entry, output a 'searchKeywords'-style string containing a short 2-3 word keyword phrase that summarises the skill's core topic for platform course searches. Use simple industry-standard terms (e.g. 'project management', 'content strategy', 'data analysis', 'stakeholder management', 'search intent'). Never use full sentences — keywords only. Same order as protective_tasks. Lowercase preferred.
-- agent_note: Name one of (Microsoft Copilot, ChatGPT, Google Gemini, Make.com, Manus) and give one concrete example of what it handles in this role. Under 30 words. For trades/healthcare/hands-on physical work, write "This role has strong natural protection from AI agents because [reason]" without naming a tool.
-- agent_tasks: 3 specific tasks AI agents are handling today in this occupation. Action verb start. Max 12 words each.
+- agent_note: One sentence describing, in generic category terms, what kind of AI tooling is handling work in this role today (e.g. "AI-powered scheduling assistants", "large language model pipelines", "automated reporting agents"). Under 30 words. Do NOT name any specific product, brand, or vendor. For trades/healthcare/hands-on physical work, write "This role has strong natural protection from AI agents because [reason]" without naming a tool.
+- agent_tasks: 3 specific tasks AI agents are handling today in this occupation. Action verb start. Max 12 words each. Describe the task generically — do NOT name products or vendors.
 
 AGENT WATCH FIELDS
-- agent_reality: 2 to 3 sentences specific to this occupation. Describe what autonomous AI agents are doing right now in this exact role. Name 2 to 3 specific real tools (e.g. Semrush AI, BrightEdge Copilot, custom GPT-4o pipelines, Microsoft Copilot, Make.com, Manus, Claude). Be concrete about what work is being absorbed. Mention NZ digital agencies or NZ businesses where natural. Do NOT repeat the agent_note content. THIS IS THE SHORTER RESULTS-PAGE VERSION.
-- agent_reality_email: 4 to 5 sentences. A SIGNIFICANTLY EXPANDED, deeper version of agent_reality, written for the email the user just gave their address to receive. It MUST contain information that was NOT visible on the results page. Name specific tools, specific NZ businesses or industry patterns where known, specific timelines (e.g. "in the last 6 months", "by mid 2026"), and specific tasks being automated right now in NZ. Do NOT repeat agent_reality verbatim. Treat agent_reality as the teaser and agent_reality_email as the full briefing. No em dashes.
-- nz_signal: 2 sentences. Include at least one specific NZ data point relevant to this occupation (e.g. AI mentions in NZ job ads have risen 143.5% since March 2025; junior coordinator roles being advertised less; senior roles increasingly listing AI proficiency as baseline). No generic global claims.
-- your_move: EXACTLY ONE sentence. One concrete 30-day action specific to this role (e.g. "Spend the next 30 days building one AI-assisted SEO workflow you own completely, site audit automation, content briefing, or monthly reporting."). Direct, specific, no platitudes. MUST NOT mention humanise.nz, Humanise, the report, the email, results, or any URL or link. MUST NOT include any follow-on sentence. The field ends after the single action sentence.
-- locked_preview: Maximum 2 sentences. Write one teaser that creates a specific, unresolved question about THIS person's situation. Reference the occupation by name and the agent tier reality. Make them feel there is one piece of information about their specific role that would change how they think about their next 90 days. End with a direct question to the reader. Banned words: unlock, discover, exclusive, tips, strategies, insights, premium. Do not sound like a marketing headline. No em dashes.
-- locked_content_full: 3 to 4 sentences. The EXPANDED answer to the locked_preview teaser, written for the email the user just gave their address to receive. This is the deepest, most specific intelligence in the entire product. It MUST contain information not visible on the results page: name specific NZ regions, specific company types, specific tools, specific tasks, specific timelines (e.g. "Canterbury and Auckland agencies are trialling agent-first SEO workflows where one senior strategist directs a stack of agents handling audits, briefs, and reporting. The roles surviving are not generalist coordinators, they are specialists in technical architecture, client strategy, or AI workflow design. The window to make that move deliberately is roughly 6 to 12 months."). Do NOT repeat anything from agent_reality, nz_signal, your_move, or locked_preview. No em dashes. End with 2 sentences that do the following. Sentence 1: Tell the reader that Humanise has specific data about their occupation that they have not yet seen. Reference something concrete, a specific task, a specific trend, or a specific comparison, that sounds like real intelligence, not a generic teaser. Sentence 2: Direct them back to humanise.nz with a clear action. Use one of these endings depending on context: Option A (if they have not yet seen their full results): "See the full breakdown for your role at humanise.nz". Option B (if they have completed the quiz): "Your full results are waiting at humanise.nz". Option C (if the content implies an upgrade): "The complete picture for your role is at humanise.nz". The ending must never be a yes/no question answerable from memory. It must create a specific gap between what the reader knows and what Humanise knows about their situation. It must always end with humanise.nz as the destination. The ending must NOT be a question and must NOT end with a question mark. Examples of the correct ending shape: "Humanise has identified the three specific SEO tasks disappearing fastest from Canterbury job ads right now, and scored whether your current workflow depends on any of them. Your full breakdown is waiting at humanise.nz" / "The NZ data shows one coordinator function that is actually growing while others compress, and it is not the one most people assume. See where your role sits at humanise.nz" / "Humanise has scored your specific task mix against the two accounting functions being automated fastest in NZ firms right now. See the full picture at humanise.nz".
+- agent_reality: 2 to 3 sentences specific to this occupation. Describe, in generic category terms, what kinds of autonomous AI systems are absorbing work in this exact role right now (e.g. "AI-powered SEO platforms", "automated competitor analysis tools", "large language model content pipelines"). Be concrete about what work is being absorbed. Do NOT name any specific product, brand, vendor, or company. Do NOT invent NZ-specific claims (no "NZ agencies are deploying X"). THIS IS THE SHORTER RESULTS-PAGE VERSION.
+- agent_reality_email: 4 to 5 sentences. A SIGNIFICANTLY EXPANDED, deeper version of agent_reality, written for the email the user just gave their address to receive. It MUST contain information that was NOT visible on the results page. Describe categories of tools, types of workflows, and tasks being automated right now in this role. Do NOT name specific products, brands, or vendors. Do NOT invent NZ-specific employer behaviour, regional claims, or fabricated timelines tied to NZ businesses. Do NOT repeat agent_reality verbatim. No em dashes.
+- nz_signal: 2 sentences offering a general, plausible observation about how AI is shifting roles in this category at a country level. Do NOT invent specific NZ percentages, specific job-ad statistics, specific regions, or specific employer claims. Speak in directional terms (e.g. "Roles like this are increasingly listing AI proficiency as baseline" / "Junior coordinator work in this category is compressing as AI absorbs routine tasks"). Generic, honest, no fabricated numbers.
+- your_move: EXACTLY ONE sentence. One concrete 30-day action specific to this role. Direct, specific, no platitudes. MUST NOT name any specific product or vendor. MUST NOT mention humanise.nz, Humanise, the report, the email, results, or any URL or link. MUST NOT include any follow-on sentence. The field ends after the single action sentence.
+- locked_preview: Maximum 2 sentences. Write one teaser that creates a specific, unresolved question about THIS person's situation. Reference the occupation by name and the agent tier reality. End with a direct question to the reader. Banned words: unlock, discover, exclusive, tips, strategies, insights, premium. Do not name specific products. Do not sound like a marketing headline. No em dashes.
+- locked_content_full: 3 to 4 sentences. The EXPANDED answer to the locked_preview teaser. Describe categories of tools, types of workflows, and the specific tasks at risk in this role. Do NOT name specific products, brands, vendors, or companies. Do NOT invent NZ-specific regional claims, specific company behaviour, or fabricated timelines. Do NOT repeat anything from agent_reality, nz_signal, your_move, or locked_preview. No em dashes. End with 2 sentences. Sentence 1: Reference a generic-but-concrete category (a type of task, trend, or comparison) Humanise has data on. Sentence 2: Direct them back to humanise.nz with one of: "See the full breakdown for your role at humanise.nz" / "Your full results are waiting at humanise.nz" / "The complete picture for your role is at humanise.nz". The ending must NOT be a question.
 
 EXAMPLES OF THE RIGHT TONE FOR locked_preview (do not copy verbatim, match the structure)
 - SEO Specialist (Tier 1): "There are three specific SEO tasks agents cannot yet do reliably, and whether your current role focuses on any of them determines how exposed you actually are. Does yours?"
@@ -652,8 +667,47 @@ No em dashes anywhere. No phrases ending in prepositions/conjunctions/articles i
       });
     }
 
-    // Universal CJK strip across every string field in the response.
-    const scrubStr = (s: string) => stripCJK(s ?? "");
+    // Universal CJK + product-brand strip across every string field in the response.
+    // Defensive: even though the system prompt forbids brand names, scrub any
+    // that slip through from the model. Replace with neutral category words.
+    const PRODUCT_PATTERNS: Array<[RegExp, string]> = [
+      [/\bBrightEdge\s+Copilot\b/gi, "AI-powered SEO platforms"],
+      [/\bBrightEdge\b/gi, "AI-powered SEO platforms"],
+      [/\bSemrush\s+AI\b/gi, "automated competitor analysis tools"],
+      [/\bSemrush\b/gi, "automated competitor analysis tools"],
+      [/\bAhrefs\b/gi, "automated competitor analysis tools"],
+      [/\bMoz\b/gi, "automated competitor analysis tools"],
+      [/\bSurfer(?:\s+SEO)?\b/gi, "AI-assisted content tools"],
+      [/\bClearscope\b/gi, "AI-assisted content tools"],
+      [/\bJasper\b/gi, "AI content generation tools"],
+      [/\bMicrosoft\s+Copilot\b/gi, "AI assistants"],
+      [/\bGitHub\s+Copilot\b/gi, "AI coding assistants"],
+      [/\bCopilot\b/gi, "AI assistants"],
+      [/\bChatGPT\b/gi, "large language model tools"],
+      [/\bGPT[- ]?5(?:\.\d+)?\b/gi, "large language models"],
+      [/\bGPT[- ]?4o\b/gi, "large language models"],
+      [/\bGPT[- ]?4\b/gi, "large language models"],
+      [/\bGPT[- ]?3(?:\.5)?\b/gi, "large language models"],
+      [/\bGPT\b/gi, "large language models"],
+      [/\bClaude\b/gi, "large language model tools"],
+      [/\bGemini\b/gi, "large language model tools"],
+      [/\bOpenAI\b/gi, "AI vendors"],
+      [/\bAnthropic\b/gi, "AI vendors"],
+      [/\bSalesforce\b/gi, "CRM automation platforms"],
+      [/\bHubSpot\b/gi, "marketing automation platforms"],
+      [/\bMake\.com\b/gi, "workflow automation tools"],
+      [/\bZapier\b/gi, "workflow automation tools"],
+      [/\bManus\b/gi, "autonomous AI agents"],
+      [/\bXero\b/gi, "accounting automation platforms"],
+      [/\bMYOB\b/gi, "accounting automation platforms"],
+      [/\bNotion\s+AI\b/gi, "AI productivity tools"],
+    ];
+    const stripBrands = (s: string) => {
+      let out = s ?? "";
+      for (const [re, sub] of PRODUCT_PATTERNS) out = out.replace(re, sub);
+      return out.replace(/\s{2,}/g, " ").trim();
+    };
+    const scrubStr = (s: string) => stripBrands(stripCJK(s ?? ""));
     const scrubArr = (arr: string[]) => arr.map((x) => scrubStr(x)).filter(Boolean);
 
     const responsePayload = {

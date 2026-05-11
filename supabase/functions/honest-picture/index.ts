@@ -115,7 +115,17 @@ NZ CONTEXT RULE (applies to every text field):
 
 UNIVERSAL TEXT RULES:
 - Respond in English only. Use only Latin characters — never any Chinese, Japanese, or Korean characters.
-- The user is in New Zealand. When referring to money, use NZ dollars (NZD or $). NEVER use pounds, euros, or any other currency. NEVER use UK or US geographic references.`;
+- The user is in New Zealand. When referring to money, use NZ dollars (NZD or $). NEVER use pounds, euros, or any other currency. NEVER use UK or US geographic references.
+
+BANNED PHRASES (must not appear in ANY field — agent_note, agent_tasks, agent_reality, agent_reality_email, nz_signal, your_move, locked_preview, locked_content_full):
+- leverage, navigate, navigating, evolving, landscape, rapidly, future-proof, stay ahead, adaptable, irreplaceable, in today's, significant, meaningful way.
+- Use plain alternatives: "use" instead of "leverage", "handle" instead of "navigate", "changing" instead of "evolving", "field" or "category" instead of "landscape".
+
+NZ_SIGNAL FIELD — SPECIAL RULE:
+- A block labelled "NZ DATA AVAILABLE" may appear in the user prompt. It contains the ONLY NZ-specific facts you may state.
+- If NZ DATA AVAILABLE is non-empty: ground nz_signal in that data. You may quote percentages, occupation trends, or job-ad changes from it. Reference it accurately — do not embellish numbers.
+- If NZ DATA AVAILABLE is empty or missing: nz_signal must speak only directionally about how AI is shifting roles in this category at a country level. Do NOT invent NZ percentages, NZ job-ad statistics, NZ regional claims, or claims about NZ employer behaviour ("entry-level positions are decreasing", "NZ agencies are deploying X", "Auckland firms report Y"). All of these are fabrication if no data backs them.
+- This rule applies ONLY to nz_signal. Other fields (agent_reality, your_move, locked_*) must still avoid NZ-specific employer/regional/numeric claims.`;
 
 const TRAILING_STOPWORDS = new Set([
   "and","or","the","a","an","of","to","for","in","on","at","by","with","from",
@@ -481,19 +491,63 @@ EXAMPLES OF THE RIGHT TONE FOR locked_preview (do not copy verbatim, match the s
 
 No em dashes anywhere. No phrases ending in prepositions/conjunctions/articles in the task arrays.`;
 
-    // Fire-and-hold: kick off network call now, await later. Attach a no-op
-    // catch so an unhandled rejection here can't crash the isolate while the
-    // clause loop is still running.
-    const tasksPromise: Promise<Response | { __error: unknown }> = callGateway({
+    // Build NZ data block for the tasks prompt. Only data we already have
+    // (display_message from humanise-scores.json, or the ANZSCO group template
+    // already stitched into hardcodedS2). Empty string = model must stay generic.
+    const nzDataBlock = (() => {
+      const parts: string[] = [];
+      if (typeof nzMarketSignal === "string" && nzMarketSignal.trim()) {
+        parts.push(`Occupation-level NZ market signal: ${nzMarketSignal.trim()}`);
+      }
+      if (hardcodedS2) {
+        parts.push(`ANZSCO group market data: ${hardcodedS2}`);
+      }
+      return parts.join("\n");
+    })();
+
+    const tasksUserPromptWithNz = `${tasksUserPromptEarly}
+
+NZ DATA AVAILABLE (use ONLY this for any NZ-specific claim in nz_signal; if empty, stay generic):
+${nzDataBlock || "(none — nz_signal must speak generally about the role category, no NZ percentages or NZ employer claims)"}`;
+
+    // Retry wrapper for tasks call: if any banned phrase appears in any text
+    // field of the parsed tool call, retry once with explicit feedback.
+    const callTasksOnce = (feedback?: string) => callGateway({
       model: "google/gemini-3-flash-preview",
       max_tokens: 1000,
       messages: [
         { role: "system", content: TASKS_SYSTEM },
-        { role: "user",   content: tasksUserPromptEarly },
+        { role: "user",   content: tasksUserPromptWithNz },
+        ...(feedback ? [{ role: "user", content: `Your previous draft was rejected: ${feedback}. Rewrite the tool call without the issue. Same constraints.` }] : []),
       ],
       tools: HP_TOOL,
       tool_choice: { type: "function", function: { name: "return_tasks" } },
-    }, LOVABLE_API_KEY).catch((err) => ({ __error: err }));
+    }, LOVABLE_API_KEY).catch((err) => ({ __error: err }) as { __error: unknown });
+
+    const tasksPromise: Promise<Response | { __error: unknown }> = (async () => {
+      const first = await callTasksOnce();
+      if (!(first instanceof Response) || !first.ok) return first;
+      // Peek at the body to check for banned phrases. We must clone because we
+      // need to read it again downstream.
+      try {
+        const cloned = first.clone();
+        const data = await cloned.json();
+        const args = data?.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
+        if (typeof args === "string") {
+          const banned = findBannedPhrase(args);
+          if (banned) {
+            console.warn(`[honest-picture] tasks contained banned phrase "${banned}" — retrying once`);
+            const second = await callTasksOnce(`it contained the banned phrase "${banned}" in one of the text fields`);
+            if (second instanceof Response && second.ok) return second;
+            // Fall through to the original response; scrubStr will neutralise
+            // the banned phrase as a final safety net.
+          }
+        }
+      } catch (e) {
+        console.warn("[honest-picture] tasks banned-phrase peek failed", e);
+      }
+      return first;
+    })();
 
     let clause = "";
     let clauseFinishReason: string | null = null;
@@ -707,7 +761,36 @@ No em dashes anywhere. No phrases ending in prepositions/conjunctions/articles i
       for (const [re, sub] of PRODUCT_PATTERNS) out = out.replace(re, sub);
       return out.replace(/\s{2,}/g, " ").trim();
     };
-    const scrubStr = (s: string) => stripBrands(stripCJK(s ?? ""));
+    const BANNED_REPLACEMENTS: Array<[RegExp, string]> = [
+      [/\bleveraging\b/gi, "using"],
+      [/\bleverage\b/gi, "use"],
+      [/\bleveraged\b/gi, "used"],
+      [/\bnavigating\b/gi, "handling"],
+      [/\bnavigate\b/gi, "handle"],
+      [/\bnavigated\b/gi, "handled"],
+      [/\bevolving\b/gi, "changing"],
+      [/\blandscape\b/gi, "field"],
+      [/\brapidly\b/gi, "quickly"],
+      [/\bfuture[- ]proof\b/gi, "resilient"],
+      [/\bstay ahead\b/gi, "keep up"],
+      [/\badaptable\b/gi, "flexible"],
+      [/\birreplaceable\b/gi, "essential"],
+      [/\bin today's\b/gi, "in current"],
+      [/\bsignificant\b/gi, "substantial"],
+      [/\bmeaningful way\b/gi, "real way"],
+    ];
+    const stripBanned = (s: string) => {
+      let out = s ?? "";
+      for (const [re, sub] of BANNED_REPLACEMENTS) {
+        out = out.replace(re, (match) =>
+          match[0] === match[0].toUpperCase()
+            ? sub.charAt(0).toUpperCase() + sub.slice(1)
+            : sub
+        );
+      }
+      return out.replace(/\s{2,}/g, " ").trim();
+    };
+    const scrubStr = (s: string) => stripBanned(stripBrands(stripCJK(s ?? "")));
     const scrubArr = (arr: string[]) => arr.map((x) => scrubStr(x)).filter(Boolean);
 
     const responsePayload = {

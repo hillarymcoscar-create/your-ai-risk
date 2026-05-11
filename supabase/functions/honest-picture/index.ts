@@ -425,8 +425,59 @@ Deno.serve(async (req) => {
       return {
         text: raw,
         finishReason: typeof choice.finish_reason === "string" ? choice.finish_reason : null,
-      };
     }
+
+    // ---- Kick off tasks call in PARALLEL with clause generation ----
+    // Build the tasks prompt now and fire the request before we await the clause
+    // loop so total latency = max(clause, tasks) instead of clause + tasks.
+    const tasksUserPromptEarly = `Generate task lists and Agent Watch fields for this person.
+
+Occupation: ${jobTitle}
+Raw job title entered: ${rawJobTitle || jobTitle}
+Industry: ${industry || "unspecified"}
+NZ region: ${region || "New Zealand"}
+Risk band: ${bandKey}
+Agent tier: ${agentTier || "unspecified"}
+Regularly uses AI: ${usesAi ? "yes" : "no"}
+
+Return ALL of these fields:
+
+TASK LISTS
+- tasks_at_risk: 3 short action phrases (4 to 7 words) for the most automatable tasks in this role.
+- protective_tasks: 3 short action phrases (4 to 7 words) for what makes this role hard to fully automate.
+- protective_skill_keywords: For each protective_tasks entry, output a 'searchKeywords'-style string containing a short 2-3 word keyword phrase that summarises the skill's core topic for platform course searches. Use simple industry-standard terms (e.g. 'project management', 'content strategy', 'data analysis', 'stakeholder management', 'search intent'). Never use full sentences — keywords only. Same order as protective_tasks. Lowercase preferred.
+- agent_note: Name one of (Microsoft Copilot, ChatGPT, Google Gemini, Make.com, Manus) and give one concrete example of what it handles in this role. Under 30 words. For trades/healthcare/hands-on physical work, write "This role has strong natural protection from AI agents because [reason]" without naming a tool.
+- agent_tasks: 3 specific tasks AI agents are handling today in this occupation. Action verb start. Max 12 words each.
+
+AGENT WATCH FIELDS
+- agent_reality: 2 to 3 sentences specific to this occupation. Describe what autonomous AI agents are doing right now in this exact role. Name 2 to 3 specific real tools (e.g. Semrush AI, BrightEdge Copilot, custom GPT-4o pipelines, Microsoft Copilot, Make.com, Manus, Claude). Be concrete about what work is being absorbed. Mention NZ digital agencies or NZ businesses where natural. Do NOT repeat the agent_note content. THIS IS THE SHORTER RESULTS-PAGE VERSION.
+- agent_reality_email: 4 to 5 sentences. A SIGNIFICANTLY EXPANDED, deeper version of agent_reality, written for the email the user just gave their address to receive. It MUST contain information that was NOT visible on the results page. Name specific tools, specific NZ businesses or industry patterns where known, specific timelines (e.g. "in the last 6 months", "by mid 2026"), and specific tasks being automated right now in NZ. Do NOT repeat agent_reality verbatim. Treat agent_reality as the teaser and agent_reality_email as the full briefing. No em dashes.
+- nz_signal: 2 sentences. Include at least one specific NZ data point relevant to this occupation (e.g. AI mentions in NZ job ads have risen 143.5% since March 2025; junior coordinator roles being advertised less; senior roles increasingly listing AI proficiency as baseline). No generic global claims.
+- your_move: EXACTLY ONE sentence. One concrete 30-day action specific to this role (e.g. "Spend the next 30 days building one AI-assisted SEO workflow you own completely, site audit automation, content briefing, or monthly reporting."). Direct, specific, no platitudes. MUST NOT mention humanise.nz, Humanise, the report, the email, results, or any URL or link. MUST NOT include any follow-on sentence. The field ends after the single action sentence.
+- locked_preview: Maximum 2 sentences. Write one teaser that creates a specific, unresolved question about THIS person's situation. Reference the occupation by name and the agent tier reality. Make them feel there is one piece of information about their specific role that would change how they think about their next 90 days. End with a direct question to the reader. Banned words: unlock, discover, exclusive, tips, strategies, insights, premium. Do not sound like a marketing headline. No em dashes.
+- locked_content_full: 3 to 4 sentences. The EXPANDED answer to the locked_preview teaser, written for the email the user just gave their address to receive. This is the deepest, most specific intelligence in the entire product. It MUST contain information not visible on the results page: name specific NZ regions, specific company types, specific tools, specific tasks, specific timelines (e.g. "Canterbury and Auckland agencies are trialling agent-first SEO workflows where one senior strategist directs a stack of agents handling audits, briefs, and reporting. The roles surviving are not generalist coordinators, they are specialists in technical architecture, client strategy, or AI workflow design. The window to make that move deliberately is roughly 6 to 12 months."). Do NOT repeat anything from agent_reality, nz_signal, your_move, or locked_preview. No em dashes. End with 2 sentences that do the following. Sentence 1: Tell the reader that Humanise has specific data about their occupation that they have not yet seen. Reference something concrete, a specific task, a specific trend, or a specific comparison, that sounds like real intelligence, not a generic teaser. Sentence 2: Direct them back to humanise.nz with a clear action. Use one of these endings depending on context: Option A (if they have not yet seen their full results): "See the full breakdown for your role at humanise.nz". Option B (if they have completed the quiz): "Your full results are waiting at humanise.nz". Option C (if the content implies an upgrade): "The complete picture for your role is at humanise.nz". The ending must never be a yes/no question answerable from memory. It must create a specific gap between what the reader knows and what Humanise knows about their situation. It must always end with humanise.nz as the destination. The ending must NOT be a question and must NOT end with a question mark. Examples of the correct ending shape: "Humanise has identified the three specific SEO tasks disappearing fastest from Canterbury job ads right now, and scored whether your current workflow depends on any of them. Your full breakdown is waiting at humanise.nz" / "The NZ data shows one coordinator function that is actually growing while others compress, and it is not the one most people assume. See where your role sits at humanise.nz" / "Humanise has scored your specific task mix against the two accounting functions being automated fastest in NZ firms right now. See the full picture at humanise.nz".
+
+EXAMPLES OF THE RIGHT TONE FOR locked_preview (do not copy verbatim, match the structure)
+- SEO Specialist (Tier 1): "There are three specific SEO tasks agents cannot yet do reliably, and whether your current role focuses on any of them determines how exposed you actually are. Does yours?"
+- Marketing Coordinator (Tier 2): "The agencies in NZ that restructured last quarter kept one type of coordinator and cut another. The difference was not seniority or salary. Do you know which side of that line your role sits on?"
+- Junior Accountant (Tier 1): "Two accounting tasks are disappearing from NZ job ads faster than any others right now. If either of them describes most of your week, your timeline is shorter than your score suggests. Want to know what they are?"
+- Registered Nurse (Tier 4): "Your clinical work is protected, but one part of your role is changing faster than most nurses realise. It is not what you would expect. Do you know what it is?"
+
+No em dashes anywhere. No phrases ending in prepositions/conjunctions/articles in the task arrays.`;
+
+    // Fire-and-hold: kick off network call now, await later. Attach a no-op
+    // catch so an unhandled rejection here can't crash the isolate while the
+    // clause loop is still running.
+    const tasksPromise: Promise<Response | { __error: unknown }> = callGateway({
+      model: "google/gemini-3-flash-preview",
+      max_tokens: 1000,
+      messages: [
+        { role: "system", content: TASKS_SYSTEM },
+        { role: "user",   content: tasksUserPromptEarly },
+      ],
+      tools: HP_TOOL,
+      tool_choice: { type: "function", function: { name: "return_tasks" } },
+    }, LOVABLE_API_KEY).catch((err) => ({ __error: err }));
 
     let clause = "";
     let clauseFinishReason: string | null = null;

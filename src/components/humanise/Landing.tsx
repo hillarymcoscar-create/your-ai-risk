@@ -50,10 +50,7 @@ export const Landing = ({ onStart }: { onStart: () => void }) => {
     return () => obs.disconnect();
   }, [stats]);
 
-  const counterText =
-    stats && stats.monthly_count >= 50
-      ? `${stats.monthly_count.toLocaleString("en-NZ")} New Zealanders have checked their score this month`
-      : "Join the first New Zealanders checking their AI risk";
+  const counterText = "Join the first New Zealanders checking their AI risk";
 
   const showLeaderboard =
     stats && stats.weekly_total >= 10 && stats.first_to_go.length > 0 && stats.last_to_go.length > 0;
@@ -115,8 +112,9 @@ export const Landing = ({ onStart }: { onStart: () => void }) => {
             label="of NZ work tasks AI can already complete end-to-end without human input."
           />
           <Stat
-            number="7 → 14%"
+            number="7→14%"
             label="NZ businesses reporting AI-related job losses in one year. Doubled from 2024."
+            numberClassName="text-3xl sm:text-4xl"
           />
           <Stat
             number="30%"
@@ -124,8 +122,7 @@ export const Landing = ({ onStart }: { onStart: () => void }) => {
           />
         </div>
         <p className="mt-6 text-center text-sm text-accent/70">
-          <span className="font-normal">Sources: </span>
-          <span className="font-semibold">Accenture/Microsoft (2024), AI Forum NZ (2025), Reserve Bank of NZ AN2026-02</span>
+          Sources: Accenture/Microsoft (2024), AI Forum NZ (2025), Reserve Bank of NZ AN2026-02
         </p>
       </section>
 
@@ -242,9 +239,9 @@ export const Landing = ({ onStart }: { onStart: () => void }) => {
   );
 };
 
-const Stat = ({ number, label }: { number: string; label: string }) => (
+const Stat = ({ number, label, numberClassName }: { number: string; label: string; numberClassName?: string }) => (
   <div className="rounded-2xl border border-border bg-card p-6 shadow-soft flex flex-col h-full">
-    <div className="text-4xl sm:text-5xl font-bold text-accent tracking-tight">{number}</div>
+    <div className={`font-bold text-accent tracking-tight whitespace-nowrap ${numberClassName ?? "text-4xl sm:text-5xl"}`}>{number}</div>
     <p className="mt-3 text-sm text-muted-foreground leading-relaxed">{label}</p>
   </div>
 );

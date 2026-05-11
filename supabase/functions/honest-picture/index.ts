@@ -491,19 +491,63 @@ EXAMPLES OF THE RIGHT TONE FOR locked_preview (do not copy verbatim, match the s
 
 No em dashes anywhere. No phrases ending in prepositions/conjunctions/articles in the task arrays.`;
 
-    // Fire-and-hold: kick off network call now, await later. Attach a no-op
-    // catch so an unhandled rejection here can't crash the isolate while the
-    // clause loop is still running.
-    const tasksPromise: Promise<Response | { __error: unknown }> = callGateway({
+    // Build NZ data block for the tasks prompt. Only data we already have
+    // (display_message from humanise-scores.json, or the ANZSCO group template
+    // already stitched into hardcodedS2). Empty string = model must stay generic.
+    const nzDataBlock = (() => {
+      const parts: string[] = [];
+      if (typeof nzMarketSignal === "string" && nzMarketSignal.trim()) {
+        parts.push(`Occupation-level NZ market signal: ${nzMarketSignal.trim()}`);
+      }
+      if (hardcodedS2) {
+        parts.push(`ANZSCO group market data: ${hardcodedS2}`);
+      }
+      return parts.join("\n");
+    })();
+
+    const tasksUserPromptWithNz = `${tasksUserPromptEarly}
+
+NZ DATA AVAILABLE (use ONLY this for any NZ-specific claim in nz_signal; if empty, stay generic):
+${nzDataBlock || "(none — nz_signal must speak generally about the role category, no NZ percentages or NZ employer claims)"}`;
+
+    // Retry wrapper for tasks call: if any banned phrase appears in any text
+    // field of the parsed tool call, retry once with explicit feedback.
+    const callTasksOnce = (feedback?: string) => callGateway({
       model: "google/gemini-3-flash-preview",
       max_tokens: 1000,
       messages: [
         { role: "system", content: TASKS_SYSTEM },
-        { role: "user",   content: tasksUserPromptEarly },
+        { role: "user",   content: tasksUserPromptWithNz },
+        ...(feedback ? [{ role: "user", content: `Your previous draft was rejected: ${feedback}. Rewrite the tool call without the issue. Same constraints.` }] : []),
       ],
       tools: HP_TOOL,
       tool_choice: { type: "function", function: { name: "return_tasks" } },
-    }, LOVABLE_API_KEY).catch((err) => ({ __error: err }));
+    }, LOVABLE_API_KEY).catch((err) => ({ __error: err }) as { __error: unknown });
+
+    const tasksPromise: Promise<Response | { __error: unknown }> = (async () => {
+      const first = await callTasksOnce();
+      if (!(first instanceof Response) || !first.ok) return first;
+      // Peek at the body to check for banned phrases. We must clone because we
+      // need to read it again downstream.
+      try {
+        const cloned = first.clone();
+        const data = await cloned.json();
+        const args = data?.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
+        if (typeof args === "string") {
+          const banned = findBannedPhrase(args);
+          if (banned) {
+            console.warn(`[honest-picture] tasks contained banned phrase "${banned}" — retrying once`);
+            const second = await callTasksOnce(`it contained the banned phrase "${banned}" in one of the text fields`);
+            if (second instanceof Response && second.ok) return second;
+            // Fall through to the original response; scrubStr will neutralise
+            // the banned phrase as a final safety net.
+          }
+        }
+      } catch (e) {
+        console.warn("[honest-picture] tasks banned-phrase peek failed", e);
+      }
+      return first;
+    })();
 
     let clause = "";
     let clauseFinishReason: string | null = null;

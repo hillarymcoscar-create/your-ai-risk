@@ -667,8 +667,47 @@ No em dashes anywhere. No phrases ending in prepositions/conjunctions/articles i
       });
     }
 
-    // Universal CJK strip across every string field in the response.
-    const scrubStr = (s: string) => stripCJK(s ?? "");
+    // Universal CJK + product-brand strip across every string field in the response.
+    // Defensive: even though the system prompt forbids brand names, scrub any
+    // that slip through from the model. Replace with neutral category words.
+    const PRODUCT_PATTERNS: Array<[RegExp, string]> = [
+      [/\bBrightEdge\s+Copilot\b/gi, "AI-powered SEO platforms"],
+      [/\bBrightEdge\b/gi, "AI-powered SEO platforms"],
+      [/\bSemrush\s+AI\b/gi, "automated competitor analysis tools"],
+      [/\bSemrush\b/gi, "automated competitor analysis tools"],
+      [/\bAhrefs\b/gi, "automated competitor analysis tools"],
+      [/\bMoz\b/gi, "automated competitor analysis tools"],
+      [/\bSurfer(?:\s+SEO)?\b/gi, "AI-assisted content tools"],
+      [/\bClearscope\b/gi, "AI-assisted content tools"],
+      [/\bJasper\b/gi, "AI content generation tools"],
+      [/\bMicrosoft\s+Copilot\b/gi, "AI assistants"],
+      [/\bGitHub\s+Copilot\b/gi, "AI coding assistants"],
+      [/\bCopilot\b/gi, "AI assistants"],
+      [/\bChatGPT\b/gi, "large language model tools"],
+      [/\bGPT[- ]?5(?:\.\d+)?\b/gi, "large language models"],
+      [/\bGPT[- ]?4o\b/gi, "large language models"],
+      [/\bGPT[- ]?4\b/gi, "large language models"],
+      [/\bGPT[- ]?3(?:\.5)?\b/gi, "large language models"],
+      [/\bGPT\b/gi, "large language models"],
+      [/\bClaude\b/gi, "large language model tools"],
+      [/\bGemini\b/gi, "large language model tools"],
+      [/\bOpenAI\b/gi, "AI vendors"],
+      [/\bAnthropic\b/gi, "AI vendors"],
+      [/\bSalesforce\b/gi, "CRM automation platforms"],
+      [/\bHubSpot\b/gi, "marketing automation platforms"],
+      [/\bMake\.com\b/gi, "workflow automation tools"],
+      [/\bZapier\b/gi, "workflow automation tools"],
+      [/\bManus\b/gi, "autonomous AI agents"],
+      [/\bXero\b/gi, "accounting automation platforms"],
+      [/\bMYOB\b/gi, "accounting automation platforms"],
+      [/\bNotion\s+AI\b/gi, "AI productivity tools"],
+    ];
+    const stripBrands = (s: string) => {
+      let out = s ?? "";
+      for (const [re, sub] of PRODUCT_PATTERNS) out = out.replace(re, sub);
+      return out.replace(/\s{2,}/g, " ").trim();
+    };
+    const scrubStr = (s: string) => stripBrands(stripCJK(s ?? ""));
     const scrubArr = (arr: string[]) => arr.map((x) => scrubStr(x)).filter(Boolean);
 
     const responsePayload = {

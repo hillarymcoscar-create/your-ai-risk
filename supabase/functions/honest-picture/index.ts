@@ -495,14 +495,14 @@ No em dashes anywhere. No phrases ending in prepositions/conjunctions/articles i
         const count = sentenceCount(clause);
         const stoppedEarly = clauseFinishReason === "length" || clauseFinishReason === "max_tokens";
 
-        if (!banned && count === 3 && !stoppedEarly) {
+        if (!banned && count >= 3 && !stoppedEarly) {
           clauseAccepted = true;
           break;
         }
 
         const problems: string[] = [];
         if (banned) problems.push(`it contained the banned phrase "${banned}"`);
-        if (count !== 3) problems.push(`it returned ${count} complete sentences instead of exactly 3`);
+        if (count < 3) problems.push(`it returned ${count} complete sentences instead of at least 3`);
         if (stoppedEarly) problems.push(`it stopped early with finish_reason=${clauseFinishReason}`);
 
         retryFeedback = `${problems.join("; ")}. Rewrite as exactly 3 complete sentences.`;

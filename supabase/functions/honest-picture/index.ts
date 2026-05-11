@@ -761,7 +761,36 @@ ${nzDataBlock || "(none — nz_signal must speak generally about the role catego
       for (const [re, sub] of PRODUCT_PATTERNS) out = out.replace(re, sub);
       return out.replace(/\s{2,}/g, " ").trim();
     };
-    const scrubStr = (s: string) => stripBrands(stripCJK(s ?? ""));
+    const BANNED_REPLACEMENTS: Array<[RegExp, string]> = [
+      [/\bleveraging\b/gi, "using"],
+      [/\bleverage\b/gi, "use"],
+      [/\bleveraged\b/gi, "used"],
+      [/\bnavigating\b/gi, "handling"],
+      [/\bnavigate\b/gi, "handle"],
+      [/\bnavigated\b/gi, "handled"],
+      [/\bevolving\b/gi, "changing"],
+      [/\blandscape\b/gi, "field"],
+      [/\brapidly\b/gi, "quickly"],
+      [/\bfuture[- ]proof\b/gi, "resilient"],
+      [/\bstay ahead\b/gi, "keep up"],
+      [/\badaptable\b/gi, "flexible"],
+      [/\birreplaceable\b/gi, "essential"],
+      [/\bin today's\b/gi, "in current"],
+      [/\bsignificant\b/gi, "substantial"],
+      [/\bmeaningful way\b/gi, "real way"],
+    ];
+    const stripBanned = (s: string) => {
+      let out = s ?? "";
+      for (const [re, sub] of BANNED_REPLACEMENTS) {
+        out = out.replace(re, (match) =>
+          match[0] === match[0].toUpperCase()
+            ? sub.charAt(0).toUpperCase() + sub.slice(1)
+            : sub
+        );
+      }
+      return out.replace(/\s{2,}/g, " ").trim();
+    };
+    const scrubStr = (s: string) => stripBanned(stripBrands(stripCJK(s ?? "")));
     const scrubArr = (arr: string[]) => arr.map((x) => scrubStr(x)).filter(Boolean);
 
     const responsePayload = {

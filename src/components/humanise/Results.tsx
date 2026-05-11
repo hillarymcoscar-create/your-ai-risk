@@ -740,9 +740,9 @@ const AgentWatch = ({
   return (
     <section
       className="mt-8 rounded-2xl bg-card border border-border shadow-soft p-6 sm:p-7"
-      style={{ borderLeft: "4px solid #00B5A4" }}
+      style={{ borderLeft: "4px solid hsl(var(--accent))" }}
     >
-      <p className="text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: "#00B5A4" }}>
+      <p className="text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: "hsl(var(--accent))" }}>
         🤖 Agent Watch
       </p>
       <p className="mt-3 text-[15px] text-muted-foreground leading-relaxed">
@@ -765,7 +765,7 @@ const AgentWatch = ({
         <div className="mt-5 space-y-5">
           {nzSignal && (
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: "#00B5A4" }}>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: "hsl(var(--accent))" }}>
                 NZ Signal
               </p>
               <p className="mt-2 text-[15px] leading-relaxed text-primary">{nzSignal}</p>
@@ -773,7 +773,7 @@ const AgentWatch = ({
           )}
           {yourMove && (
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: "#00B5A4" }}>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: "hsl(var(--accent))" }}>
                 Your Move
               </p>
               <p className="mt-2 text-[15px] leading-relaxed text-primary">{yourMove}</p>
@@ -787,7 +787,7 @@ const AgentWatch = ({
         <div className="mt-5 space-y-4">
           {nzSignal && (
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: "#00B5A4" }}>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: "hsl(var(--accent))" }}>
                 NZ Signal
               </p>
               <p className="mt-2 text-[15px] leading-relaxed text-primary">{nzSignal}</p>
@@ -795,7 +795,7 @@ const AgentWatch = ({
           )}
           {yourMove && (
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: "#00B5A4" }}>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: "hsl(var(--accent))" }}>
                 Your Move
               </p>
               <p className="mt-2 text-[15px] leading-relaxed text-primary">{yourMove}</p>

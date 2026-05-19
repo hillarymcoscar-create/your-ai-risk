@@ -922,18 +922,12 @@ const SoftExitBanner = () => (
         Your score below is real, but it's based on the closest occupation match we have. Take it as a signal, not a verdict.
       </p>
     </div>
-    <div className="mt-5 flex flex-col sm:flex-row gap-3">
+    <div className="mt-5">
       <a
-        href="/hands-on"
+        href="/why-hands-on-roles-are-safer"
         className="inline-flex items-center justify-center rounded-full bg-cta text-accent-foreground hover:opacity-95 font-semibold h-11 px-5 text-sm"
       >
         Why hands-on roles are safer
-      </a>
-      <a
-        href="/hands-on"
-        className="inline-flex items-center justify-center rounded-full border border-border bg-card text-primary hover:bg-secondary font-semibold h-11 px-5 text-sm"
-      >
-        Notify me when Humanise builds a hands-on version
       </a>
     </div>
   </section>

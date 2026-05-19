@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/humanise/Logo";
 import { Footer } from "@/components/humanise/Footer";
-import { ArrowRight, Clock, Lock, BookOpen } from "lucide-react";
+import { ArrowRight, Check, Clock, Lock, BookOpen, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { track } from "@/lib/analytics";
 

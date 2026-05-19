@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/humanise/Logo";
 import { Footer } from "@/components/humanise/Footer";
-import { ArrowRight, Clock, Lock, BookOpen } from "lucide-react";
+import { ArrowRight, Check, Clock, Lock, BookOpen, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { track } from "@/lib/analytics";
 
@@ -210,6 +210,68 @@ export const Landing = ({ onStart }: { onStart: () => void }) => {
             for screen-based work.
           </p>
         </div>
+      </section>
+
+      {/* SECTION 6 — WHY NOT CHATGPT */}
+      <section className="container max-w-5xl py-16 sm:py-20">
+        <h2 className="text-center text-2xl sm:text-3xl font-bold text-accent">
+          Why not just ask ChatGPT?
+        </h2>
+        <p className="mt-4 text-center text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto">
+          It's a fair question. AI chatbots are powerful — but they don't know what's happening to your role in New Zealand.
+        </p>
+
+        <div className="mt-10 space-y-4">
+          {[
+            {
+              left: "Trained on global data, not New Zealand-specific",
+              right: "Built on Reserve Bank of NZ research, MBIE Jobs Online, and Stats NZ",
+            },
+            {
+              left: "Makes up statistics confidently when it doesn't know",
+              right: "Every number is sourced and verifiable",
+            },
+            {
+              left: "Gives different answers each time you ask",
+              right: "Same inputs always produce the same score",
+            },
+            {
+              left: "Knowledge frozen at training cutoff",
+              right: "Updated with live NZ hiring trends from SEEK and Trade Me Jobs",
+            },
+            {
+              left: "Generic paragraphs of advice",
+              right: "A specific risk score and clear next move for your role",
+            },
+            {
+              left: "Doesn't know your industry's NZ-specific reality",
+              right: "1,016 occupations scored against NZ workforce data",
+            },
+            {
+              left: "Won't tell you what AI agents are absorbing from your job",
+              right: "Live AGENT WATCH per role: see exactly which agents are targeting your work right now",
+            },
+          ].map((row, i) => (
+            <div key={i} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="rounded-2xl border border-border bg-card p-5 shadow-soft flex items-start gap-3">
+                <div className="mt-0.5 text-muted-foreground/60 shrink-0">
+                  <X className="h-5 w-5" strokeWidth={2} />
+                </div>
+                <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">{row.left}</p>
+              </div>
+              <div className="rounded-2xl border border-border bg-card p-5 shadow-soft border-l-4 border-l-accent flex items-start gap-3">
+                <div className="mt-0.5 text-accent shrink-0">
+                  <Check className="h-5 w-5" strokeWidth={2.5} />
+                </div>
+                <p className="text-sm sm:text-base text-primary leading-relaxed font-medium">{row.right}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <p className="mt-10 text-center text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+          We're not replacing your favourite AI assistant. We're doing what it can't: combining NZ-specific research with live local data to give you a number you can actually act on.
+        </p>
       </section>
 
       {/* SECTION 7 — FINAL CTA */}

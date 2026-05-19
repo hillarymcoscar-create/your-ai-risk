@@ -53,65 +53,45 @@ const WhyHandsOnRolesAreSafer = () => {
 
         <article className="space-y-6 text-[16px] sm:text-[17px] text-muted-foreground leading-relaxed">
           <p>
-            If your work involves your hands, your body, or being physically present somewhere —
-            you're in genuinely lower-risk territory than most knowledge workers. Here's why.
+            If your work involves your hands, your body, or being physically present somewhere, you're in genuinely lower-risk territory than most knowledge workers. Here's why.
           </p>
 
           <h2 className="text-xl sm:text-2xl font-semibold text-accent pt-4">
             AI can't replicate physical dexterity.
           </h2>
           <p>
-            The robotics needed to match a sparky pulling cable through a wall cavity, a plumber
-            working under a sink, or a nurse changing a dressing on real human skin — that
-            technology exists in research labs, but it's nowhere near commercial deployment. The
-            hardware costs more than the worker, breaks down often, and can't adapt to unexpected
-            conditions. A sparky's hands and judgement are still cheaper and more reliable than any
-            robot Bunnings could put on a job site.
+            The robotics needed to match a sparky pulling cable through a wall cavity, a plumber working under a sink, or a nurse changing a dressing on real human skin? That technology exists in research labs, but it's nowhere near commercial deployment. The hardware costs more than the worker, breaks down often, and can't adapt to unexpected conditions. A sparky's hands and judgement are still cheaper and more reliable than any robot Bunnings could put on a job site.
           </p>
 
           <h2 className="text-xl sm:text-2xl font-semibold text-accent pt-4">
             Real-world unpredictability defeats current AI.
           </h2>
           <p>
-            Knowledge work happens in controlled environments — spreadsheets, emails, documents. AI
-            thrives there. But a building site has weather, ground conditions, unexpected old
-            wiring, customers changing their minds, and a thousand variables no model has been
-            trained on. AI is genuinely terrible at situations it hasn't seen before. Hands-on work
-            is full of them.
+            Knowledge work happens in controlled environments. Spreadsheets, emails, documents. AI thrives there. But a building site has weather, ground conditions, unexpected old wiring, customers changing their minds, and a thousand variables no model has been trained on. AI is genuinely terrible at situations it hasn't seen before. Hands-on work is full of them.
           </p>
 
           <h2 className="text-xl sm:text-2xl font-semibold text-accent pt-4">
             Regulation and licensing protect you.
           </h2>
           <p>
-            Electrical work, plumbing, medical care, building inspection — these are regulated. You
-            need certification, licensing, insurance, and accountability. AI doesn't have a licence.
-            Even if a model could technically diagnose a wiring fault, no one can legally sign off
-            on the work, carry the insurance, or be liable when it goes wrong. That regulatory moat
-            protects entire industries.
+            Electrical work, plumbing, medical care, building inspection. These are regulated. You need certification, licensing, insurance, and accountability. AI doesn't have a licence. Even if a model could technically diagnose a wiring fault, no one can legally sign off on the work, carry the insurance, or be liable when it goes wrong. That regulatory moat protects entire industries.
           </p>
 
           <h2 className="text-xl sm:text-2xl font-semibold text-accent pt-4">
             Customers want a human.
           </h2>
           <p>
-            In hands-on services — hairdressing, aged care, hospitality, personal training,
-            hands-on therapy — the human element is the product. Customers aren't paying for the
-            task to be done. They're paying for someone to do it for them, with care, in person.
-            That demand isn't going anywhere.
+            In hands-on services like hairdressing, aged care, hospitality, personal training, and hands-on therapy, the human element is the product. Customers aren't paying for the task to be done. They're paying for someone to do it for them, with care, in person. That demand isn't going anywhere.
           </p>
 
           <h2 className="text-xl sm:text-2xl font-semibold text-accent pt-4">
             The caveat: it's not forever.
           </h2>
           <p>
-            Robotics is improving. Within 10-15 years, some hands-on work will start to face real
-            automation pressure (warehouse picking, basic food prep, simple agricultural tasks).
-            And the paperwork around hands-on jobs — quoting, invoicing, scheduling, compliance
-            reporting — is already being automated.
+            Robotics is improving. Within 10 to 15 years, some hands-on work will start to face real automation pressure (warehouse picking, basic food prep, simple agricultural tasks). And the paperwork around hands-on jobs (quoting, invoicing, scheduling, compliance reporting) is already being automated.
           </p>
 
-          <p className="text-primary font-medium">
+          <p>
             So if you're in a hands-on role, your hands are safe for now. Your admin probably isn't.
           </p>
 

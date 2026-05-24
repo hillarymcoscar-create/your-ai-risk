@@ -297,27 +297,16 @@ export const UpskillSection = ({
 
   return (
     <section className="mt-12">
-      <h2 className="text-2xl font-semibold text-primary text-center">Ready to Upskill?</h2>
+      <h2 className="text-2xl font-semibold text-primary text-center">Ready to upskill?</h2>
 
       {/* Free tier */}
       <div className="mt-6 rounded-2xl border border-border bg-card p-6 shadow-soft">
-        <h3 className="font-semibold text-primary">Your 3 protective skills to build</h3>
-
-        <ul className="mt-4 space-y-2">
-          {skills.map((skill, i) => (
-            <li key={i} className="flex gap-2 text-sm font-medium text-primary">
-              <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-accent shrink-0" />
-              <span>{skill}</span>
-            </li>
-          ))}
-        </ul>
-
-        <p className="mt-5 text-sm font-medium text-primary">Explore courses for these skills:</p>
+        <p className="text-sm font-medium text-primary">Explore courses for your protective skills:</p>
         {(() => {
           const searchTerm = (skillKeywords?.[0]?.trim() || skills[0]?.trim() || "").trim();
           const combined = encodeURIComponent(searchTerm);
           return (
-            <div className="mt-2 grid grid-cols-3 gap-2">
+            <div className="mt-3 grid grid-cols-3 gap-2">
               <a
                 href={`https://www.linkedin.com/learning/search?keywords=${combined}`}
                 target="_blank"
@@ -353,23 +342,8 @@ export const UpskillSection = ({
         })()}
 
         <p className="mt-3 text-xs text-muted-foreground">Free and paid options available · Skillshare free trial available</p>
-
-        {/* Email CTA */}
-        <div className="mt-5 flex flex-col sm:flex-row sm:items-center gap-3 border-t border-border pt-5">
-          <p className="text-sm font-medium text-primary flex-1">
-            Get your personalised industry upskill pack — free
-          </p>
-          <Button
-            onClick={() => setModalOpen(true)}
-            className="rounded-full font-semibold bg-cta text-accent-foreground hover:opacity-95 shrink-0"
-          >
-            <BookOpen className="mr-2 h-4 w-4" />
-            Email me the pack
-          </Button>
-        </div>
-
-
       </div>
+
 
       {/* Waitlist tier */}
       <div className="mt-4 rounded-2xl border border-accent/30 bg-accent/5 p-6">

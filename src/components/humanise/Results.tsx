@@ -825,6 +825,47 @@ const AgentWatch = ({
   );
 };
 
+const AgentWatchPreview = ({
+  agentTier, agentReality,
+}: {
+  agentTier: AgentTier | null;
+  agentReality?: string;
+}) => {
+  const badge = agentTier ? AGENT_BADGE_BY_TIER[agentTier] : null;
+
+  return (
+    <section
+      className="mt-8 rounded-2xl bg-card border border-border shadow-soft p-6 sm:p-7 animate-fade-in"
+      style={{ borderLeft: "4px solid hsl(var(--accent))" }}
+    >
+      <p className="text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: "hsl(var(--accent))" }}>
+        🤖 Agent Watch
+      </p>
+      <p className="mt-3 text-[15px] text-muted-foreground leading-relaxed">
+        AI agents handle entire task sequences without human input. Here's what's targeting roles like yours right now.
+      </p>
+      {badge && (
+        <span
+          className="mt-4 inline-block rounded-full px-3 py-1 text-[11px] font-bold uppercase tracking-[0.1em] text-white"
+          style={{ background: badge.bg }}
+        >
+          {badge.label}
+        </span>
+      )}
+
+      {agentReality && (
+        <div className="relative mt-5">
+          <p className="text-[15px] leading-relaxed text-primary">{agentReality}</p>
+          <div
+            className="pointer-events-none absolute inset-x-0 bottom-0 h-10"
+            style={{ background: "linear-gradient(to bottom, hsl(var(--card) / 0), hsl(var(--card)))" }}
+          />
+        </div>
+      )}
+    </section>
+  );
+};
+
 const InlineScoreCaveat = () => {
   const [open, setOpen] = useState(false);
   return (

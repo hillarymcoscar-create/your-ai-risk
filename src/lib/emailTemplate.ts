@@ -186,6 +186,30 @@ export function buildEmailHtml(opts: BuildEmailOpts): string {
   const workforceSection = workforceHtml
     ? `${sec("NZ workforce data")}${workforceHtml}` : "";
 
+  // ── 6.5 Agent Watch ──────────────────────────────────────────────────
+  const tierLabel = agentTier ? AGENT_TIER_LABELS[agentTier] : "";
+  const agentBits: string[] = [];
+  if (tierLabel) {
+    agentBits.push(`<div style="display:inline-block;font-size:10px;font-weight:700;letter-spacing:.12em;
+      color:${TEAL};background:#e6f5f3;border:1px solid #b8e0db;border-radius:999px;
+      padding:4px 10px;margin-bottom:12px;">${esc(tierLabel)}</div>`);
+  }
+  if (agentReality && agentReality.trim()) {
+    agentBits.push(`<p style="margin:0 0 14px;font-size:14px;line-height:1.7;color:#333;">${esc(agentReality)}</p>`);
+  }
+  if (nzSignal && nzSignal.trim()) {
+    agentBits.push(`<div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+      color:#9ca3af;margin:14px 0 4px;">NZ signal</div>
+      <p style="margin:0 0 12px;font-size:14px;line-height:1.7;color:#333;">${esc(nzSignal)}</p>`);
+  }
+  if (yourMove && yourMove.trim()) {
+    agentBits.push(`<div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+      color:#9ca3af;margin:14px 0 4px;">Your move</div>
+      <p style="margin:0;font-size:14px;line-height:1.7;color:#333;">${esc(yourMove)}</p>`);
+  }
+  const agentWatchSection = agentBits.length
+    ? `${sec("🤖 Agent Watch")}${agentBits.join("")}` : "";
+
   // ── 6. Tasks at risk ─────────────────────────────────────────────────
   const tasksSection = tasksAtRisk.length ? `
     ${sec("Your top 3 tasks at risk")}

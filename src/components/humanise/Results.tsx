@@ -395,6 +395,10 @@ export const Results = ({ answers, onRestart }: Props) => {
         tasksAtRisk:         activeTasks,
         protectiveSkills:    activeSkills,
         pack,
+        agentTier,
+        agentReality:        (aiTasks?.agent_reality_email && aiTasks.agent_reality_email.trim()) ? aiTasks.agent_reality_email : (aiTasks?.agent_reality ?? ""),
+        nzSignal:            aiTasks?.nz_signal ?? "",
+        yourMove:            aiTasks?.your_move ?? "",
       });
 
       const { data, error } = await supabase.functions.invoke("send-results-email", {

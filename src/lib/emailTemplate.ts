@@ -117,7 +117,18 @@ export interface BuildEmailOpts {
   tasksAtRisk?: string[];
   protectiveSkills?: string[];
   pack?: EmailPack | null;
+  agentTier?: string | null;
+  agentReality?: string;
+  nzSignal?: string;
+  yourMove?: string;
 }
+
+const AGENT_TIER_LABELS: Record<string, string> = {
+  tier_1: "HIGH AGENT EXPOSURE",
+  tier_2: "SIGNIFICANT AGENT EXPOSURE",
+  tier_3: "MODERATE AGENT EXPOSURE",
+  tier_4: "LOW AGENT EXPOSURE",
+};
 
 export function buildEmailHtml(opts: BuildEmailOpts): string {
   const {

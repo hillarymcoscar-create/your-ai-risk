@@ -760,17 +760,12 @@ const AGENT_BADGE_BY_TIER: Record<AgentTier, { label: string; bg: string }> = {
 };
 
 const AgentWatch = ({
-  agentTier, agentReality, nzSignal, yourMove, lockedPreview,
-  jobTitle, emailSubmitted, onOpenEmailModal,
+  agentTier, agentReality, nzSignal, yourMove,
 }: {
   agentTier: AgentTier | null;
   agentReality?: string;
   nzSignal?: string;
   yourMove?: string;
-  lockedPreview?: string;
-  jobTitle: string;
-  emailSubmitted: boolean;
-  onOpenEmailModal: () => void;
 }) => {
   const badge = agentTier ? AGENT_BADGE_BY_TIER[agentTier] : null;
 
@@ -798,68 +793,104 @@ const AgentWatch = ({
         <p className="mt-5 text-[15px] leading-relaxed text-primary">{agentReality}</p>
       )}
 
-      {emailSubmitted ? (
-        <div className="mt-5 space-y-5">
-          {nzSignal && (
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: "hsl(var(--accent))" }}>
-                NZ Signal
-              </p>
-              <p className="mt-2 text-[15px] leading-relaxed text-primary">{nzSignal}</p>
-            </div>
-          )}
-          {yourMove && (
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: "hsl(var(--accent))" }}>
-                Your Move
-              </p>
-              <p className="mt-2 text-[15px] leading-relaxed text-primary">{yourMove}</p>
-            </div>
-          )}
-          <p className="text-[11px] text-muted-foreground/60">
-            Source: Humanise Agent Watch, updated April 2026.
-          </p>
-        </div>
-      ) : (
-        <div className="mt-5 space-y-4">
-          {nzSignal && (
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: "hsl(var(--accent))" }}>
-                NZ Signal
-              </p>
-              <p className="mt-2 text-[15px] leading-relaxed text-primary">{nzSignal}</p>
-            </div>
-          )}
-          {yourMove && (
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: "hsl(var(--accent))" }}>
-                Your Move
-              </p>
-              <p className="mt-2 text-[15px] leading-relaxed text-primary">{yourMove}</p>
-            </div>
-          )}
-          <button
-            type="button"
-            onClick={onOpenEmailModal}
-            className="w-full text-left rounded-xl border border-border bg-secondary/40 px-4 py-3 flex items-start gap-3 hover:bg-secondary/60 transition-smooth focus:outline-none focus:ring-2 focus:ring-accent/40"
-            aria-label="Open email gate to see your full Agent Watch report"
-          >
-            <Lock className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground/60" />
-            <span className="text-sm text-muted-foreground/80 italic">
-              {lockedPreview || `What AI agents are doing in ${jobTitle} roles right now`}
-            </span>
-          </button>
-          <Button
-            onClick={onOpenEmailModal}
-            className="rounded-full font-semibold bg-cta text-accent-foreground hover:opacity-95 text-sm px-5 h-10"
-          >
-            See what AI agents are doing in your role →
-          </Button>
-        </div>
-      )}
+      <div className="mt-5 space-y-5">
+        {nzSignal && (
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: "hsl(var(--accent))" }}>
+              NZ Signal
+            </p>
+            <p className="mt-2 text-[15px] leading-relaxed text-primary">{nzSignal}</p>
+          </div>
+        )}
+        {yourMove && (
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: "hsl(var(--accent))" }}>
+              Your Move
+            </p>
+            <p className="mt-2 text-[15px] leading-relaxed text-primary">{yourMove}</p>
+          </div>
+        )}
+        <p className="text-[11px] text-muted-foreground/60">
+          Source: Humanise Agent Watch, updated April 2026.
+        </p>
+      </div>
     </section>
   );
 };
+
+const InlineScoreCaveat = () => {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="mt-5 text-center">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-accent underline underline-offset-2"
+        aria-expanded={open}
+      >
+        ℹ️ What this score can't tell you
+      </button>
+      {open && (
+        <div className="mt-3 mx-auto max-w-[60ch] text-left rounded-xl bg-card/60 border border-border p-4 text-[13px] leading-relaxed text-muted-foreground animate-fade-in">
+          <p className="font-medium text-primary">This score is a signal, not a sentence.</p>
+          <p className="mt-2">
+            It doesn't know your specific employer. It doesn't know whether your team is already adopting AI. It doesn't know your network, your reputation, or your track record. It doesn't know how willing you are to adapt, which is, honestly, the biggest variable of all.
+          </p>
+          <p className="mt-2">Use this as a starting point for honest thinking. Not as a final answer.</p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const EmailGate = ({
+  email, onEmailChange, onSubmit, submitting,
+}: {
+  email: string;
+  onEmailChange: (v: string) => void;
+  onSubmit: (e: React.FormEvent) => void;
+  submitting: boolean;
+}) => (
+  <section
+    className="mt-10 rounded-2xl bg-card border border-border shadow-soft p-6 sm:p-8 animate-fade-in"
+    style={{ borderTop: "4px solid hsl(var(--accent))" }}
+  >
+    <h2 className="text-xl sm:text-2xl font-semibold text-primary text-center">
+      Want to know what to do about it?
+    </h2>
+    <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground text-center max-w-[60ch] mx-auto">
+      Get your personalised action plan — which AI agents are targeting your role, what to learn first, and where to upskill. Free, instant, no spam.
+    </p>
+    <form onSubmit={onSubmit} className="mt-6 flex flex-col sm:flex-row gap-3 max-w-xl mx-auto">
+      <Input
+        type="email"
+        required
+        placeholder="your@email.com"
+        value={email}
+        onChange={(e) => onEmailChange(e.target.value)}
+        disabled={submitting}
+        className="h-12 rounded-xl flex-1"
+      />
+      <Button
+        type="submit"
+        disabled={submitting || !email.trim()}
+        className="h-12 rounded-full font-semibold bg-cta text-accent-foreground hover:opacity-95 disabled:opacity-50 px-6"
+      >
+        {submitting ? (
+          <span className="flex items-center gap-2">
+            <span className="h-4 w-4 rounded-full border-2 border-accent-foreground/30 border-t-accent-foreground animate-spin" />
+            Sending…
+          </span>
+        ) : (
+          "Send me my plan →"
+        )}
+      </Button>
+    </form>
+    <p className="mt-3 text-center text-[11px] text-muted-foreground">
+      No spam. Unsubscribe anytime.
+    </p>
+  </section>
+);
 
 const toneStyles = {
   danger: "bg-danger/10 text-danger",

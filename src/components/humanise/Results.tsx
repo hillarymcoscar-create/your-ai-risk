@@ -512,9 +512,8 @@ export const Results = ({ answers, onRestart }: Props) => {
               {answers.country ? ` · ${answers.region ? `${answers.region}, ` : ""}${answers.country}` : ""}
             </p>
           )}
+          <InlineScoreCaveat />
         </section>
-
-        <ScoreCaveat />
 
         <HonestPicture
           jobTitle={match?.title ?? answers.jobTitle}
@@ -532,26 +531,6 @@ export const Results = ({ answers, onRestart }: Props) => {
           protectiveTasks={match?.protective_tasks}
           nzMarketSignal={match?.job_market_signals?.display_message ?? null}
           onTasks={setAiTasks}
-        />
-
-        <AgentWatch
-          agentTier={agentTier}
-          agentReality={aiTasks?.agent_reality}
-          nzSignal={aiTasks?.nz_signal}
-          yourMove={aiTasks?.your_move}
-          lockedPreview={aiTasks?.locked_preview}
-          jobTitle={match?.title ?? answers.jobTitle}
-          emailSubmitted={emailSubmitted}
-          onOpenEmailModal={openAgentWatchGate}
-        />
-
-        <NzMarketSignal
-          message={match?.job_market_signals?.display_message ?? null}
-          source={match?.job_market_signals?.source ?? null}
-        />
-        <NzWorkforceData
-          onetCode={match?.onet_code}
-          region={answers.country === "New Zealand" ? answers.region : null}
         />
 
         <section className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -575,23 +554,81 @@ export const Results = ({ answers, onRestart }: Props) => {
           />
         </section>
 
-        <UpskillSection
-          skills={activeSkills}
-          skillKeywords={aiTasks?.protective_skill_keywords ?? []}
-          industry={answers.industry}
-          jobTitle={match?.title ?? answers.jobTitle}
-          matchedTitle={match?.title ?? null}
-          score={score}
-          riskBand={band}
-          honestPicture={aiTasks?.honest_picture ?? ""}
-          nzMarketSignalMsg={match?.job_market_signals?.display_message ?? ""}
-          nzMarketSignalSrc={match?.job_market_signals?.source ?? ""}
-          nzData={nzData}
-          tasksAtRisk={activeTasks}
-          region={answers.region ?? ""}
-          onEmailCaptured={(email) => { void attachEmailToQuizResponse(email); void sendResultsEmail(email); setEmailSubmitted(true); }}
-          getQuizResponseId={() => quizResponseIdRef.current}
+        <NzMarketSignal
+          message={match?.job_market_signals?.display_message ?? null}
+          source={match?.job_market_signals?.source ?? null}
         />
+        <NzWorkforceData
+          onetCode={match?.onet_code}
+          region={answers.country === "New Zealand" ? answers.region : null}
+        />
+
+        {!emailSubmitted && (
+          <EmailGate
+            submitting={planSubmitting}
+            email={planEmail}
+            onEmailChange={setPlanEmail}
+            onSubmit={async (e) => {
+              e.preventDefault();
+              const trimmed = planEmail.trim();
+              if (!trimmed) return;
+              setPlanSubmitting(true);
+              track("email_gate_converted", { source: "results_email_gate" });
+              try {
+                await supabase.from("email_captures").insert({
+                  email: trimmed,
+                  source: "results_email_plan",
+                  occupation: match?.title ?? answers.jobTitle ?? null,
+                  score,
+                  agent_tier: agentTier,
+                  segment_tag: answers.segment_tag ?? null,
+                  nz_region: answers.country === "New Zealand" ? (answers.region ?? null) : null,
+                });
+              } catch (err) {
+                console.error("email_captures insert failed", err);
+              }
+              void attachEmailToQuizResponse(trimmed);
+              const ok = await sendResultsEmail(trimmed);
+              setPlanSubmitting(false);
+              setEmailSubmitted(true);
+              setPlanEmail("");
+              if (ok) {
+                toast.success("Check your inbox. Your full plan is on the way.");
+              } else {
+                toast.error("Saved your email, but the report email is delayed. Check back shortly.");
+              }
+            }}
+          />
+        )}
+
+        {emailSubmitted && (
+          <div className="animate-fade-in">
+            <AgentWatch
+              agentTier={agentTier}
+              agentReality={aiTasks?.agent_reality}
+              nzSignal={aiTasks?.nz_signal}
+              yourMove={aiTasks?.your_move}
+            />
+
+            <UpskillSection
+              skills={activeSkills}
+              skillKeywords={aiTasks?.protective_skill_keywords ?? []}
+              industry={answers.industry}
+              jobTitle={match?.title ?? answers.jobTitle}
+              matchedTitle={match?.title ?? null}
+              score={score}
+              riskBand={band}
+              honestPicture={aiTasks?.honest_picture ?? ""}
+              nzMarketSignalMsg={match?.job_market_signals?.display_message ?? ""}
+              nzMarketSignalSrc={match?.job_market_signals?.source ?? ""}
+              nzData={nzData}
+              tasksAtRisk={activeTasks}
+              region={answers.region ?? ""}
+              onEmailCaptured={(email) => { void attachEmailToQuizResponse(email); void sendResultsEmail(email); setEmailSubmitted(true); }}
+              getQuizResponseId={() => quizResponseIdRef.current}
+            />
+          </div>
+        )}
 
         <p className="mt-16 text-center text-xs text-muted-foreground/80">
           Autonomous agent activity sourced from real-time AI capability analysis across 1,016 NZ occupations.

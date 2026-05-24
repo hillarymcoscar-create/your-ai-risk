@@ -836,9 +836,8 @@ const AgentWatchPreview = ({
   agentReality?: string;
 }) => {
   const badge = agentTier ? AGENT_BADGE_BY_TIER[agentTier] : null;
-  const previewAgentReality = (agentReality ?? "")
-    .split(/\bNZ Signal\b|\bYour Move\b/i)[0]
-    .trim();
+  const firstSentence = (agentReality ?? "").split(/(?<=[.!?])\s+/)[0]?.trim() ?? "";
+  const previewAgentReality = firstSentence;
 
   return (
     <section
@@ -863,7 +862,7 @@ const AgentWatchPreview = ({
       {previewAgentReality && (
         <div className="relative mt-5">
           <p className="text-[15px] leading-relaxed text-primary">{previewAgentReality}</p>
-          <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-card to-transparent pointer-events-none" />
+          <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-card to-transparent pointer-events-none" />
         </div>
       )}
     </section>

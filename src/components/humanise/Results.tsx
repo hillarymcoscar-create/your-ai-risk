@@ -155,8 +155,8 @@ export const Results = ({ answers, onRestart }: Props) => {
       tasks = (match.tasks_at_risk ?? []).map(cleanTask).filter(Boolean).slice(0, 3);
       skills = (match.protective_tasks ?? []).map(cleanTask).filter(Boolean).slice(0, 3);
     }
-    const pct = percentile(score, occupations);
-    comparison = `Your role ranks in the ${pct}th percentile of 1,016 occupations analysed`;
+    const pct = Math.max(1, percentile(match.risk_score, occupations));
+    comparison = `Your role ranks in the ${ordinal(pct)} percentile of 1,016 occupations analysed — higher risk than ${100 - pct}% of roles`;
   } else {
     // Fallback: industry-based scoring
     score = calculateRisk(answers);

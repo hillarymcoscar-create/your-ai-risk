@@ -836,9 +836,8 @@ const AgentWatchPreview = ({
   agentReality?: string;
 }) => {
   const badge = agentTier ? AGENT_BADGE_BY_TIER[agentTier] : null;
-  const previewAgentReality = (agentReality ?? "")
-    .split(/\bNZ Signal\b|\bYour Move\b/i)[0]
-    .trim();
+  const firstSentence = (agentReality ?? "").split(/(?<=[.!?])\s+/)[0]?.trim() ?? "";
+  const previewAgentReality = firstSentence;
 
   return (
     <section

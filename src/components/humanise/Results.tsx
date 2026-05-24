@@ -34,7 +34,7 @@ import {
   type QuizAnswers,
   type RiskBandLabel,
 } from "@/lib/humanise";
-import { useOccupations, useAliases, findBestMatch, findByAlias, percentile, type Occupation } from "@/lib/onet";
+import { useOccupations, useAliases, findBestMatch, findByAlias, percentile, ordinal, type Occupation } from "@/lib/onet";
 import { getAnzscoGroupData } from "@/lib/nzWorkforceUtils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -155,8 +155,8 @@ export const Results = ({ answers, onRestart }: Props) => {
       tasks = (match.tasks_at_risk ?? []).map(cleanTask).filter(Boolean).slice(0, 3);
       skills = (match.protective_tasks ?? []).map(cleanTask).filter(Boolean).slice(0, 3);
     }
-    const pct = percentile(score, occupations);
-    comparison = `Your role ranks in the ${pct}th percentile of 1,016 occupations analysed`;
+    const pct = Math.max(1, percentile(match.risk_score, occupations));
+    comparison = `Your role ranks in the ${ordinal(pct)} percentile of 1,016 occupations analysed — higher risk than ${100 - pct}% of roles`;
   } else {
     // Fallback: industry-based scoring
     score = calculateRisk(answers);
@@ -512,9 +512,8 @@ export const Results = ({ answers, onRestart }: Props) => {
               {answers.country ? ` · ${answers.region ? `${answers.region}, ` : ""}${answers.country}` : ""}
             </p>
           )}
+          <InlineScoreCaveat />
         </section>
-
-        <ScoreCaveat />
 
         <HonestPicture
           jobTitle={match?.title ?? answers.jobTitle}
@@ -532,26 +531,6 @@ export const Results = ({ answers, onRestart }: Props) => {
           protectiveTasks={match?.protective_tasks}
           nzMarketSignal={match?.job_market_signals?.display_message ?? null}
           onTasks={setAiTasks}
-        />
-
-        <AgentWatch
-          agentTier={agentTier}
-          agentReality={aiTasks?.agent_reality}
-          nzSignal={aiTasks?.nz_signal}
-          yourMove={aiTasks?.your_move}
-          lockedPreview={aiTasks?.locked_preview}
-          jobTitle={match?.title ?? answers.jobTitle}
-          emailSubmitted={emailSubmitted}
-          onOpenEmailModal={openAgentWatchGate}
-        />
-
-        <NzMarketSignal
-          message={match?.job_market_signals?.display_message ?? null}
-          source={match?.job_market_signals?.source ?? null}
-        />
-        <NzWorkforceData
-          onetCode={match?.onet_code}
-          region={answers.country === "New Zealand" ? answers.region : null}
         />
 
         <section className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -575,23 +554,81 @@ export const Results = ({ answers, onRestart }: Props) => {
           />
         </section>
 
-        <UpskillSection
-          skills={activeSkills}
-          skillKeywords={aiTasks?.protective_skill_keywords ?? []}
-          industry={answers.industry}
-          jobTitle={match?.title ?? answers.jobTitle}
-          matchedTitle={match?.title ?? null}
-          score={score}
-          riskBand={band}
-          honestPicture={aiTasks?.honest_picture ?? ""}
-          nzMarketSignalMsg={match?.job_market_signals?.display_message ?? ""}
-          nzMarketSignalSrc={match?.job_market_signals?.source ?? ""}
-          nzData={nzData}
-          tasksAtRisk={activeTasks}
-          region={answers.region ?? ""}
-          onEmailCaptured={(email) => { void attachEmailToQuizResponse(email); void sendResultsEmail(email); setEmailSubmitted(true); }}
-          getQuizResponseId={() => quizResponseIdRef.current}
+        <NzMarketSignal
+          message={match?.job_market_signals?.display_message ?? null}
+          source={match?.job_market_signals?.source ?? null}
         />
+        <NzWorkforceData
+          onetCode={match?.onet_code}
+          region={answers.country === "New Zealand" ? answers.region : null}
+        />
+
+        {!emailSubmitted && (
+          <EmailGate
+            submitting={planSubmitting}
+            email={planEmail}
+            onEmailChange={setPlanEmail}
+            onSubmit={async (e) => {
+              e.preventDefault();
+              const trimmed = planEmail.trim();
+              if (!trimmed) return;
+              setPlanSubmitting(true);
+              track("email_gate_converted", { source: "results_email_gate" });
+              try {
+                await supabase.from("email_captures").insert({
+                  email: trimmed,
+                  source: "results_email_plan",
+                  occupation: match?.title ?? answers.jobTitle ?? null,
+                  score,
+                  agent_tier: agentTier,
+                  segment_tag: answers.segment_tag ?? null,
+                  nz_region: answers.country === "New Zealand" ? (answers.region ?? null) : null,
+                });
+              } catch (err) {
+                console.error("email_captures insert failed", err);
+              }
+              void attachEmailToQuizResponse(trimmed);
+              const ok = await sendResultsEmail(trimmed);
+              setPlanSubmitting(false);
+              setEmailSubmitted(true);
+              setPlanEmail("");
+              if (ok) {
+                toast.success("Check your inbox. Your full plan is on the way.");
+              } else {
+                toast.error("Saved your email, but the report email is delayed. Check back shortly.");
+              }
+            }}
+          />
+        )}
+
+        {emailSubmitted && (
+          <div className="animate-fade-in">
+            <AgentWatch
+              agentTier={agentTier}
+              agentReality={aiTasks?.agent_reality}
+              nzSignal={aiTasks?.nz_signal}
+              yourMove={aiTasks?.your_move}
+            />
+
+            <UpskillSection
+              skills={activeSkills}
+              skillKeywords={aiTasks?.protective_skill_keywords ?? []}
+              industry={answers.industry}
+              jobTitle={match?.title ?? answers.jobTitle}
+              matchedTitle={match?.title ?? null}
+              score={score}
+              riskBand={band}
+              honestPicture={aiTasks?.honest_picture ?? ""}
+              nzMarketSignalMsg={match?.job_market_signals?.display_message ?? ""}
+              nzMarketSignalSrc={match?.job_market_signals?.source ?? ""}
+              nzData={nzData}
+              tasksAtRisk={activeTasks}
+              region={answers.region ?? ""}
+              onEmailCaptured={(email) => { void attachEmailToQuizResponse(email); void sendResultsEmail(email); setEmailSubmitted(true); }}
+              getQuizResponseId={() => quizResponseIdRef.current}
+            />
+          </div>
+        )}
 
         <p className="mt-16 text-center text-xs text-muted-foreground/80">
           Autonomous agent activity sourced from real-time AI capability analysis across 1,016 NZ occupations.
@@ -723,17 +760,12 @@ const AGENT_BADGE_BY_TIER: Record<AgentTier, { label: string; bg: string }> = {
 };
 
 const AgentWatch = ({
-  agentTier, agentReality, nzSignal, yourMove, lockedPreview,
-  jobTitle, emailSubmitted, onOpenEmailModal,
+  agentTier, agentReality, nzSignal, yourMove,
 }: {
   agentTier: AgentTier | null;
   agentReality?: string;
   nzSignal?: string;
   yourMove?: string;
-  lockedPreview?: string;
-  jobTitle: string;
-  emailSubmitted: boolean;
-  onOpenEmailModal: () => void;
 }) => {
   const badge = agentTier ? AGENT_BADGE_BY_TIER[agentTier] : null;
 
@@ -761,68 +793,104 @@ const AgentWatch = ({
         <p className="mt-5 text-[15px] leading-relaxed text-primary">{agentReality}</p>
       )}
 
-      {emailSubmitted ? (
-        <div className="mt-5 space-y-5">
-          {nzSignal && (
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: "hsl(var(--accent))" }}>
-                NZ Signal
-              </p>
-              <p className="mt-2 text-[15px] leading-relaxed text-primary">{nzSignal}</p>
-            </div>
-          )}
-          {yourMove && (
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: "hsl(var(--accent))" }}>
-                Your Move
-              </p>
-              <p className="mt-2 text-[15px] leading-relaxed text-primary">{yourMove}</p>
-            </div>
-          )}
-          <p className="text-[11px] text-muted-foreground/60">
-            Source: Humanise Agent Watch, updated April 2026.
-          </p>
-        </div>
-      ) : (
-        <div className="mt-5 space-y-4">
-          {nzSignal && (
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: "hsl(var(--accent))" }}>
-                NZ Signal
-              </p>
-              <p className="mt-2 text-[15px] leading-relaxed text-primary">{nzSignal}</p>
-            </div>
-          )}
-          {yourMove && (
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: "hsl(var(--accent))" }}>
-                Your Move
-              </p>
-              <p className="mt-2 text-[15px] leading-relaxed text-primary">{yourMove}</p>
-            </div>
-          )}
-          <button
-            type="button"
-            onClick={onOpenEmailModal}
-            className="w-full text-left rounded-xl border border-border bg-secondary/40 px-4 py-3 flex items-start gap-3 hover:bg-secondary/60 transition-smooth focus:outline-none focus:ring-2 focus:ring-accent/40"
-            aria-label="Open email gate to see your full Agent Watch report"
-          >
-            <Lock className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground/60" />
-            <span className="text-sm text-muted-foreground/80 italic">
-              {lockedPreview || `What AI agents are doing in ${jobTitle} roles right now`}
-            </span>
-          </button>
-          <Button
-            onClick={onOpenEmailModal}
-            className="rounded-full font-semibold bg-cta text-accent-foreground hover:opacity-95 text-sm px-5 h-10"
-          >
-            See what AI agents are doing in your role →
-          </Button>
-        </div>
-      )}
+      <div className="mt-5 space-y-5">
+        {nzSignal && (
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: "hsl(var(--accent))" }}>
+              NZ Signal
+            </p>
+            <p className="mt-2 text-[15px] leading-relaxed text-primary">{nzSignal}</p>
+          </div>
+        )}
+        {yourMove && (
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em]" style={{ color: "hsl(var(--accent))" }}>
+              Your Move
+            </p>
+            <p className="mt-2 text-[15px] leading-relaxed text-primary">{yourMove}</p>
+          </div>
+        )}
+        <p className="text-[11px] text-muted-foreground/60">
+          Source: Humanise Agent Watch, updated April 2026.
+        </p>
+      </div>
     </section>
   );
 };
+
+const InlineScoreCaveat = () => {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="mt-5 text-center">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-accent underline underline-offset-2"
+        aria-expanded={open}
+      >
+        ℹ️ What this score can't tell you
+      </button>
+      {open && (
+        <div className="mt-3 mx-auto max-w-[60ch] text-left rounded-xl bg-card/60 border border-border p-4 text-[13px] leading-relaxed text-muted-foreground animate-fade-in">
+          <p className="font-medium text-primary">This score is a signal, not a sentence.</p>
+          <p className="mt-2">
+            It doesn't know your specific employer. It doesn't know whether your team is already adopting AI. It doesn't know your network, your reputation, or your track record. It doesn't know how willing you are to adapt, which is, honestly, the biggest variable of all.
+          </p>
+          <p className="mt-2">Use this as a starting point for honest thinking. Not as a final answer.</p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const EmailGate = ({
+  email, onEmailChange, onSubmit, submitting,
+}: {
+  email: string;
+  onEmailChange: (v: string) => void;
+  onSubmit: (e: React.FormEvent) => void;
+  submitting: boolean;
+}) => (
+  <section
+    className="mt-10 rounded-2xl bg-card border border-border shadow-soft p-6 sm:p-8 animate-fade-in"
+    style={{ borderTop: "4px solid hsl(var(--accent))" }}
+  >
+    <h2 className="text-xl sm:text-2xl font-semibold text-primary text-center">
+      Want to know what to do about it?
+    </h2>
+    <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground text-center max-w-[60ch] mx-auto">
+      Get your personalised action plan — which AI agents are targeting your role, what to learn first, and where to upskill. Free, instant, no spam.
+    </p>
+    <form onSubmit={onSubmit} className="mt-6 flex flex-col sm:flex-row gap-3 max-w-xl mx-auto">
+      <Input
+        type="email"
+        required
+        placeholder="your@email.com"
+        value={email}
+        onChange={(e) => onEmailChange(e.target.value)}
+        disabled={submitting}
+        className="h-12 rounded-xl flex-1"
+      />
+      <Button
+        type="submit"
+        disabled={submitting || !email.trim()}
+        className="h-12 rounded-full font-semibold bg-cta text-accent-foreground hover:opacity-95 disabled:opacity-50 px-6"
+      >
+        {submitting ? (
+          <span className="flex items-center gap-2">
+            <span className="h-4 w-4 rounded-full border-2 border-accent-foreground/30 border-t-accent-foreground animate-spin" />
+            Sending…
+          </span>
+        ) : (
+          "Send me my plan →"
+        )}
+      </Button>
+    </form>
+    <p className="mt-3 text-center text-[11px] text-muted-foreground">
+      No spam. Unsubscribe anytime.
+    </p>
+  </section>
+);
 
 const toneStyles = {
   danger: "bg-danger/10 text-danger",

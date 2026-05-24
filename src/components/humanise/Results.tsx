@@ -34,7 +34,7 @@ import {
   type QuizAnswers,
   type RiskBandLabel,
 } from "@/lib/humanise";
-import { useOccupations, useAliases, findBestMatch, findByAlias, percentile, type Occupation } from "@/lib/onet";
+import { useOccupations, useAliases, findBestMatch, findByAlias, percentile, ordinal, type Occupation } from "@/lib/onet";
 import { getAnzscoGroupData } from "@/lib/nzWorkforceUtils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";

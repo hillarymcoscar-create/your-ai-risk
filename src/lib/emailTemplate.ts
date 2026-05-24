@@ -322,6 +322,7 @@ export function buildEmailHtml(opts: BuildEmailOpts): string {
       ${workforceSection}
       ${tasksSection}
       ${skillsSection}
+      ${agentWatchSection}
       ${upskillSection}
 
       <!-- 9. Footer -->

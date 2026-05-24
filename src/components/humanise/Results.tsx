@@ -564,6 +564,13 @@ export const Results = ({ answers, onRestart }: Props) => {
         />
 
         {!emailSubmitted && (
+          <AgentWatchPreview
+            agentTier={agentTier}
+            agentReality={aiTasks?.agent_reality}
+          />
+        )}
+
+        {!emailSubmitted && (
           <EmailGate
             submitting={planSubmitting}
             email={planEmail}

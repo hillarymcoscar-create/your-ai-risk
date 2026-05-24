@@ -138,6 +138,7 @@ export function buildEmailHtml(opts: BuildEmailOpts): string {
     statsnzThousands, statsnzShare,
     tasksAtRisk = [], protectiveSkills = [],
     pack,
+    agentTier, agentReality, nzSignal, yourMove,
   } = opts;
 
   const colour      = bandColour(riskScore);
